@@ -1,6 +1,6 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/carbon.dart';
 import 'package:provider/provider.dart';
@@ -79,7 +79,6 @@ class _HomeScreenState extends State<HomeScreen> {
         lastName = userDetails['family_name'] ?? "";
         userEmail = userDetails['email'];
         profilePictureUrl = userDetails['picture'];
-        print('Profile Picture URL: $profilePictureUrl');
       });
     } else {
       print("User details JSON is null.");
@@ -452,8 +451,7 @@ class ImageWithBearerToken extends StatelessWidget {
   const ImageWithBearerToken({
     required this.imageUrl,
     required this.bearerToken,
-    Key? key,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -463,24 +461,7 @@ class ImageWithBearerToken extends StatelessWidget {
         if (snapshot.hasError) {
           return Center(child: Text('Error loading image'));
         } else if (snapshot.connectionState == ConnectionState.done) {
-          if (snapshot.hasData) {
-            // Check the status code and content type
-            if (snapshot.data!.statusCode == 200 &&
-                snapshot.data!.headers['content-type']!.startsWith('image/')) {
-              return Image.memory(snapshot.data!.bodyBytes);
-            } else {
-              // Print debug information
-              print('Invalid image data or unauthorized.');
-              print('Status Code: ${snapshot.data!.statusCode}');
-              print('Content-Type: ${snapshot.data!.headers['content-type']}');
-              print(
-                  'Response Body: ${snapshot.data!.bodyBytes.length > 100 ? snapshot.data!.bodyBytes.sublist(0, 100) : snapshot.data!.bodyBytes}');
-
-              return Center(child: Text('Invalid image data or unauthorized.'));
-            }
-          } else {
-            return Center(child: Text('No data received.'));
-          }
+          return Image.memory(snapshot.data!.bodyBytes);
         } else {
           return const CircularProgressIndicator();
         }
@@ -491,9 +472,6 @@ class ImageWithBearerToken extends StatelessWidget {
   Future<http.Response> _fetchImage() async {
     final headers = {'Authorization': 'Bearer $bearerToken'};
     final response = await http.get(Uri.parse(imageUrl), headers: headers);
-    print('Bearer Token: $bearerToken');
-    print('Response URL: $imageUrl');
-    print(response.body);
     return response;
   }
 }

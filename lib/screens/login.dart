@@ -54,6 +54,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   physics: const BouncingScrollPhysics(),
                   children: [
                     height200Space,
+                    height200Space,
                     heroText(),
                     heightSpace,
                     welcomeText(),
@@ -61,18 +62,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     heightSpace,
                     heightSpace,
                     heightSpace,
-                    emailField(),
-                    heightSpace,
-                    heightSpace,
-                    passwordField(),
-                    heightSpace,
-                    heightSpace,
-                    heightSpace,
-                    forgotText(),
-                    heightSpace,
-                    heightSpace,
-                    heightSpace,
-                    loginButton(context),
+                    loginButtonWithFrape(context, "Login"),
                     heightSpace,
                     heightSpace,
                     heightSpace,
@@ -87,22 +77,15 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  loginButton(contex) {
+  loginButtonWithFrape(contex, String buttonName) {
     return InkWell(
       onTap: _isLoggingIn
           ? null
           : () async {
-              // Disable onTap if already logging in
               setState(() {
-                _isLoggingIn = true; 
+                _isLoggingIn = true;
               });
-              await ApiService.login(
-                  context, _emailController.text, _passwordController.text);
-              if (mounted) {
-                setState(() {
-                  _isLoggingIn = false; 
-                });
-              }
+              ApiService.loginWithFrappe(context);
             },
       child: Container(
         width: double.maxFinite,
@@ -121,7 +104,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         alignment: Alignment.center,
         child: _isLoggingIn
-            ? SizedBox(
+            ? const SizedBox(
                 width: 20, // Width of the CircularProgressIndicator
                 height: 21, // Height of the CircularProgressIndicator
                 child: CircularProgressIndicator(
@@ -130,74 +113,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       Colors.white), // Spinner color
                 ),
               )
-            : const Text(
-                "Login",
+            : Text(
+                buttonName,
                 style: bold18White,
               ),
-      ),
-    );
-  }
-
-  emailField() {
-    return Container(
-      decoration: BoxDecoration(
-        color: whiteColor,
-        borderRadius: BorderRadius.circular(10.0),
-        boxShadow: [
-          BoxShadow(
-            color: blackColor.withOpacity(0.1),
-            blurRadius: 12.0,
-            offset: const Offset(0, 6),
-          )
-        ],
-      ),
-      child: TextField(
-        controller: _emailController,
-        cursorColor: primaryColor,
-        style: semibold15Black33,
-        decoration: const InputDecoration(
-          border: InputBorder.none,
-          hintText: "Enter your email",
-          hintStyle: semibold15Grey,
-          contentPadding: EdgeInsets.symmetric(vertical: fixPadding * 1.4),
-          prefixIcon: Icon(
-            CupertinoIcons.envelope,
-            size: 20.0,
-          ),
-        ),
-      ),
-    );
-  }
-
-  passwordField() {
-    return Container(
-      decoration: BoxDecoration(
-        color: whiteColor,
-        borderRadius: BorderRadius.circular(10.0),
-        boxShadow: [
-          BoxShadow(
-            color: blackColor.withOpacity(0.1),
-            blurRadius: 12.0,
-            offset: const Offset(0, 6),
-          )
-        ],
-      ),
-      child: TextField(
-        controller: _passwordController,
-        obscureText: true,
-        cursorColor: primaryColor,
-        style: semibold15Black33,
-        keyboardType: TextInputType.emailAddress,
-        decoration: const InputDecoration(
-          border: InputBorder.none,
-          hintText: "Enter your password",
-          hintStyle: semibold15Grey,
-          contentPadding: EdgeInsets.symmetric(vertical: fixPadding * 1.4),
-          prefixIcon: Icon(
-            CupertinoIcons.padlock,
-            size: 20.0,
-          ),
-        ),
       ),
     );
   }
