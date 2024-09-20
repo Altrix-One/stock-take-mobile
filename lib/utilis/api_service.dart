@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -104,41 +105,61 @@ class ApiService {
       String userEmail = userDetails['email'];
 
       try {
-        accessToken = accessToken.replaceAll('"', '');
+        // Check for network connectivity
+        List<ConnectivityResult> result =
+            await Connectivity().checkConnectivity();
 
-        // Make the API call to fetch warehouses
-        final response = await http.post(
-          Uri.parse('$_baseUrl/api/method/fetch_user_warehouse'),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $accessToken',
-          },
-          body: jsonEncode({'user': userEmail}),
-        );
+        // Check if the result is either mobile or Wi-Fi
+        if (result == ConnectivityResult.mobile ||
+            result == ConnectivityResult.wifi) {
+          accessToken = accessToken.replaceAll('"', '');
 
-        // Check if the response is successful
-        if (response.statusCode == 200) {
-          final data = jsonDecode(response.body);
+          // Make the API call to fetch warehouses
+          final response = await http.post(
+            Uri.parse('$_baseUrl/api/method/fetch_user_warehouse'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $accessToken',
+            },
+            body: jsonEncode({'user': userEmail}),
+          );
 
-          // Check if the response contains the "message" field with warehouse data
-          if (data['message'] != null && data['message'] is List) {
-            return List<String>.from(data['message']);
+          // Check if the response is successful
+          if (response.statusCode == 200) {
+            final data = jsonDecode(response.body);
+
+            // Check if the response contains the "message" field with warehouse data
+            if (data['message'] != null && data['message'] is List) {
+              // Save the warehouses to SharedPreferences for offline use
+              await prefs.setString('warehouses', jsonEncode(data['message']));
+              return List<String>.from(data['message']);
+            } else {
+              // Handle unexpected server response
+              String errorMessage =
+                  data['message'] ?? 'Unexpected response from the server';
+              showErrorDialog(context, errorMessage);
+              return [];
+            }
           } else {
-            // Handle the case where the message field exists but no warehouse is found
+            // Handle non-200 status codes and extract the message from the backend response
+            final errorData = jsonDecode(response.body);
             String errorMessage =
-                data['message'] ?? 'Unexpected response from the server';
+                errorData['message'] ?? 'Failed to load warehouses.';
             showErrorDialog(context, errorMessage);
             return [];
           }
         } else {
-          // Handle non-200 status codes and extract the message from the backend response
-          final errorData = jsonDecode(response.body);
-          String errorMessage =
-              errorData['message'] ?? 'Failed to load warehouses.';
-
-          // Show the extracted error message to the user
-          showErrorDialog(context, errorMessage);
-          return [];
+          // If not connected to the internet, retrieve stored warehouses from SharedPreferences
+          String? storedWarehousesJson = prefs.getString('warehouses');
+          if (storedWarehousesJson != null) {
+            List<String> storedWarehouses =
+                List<String>.from(jsonDecode(storedWarehousesJson));
+            return storedWarehouses;
+          } else {
+            showErrorDialog(context,
+                'No internet connection and no stored warehouses available.');
+            return [];
+          }
         }
       } catch (e) {
         // Handle any other errors during the HTTP request
