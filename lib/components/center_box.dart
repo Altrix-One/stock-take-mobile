@@ -1,11 +1,11 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/uil.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:stock_count/constants/theme.dart';
+import 'package:stock_count/screens/entry_detail_screen.dart'; // Add this import
 import 'package:stock_count/screens/home.dart';
 import 'package:stock_count/utilis/dialog_messages.dart';
 import 'package:provider/provider.dart';
@@ -29,15 +29,13 @@ class _CenterBoxState extends State<CenterBox> {
     fetchEntries();
   }
 
- Future<void> fetchEntries() async {
+  Future<void> fetchEntries() async {
     if (widget.database != null) {
       try {
         SharedPreferences prefs = await SharedPreferences.getInstance();
         String? userDetailsJson = prefs.getString('userDetails');
         if (userDetailsJson != null) {
-          Map<String, dynamic> userDetails = json.decode(userDetailsJson);
-          String stockCountPersonId =
-              userDetails['message']['stock_count_person']['name'];
+          String? stockCountPersonId = prefs.getString('userId');
 
           String query = '''
         SELECT 
@@ -76,15 +74,27 @@ class _CenterBoxState extends State<CenterBox> {
           context,
           MaterialPageRoute(
             builder: (context) => HomeScreen(
-              recountEntryId: entryId,
-              recountWarehouse: warehouse,
-              countType: countType,
-              database: widget.database
-            ),
+                recountEntryId: entryId,
+                recountWarehouse: warehouse,
+                countType: countType,
+                database: widget.database),
           ),
         );
       }
     });
+  }
+
+  void startEntryDetails(int entryId, String warehouse) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EntryDetailsScreen(
+          entryId: entryId,
+          warehouse: warehouse,
+          database: widget.database,
+        ),
+      ),
+    );
   }
 
   @override
@@ -97,18 +107,7 @@ class _CenterBoxState extends State<CenterBox> {
             width: double.maxFinite,
             padding: const EdgeInsets.symmetric(
                 horizontal: fixPadding * 1.4, vertical: fixPadding * 3.5),
-            margin: const EdgeInsets.symmetric(
-                horizontal: 15), // Space from left and right sides
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(10),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 10,
-                ),
-              ],
-            ),
+            margin: const EdgeInsets.symmetric(horizontal: 5),
             child: entries.isEmpty
                 ? const LinearProgressIndicator()
                 : ListView.builder(
@@ -124,6 +123,10 @@ class _CenterBoxState extends State<CenterBox> {
                               startRecount(entries[index]['id'],
                                   entries[index]['warehouse'], countType);
                             },
+                            onArrowTap: () {
+                              startEntryDetails(entries[index]['id'],
+                                  entries[index]['warehouse']);
+                            },
                           ),
                           const SizedBox(height: 10),
                         ],
@@ -138,7 +141,8 @@ class _CenterBoxState extends State<CenterBox> {
 }
 
 Widget optionWidget(
-    Widget icon, String title, String subTitle, VoidCallback onTap) {
+    Widget icon, String title, String subTitle, VoidCallback onTap,
+    {VoidCallback? onArrowTap}) {
   return GestureDetector(
     onTap: onTap,
     child: Container(
@@ -191,7 +195,7 @@ Widget optionWidget(
             ),
           ),
           InkWell(
-            onTap: () => print("Arrow icon tapped!"),
+            onTap: onArrowTap,
             child: const Padding(
               padding: EdgeInsets.all(8.0),
               child: Icon(
