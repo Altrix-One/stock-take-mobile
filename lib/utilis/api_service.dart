@@ -109,7 +109,7 @@ class ApiService {
         bool hasInternet = await InternetConnectionChecker().hasConnection;
 
         if (hasInternet) {
-          // If internet is available, fetch the warehouses
+          // If internet is available, fetch the warehouses, company, and user_id
           accessToken = accessToken.replaceAll('"', '');
 
           final response = await http.post(
@@ -124,10 +124,20 @@ class ApiService {
           if (response.statusCode == 200) {
             final data = jsonDecode(response.body);
 
-            if (data['message'] != null && data['message'] is List) {
-              // Save warehouses to SharedPreferences for offline use
-              await prefs.setString('warehouses', jsonEncode(data['message']));
-              return List<String>.from(data['message']);
+            // Check if the response contains warehouses, company, and user_id
+            if (data['message'] != null &&
+                data['message']['warehouses'] != null) {
+              List<String> warehouses =
+                  List<String>.from(data['message']['warehouses']);
+              String company = data['message']['company'] ?? 'Unknown Company';
+              String userId = data['message']['user_id'] ?? 'Unknown User ID';
+
+              // Save warehouses, company, and user_id to SharedPreferences for offline use
+              await prefs.setString('warehouses', jsonEncode(warehouses));
+              await prefs.setString('company', company);
+              await prefs.setString('userId', userId);
+
+              return warehouses;
             } else {
               String errorMessage =
                   data['message'] ?? 'Unexpected response from the server';
@@ -142,15 +152,21 @@ class ApiService {
             return [];
           }
         } else {
-          // If no internet, load warehouses from SharedPreferences
+          // If no internet, load warehouses, company, and user_id from SharedPreferences
           String? storedWarehousesJson = prefs.getString('warehouses');
-          if (storedWarehousesJson != null) {
+          String? storedCompany = prefs.getString('company');
+          String? storedUserId = prefs.getString('userId');
+
+          if (storedWarehousesJson != null &&
+              storedCompany != null &&
+              storedUserId != null) {
             List<String> storedWarehouses =
                 List<String>.from(jsonDecode(storedWarehousesJson));
+            print('Company: $storedCompany, User ID: $storedUserId');
             return storedWarehouses;
           } else {
             showErrorDialog(context,
-                'No internet connection and no stored warehouses available.');
+                'No internet connection and no stored data available.');
             return [];
           }
         }
