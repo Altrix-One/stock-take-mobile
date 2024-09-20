@@ -2,8 +2,8 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:lottie/lottie.dart';
 import 'package:stock_count/constants/theme.dart';
-import 'package:stock_count/screens/home.dart';
 import 'package:stock_count/utilis/api_service.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -17,21 +17,15 @@ class _LoginScreenState extends State<LoginScreen> {
   DateTime? backPressTime;
   bool _isLoggingIn = false;
 
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-
   @override
   void dispose() {
-    // Dispose controllers when the widget is disposed
-    _emailController.dispose();
-    _passwordController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    // ignore: deprecated_member_use
+
     return WillPopScope(
       onWillPop: () async {
         bool backStatus = onWillPop(); // Call your existing onWillPop function
@@ -47,29 +41,26 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Scaffold(
           body: Column(
             children: [
-              // headerImage(size),
               Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.all(fixPadding * 2.0),
-                  physics: const BouncingScrollPhysics(),
+                child: Column(
                   children: [
-                    height200Space,
-                    height200Space,
+                    headerImage(size),
+                    SizedBox(height: size.height * 0.02), // Dynamic height
                     heroText(),
-                    heightSpace,
+                    SizedBox(height: size.height * 0.015), // Dynamic height
                     welcomeText(),
-                    heightSpace,
-                    heightSpace,
-                    heightSpace,
-                    heightSpace,
-                    loginButtonWithFrape(context, "Login"),
-                    heightSpace,
-                    heightSpace,
-                    heightSpace,
-                    supportText()
+                    SizedBox(height: size.height * 0.02), // Dynamic height
+                    extraDescription(),
+                    const Spacer(),
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                          horizontal: fixPadding * 2.0,
+                          vertical: size.height * 0.02),
+                      child: loginButtonWithFrape(context, "Get Started"),
+                    ),
                   ],
                 ),
-              )
+              ),
             ],
           ),
         ),
@@ -77,7 +68,20 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  loginButtonWithFrape(contex, String buttonName) {
+  // Header Image with Lottie animation
+  headerImage(Size size) {
+    return Container(
+      padding: const EdgeInsets.only(top: fixPadding * 1.5),
+      width: double.maxFinite,
+      height: size.height * 0.4,
+      color: primaryColor,
+      alignment: Alignment.center,
+      child: Lottie.asset('assets/lottie_assets/1.json'),
+    );
+  }
+
+  // Get Started Button with loader control
+  loginButtonWithFrape(BuildContext context, String buttonName) {
     return InkWell(
       onTap: _isLoggingIn
           ? null
@@ -85,7 +89,12 @@ class _LoginScreenState extends State<LoginScreen> {
               setState(() {
                 _isLoggingIn = true;
               });
-              ApiService.loginWithFrappe(context);
+              // Call the login method and wait for completion
+              await ApiService.loginWithFrappe(context);
+              // Once done, set the state to stop showing the loader
+              setState(() {
+                _isLoggingIn = false;
+              });
             },
       child: Container(
         width: double.maxFinite,
@@ -121,33 +130,31 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  // Description Text
   welcomeText() {
-    return const Padding(
+    return Padding(
       padding: EdgeInsets.symmetric(horizontal: fixPadding * 2.0),
       child: Text(
-        "A Revolutionary Stock Management App Integrated with ERPNext",
+        "Streamline your stock management with real-time data integration and easy ERPNext connectivity. Simplifying your stock-taking process for higher efficiency.",
         style: medium15Grey,
         textAlign: TextAlign.center,
       ),
     );
   }
 
-  forgotText() {
+  // Additional Descriptive Text to fill space
+  extraDescription() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: fixPadding * 2.0),
-      child: InkWell(
-        onTap: () {
-          // pleaseWaitDialog(context);
-        },
-        child: const Text(
-          "Forgot passowrd?",
-          style: medium15Grey,
-          textAlign: TextAlign.right,
-        ),
+      padding: EdgeInsets.symmetric(horizontal: fixPadding * 2.0),
+      child: Text(
+        "Track your inventory with precision, reduce human error, and improve productivity. This app offers intuitive navigation and seamless integration with your existing workflows.",
+        style: medium14Grey,
+        textAlign: TextAlign.center,
       ),
     );
   }
 
+  // Hero Title "STOCK TAKE"
   heroText() {
     return const Text(
       "STOCK TAKE",
@@ -156,6 +163,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  // Handle back button press
   onWillPop() {
     DateTime now = DateTime.now();
     if (backPressTime == null ||
@@ -176,21 +184,5 @@ class _LoginScreenState extends State<LoginScreen> {
     } else {
       return true;
     }
-  }
-
-  supportText() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: fixPadding * 2.0),
-      child: InkWell(
-        onTap: () {
-          // Navigator.pushNamed(context, '/otp');
-        },
-        child: const Text(
-          "Need Support? Click here.",
-          style: medium15Grey,
-          textAlign: TextAlign.center,
-        ),
-      ),
-    );
   }
 }
