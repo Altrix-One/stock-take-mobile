@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:stock_count/constants/theme.dart'; // Assuming you're using constants for colors and text styles
+import 'package:stock_count/constants/theme.dart';
 import 'package:sqflite/sqflite.dart';
 
 class EntryDetailsScreen extends StatefulWidget {

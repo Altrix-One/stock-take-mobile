@@ -5,7 +5,7 @@ import 'package:iconify_flutter/icons/uil.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:stock_count/constants/theme.dart';
-import 'package:stock_count/screens/entry_detail_screen.dart'; // Add this import
+import 'package:stock_count/screens/entry_detail_screen.dart';
 import 'package:stock_count/screens/home.dart';
 import 'package:stock_count/utilis/dialog_messages.dart';
 import 'package:provider/provider.dart';
@@ -116,16 +116,20 @@ class _CenterBoxState extends State<CenterBox> {
                       return Column(
                         children: [
                           optionWidget(
-                            const Iconify(Uil.refresh),
+                            () {
+                              // Open the entry details when the card is tapped
+                              startEntryDetails(entries[index]['id'],
+                                  entries[index]['warehouse']);
+                            },
                             "Entry ${entries[index]['id']} - ${entries[index]['warehouse']}",
                             "Items : ${entries[index]['item_count']} | ${entries[index]['posting_date']} | ${entries[index]['posting_time']}",
                             () {
-                              startRecount(entries[index]['id'],
-                                  entries[index]['warehouse'], countType);
-                            },
-                            onArrowTap: () {
-                              startEntryDetails(entries[index]['id'],
-                                  entries[index]['warehouse']);
+                              // Start recount when the refresh icon is tapped
+                              startRecount(
+                                entries[index]['id'],
+                                entries[index]['warehouse'],
+                                countType,
+                              );
                             },
                           ),
                           const SizedBox(height: 10),
@@ -140,11 +144,10 @@ class _CenterBoxState extends State<CenterBox> {
   }
 }
 
-Widget optionWidget(
-    Widget icon, String title, String subTitle, VoidCallback onTap,
-    {VoidCallback? onArrowTap}) {
+Widget optionWidget(VoidCallback onTap, String title, String subTitle,
+    VoidCallback onRefreshTap) {
   return GestureDetector(
-    onTap: onTap,
+    onTap: onTap, // This handles the card tap for viewing entry details
     child: Container(
       width: double.maxFinite,
       padding: const EdgeInsets.symmetric(
@@ -161,21 +164,24 @@ Widget optionWidget(
       ),
       child: Row(
         children: [
-          Container(
-            height: 40.0,
-            width: 40.0,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: whiteColor,
-              boxShadow: [
-                BoxShadow(
-                  color: blackColor.withOpacity(0.15),
-                  blurRadius: 6.0,
-                )
-              ],
+          GestureDetector(
+            onTap: onRefreshTap, // This handles the tap for the refresh icon
+            child: Container(
+              height: 40.0,
+              width: 40.0,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: whiteColor,
+                boxShadow: [
+                  BoxShadow(
+                    color: blackColor.withOpacity(0.15),
+                    blurRadius: 6.0,
+                  )
+                ],
+              ),
+              alignment: Alignment.center,
+              child: const Iconify(Uil.refresh),
             ),
-            alignment: Alignment.center,
-            child: icon,
           ),
           const SizedBox(width: fixPadding),
           Expanded(
@@ -194,17 +200,14 @@ Widget optionWidget(
               ],
             ),
           ),
-          InkWell(
-            onTap: onArrowTap,
-            child: const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Icon(
-                Icons.arrow_forward_ios,
-                color: Colors.black,
-                size: 20.0,
-              ),
+          const Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Icon(
+              Icons.arrow_forward_ios,
+              color: Colors.black,
+              size: 20.0,
             ),
-          )
+          ),
         ],
       ),
     ),
