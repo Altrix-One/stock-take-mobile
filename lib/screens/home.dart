@@ -10,7 +10,9 @@ import 'package:path/path.dart' as p;
 
 import 'package:stock_count/components/calculator_card.dart';
 import 'package:stock_count/components/center_box.dart';
+import 'package:stock_count/config.dart';
 import 'package:stock_count/constants/theme.dart';
+import 'package:stock_count/utilis/api_service.dart';
 import 'package:stock_count/utilis/change_notifier.dart';
 import 'package:stock_count/utilis/db_schema.dart';
 import 'package:stock_count/utilis/dialog_messages.dart';
@@ -156,7 +158,8 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
     if (index == 0 && !isCountStarted && _selectedIndex != 1) {
-      List<String> warehouses = await getWarehouses();
+      List<String> warehouses = await ApiService.getWarehouses(context);
+      // print(warehouses);
       if (warehouses.isNotEmpty) {
         showWarehouseDialog(context, warehouses);
       }
@@ -321,18 +324,6 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       },
     );
-  }
-
-  Future<List<String>> getWarehouses() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? userDetailsJson = prefs.getString('userDetails');
-    if (userDetailsJson != null) {
-      Map<String, dynamic> userDetails = json.decode(userDetailsJson);
-      List<dynamic> warehouses =
-          userDetails['message']['stock_count_person']['warehouse'];
-      return warehouses.map((w) => w['warehouse'] as String).toList();
-    }
-    return [];
   }
 
   Widget dialogOption(String type) {

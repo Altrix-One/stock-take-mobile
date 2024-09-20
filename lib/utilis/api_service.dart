@@ -16,44 +16,6 @@ class ApiService {
   static const String _tokenEndpoint = AppConfig.tokenEndpoint;
   static const String _userInfoEndpoint = AppConfig.userInfoEndpoint;
 
-  // Existing login function
-  static Future<void> login(
-      BuildContext context, String email, String password) async {
-    try {
-      var response = await http.post(
-        Uri.parse(
-            '$_baseUrl/csf_tz.stock_count.doctype.stock_count_person.stock_count_person.authenticate_stock_count_person'),
-        body: jsonEncode({
-          'email': email,
-          'password': password,
-        }),
-        headers: {'Content-Type': 'application/json'},
-      );
-
-      var responseData = jsonDecode(response.body);
-      if (responseData['message']['status_code'] == 200) {
-        var data = jsonDecode(response.body);
-
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        await prefs.setString('userDetails', jsonEncode(data));
-
-        // ignore: use_build_context_synchronously
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
-          (Route<dynamic> route) => false,
-        );
-      } else {
-        // ignore: use_build_context_synchronously
-        showErrorDialog(
-            context, jsonDecode(response.body)['message']['message']);
-      }
-    } catch (e) {
-      // ignore: use_build_context_synchronously
-      showErrorDialog(context, "An error occurred: $e");
-    }
-  }
-
   // New loginWithFrappe function
   static Future<void> loginWithFrappe(BuildContext context) async {
     try {
@@ -129,6 +91,67 @@ class ApiService {
       }
     } catch (e) {
       showErrorDialog(context, "An error occurred: $e");
+    }
+  }
+
+  static Future<List<String>> getWarehouses(BuildContext context) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? userDetailsJson = prefs.getString('userDetails');
+    String? accessToken = prefs.getString('accessToken');
+
+    if (userDetailsJson != null && accessToken != null) {
+      Map<String, dynamic> userDetails = json.decode(userDetailsJson);
+      String userEmail = userDetails['email'];
+
+      try {
+        accessToken = accessToken.replaceAll('"', '');
+
+        // Make the API call to fetch warehouses
+        final response = await http.post(
+          Uri.parse('$_baseUrl/api/method/fetch_user_warehouse'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $accessToken',
+          },
+          body: jsonEncode({'user': userEmail}),
+        );
+
+        // Check if the response is successful
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+
+          // Check if the response contains the "message" field with warehouse data
+          if (data['message'] != null && data['message'] is List) {
+            return List<String>.from(data['message']);
+          } else {
+            // Handle the case where the message field exists but no warehouse is found
+            String errorMessage =
+                data['message'] ?? 'Unexpected response from the server';
+            showErrorDialog(context, errorMessage);
+            return [];
+          }
+        } else {
+          // Handle non-200 status codes and extract the message from the backend response
+          final errorData = jsonDecode(response.body);
+          String errorMessage =
+              errorData['message'] ?? 'Failed to load warehouses.';
+
+          // Show the extracted error message to the user
+          showErrorDialog(context, errorMessage);
+          return [];
+        }
+      } catch (e) {
+        // Handle any other errors during the HTTP request
+        String errorMessage = 'Error fetching warehouses: $e';
+        showErrorDialog(context, errorMessage);
+        return [];
+      }
+    } else {
+      // Handle the case where user details or access token are missing
+      String errorMessage =
+          'User details or access token missing in SharedPreferences';
+      showErrorDialog(context, errorMessage);
+      return [];
     }
   }
 }
