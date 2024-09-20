@@ -26,26 +26,30 @@ class CalculatorCard extends StatefulWidget {
 }
 
 class _CalculatorCardState extends State<CalculatorCard>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
   QRViewController? controller;
   String displayText = '0'; // Used to display numbers on calculator
   String scannedData = '';
 
-  late AnimationController _controller;
+  bool isCameraInitialized = false;
+
+  late AnimationController _animationController;
   late Animation<double> _animation;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
+    _animationController = AnimationController(
       duration: const Duration(seconds: 1),
       vsync: this,
     )..repeat(reverse: true);
 
-    _animation = Tween<double>(begin: 0.8, end: 1.2)
-        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
-    // Listen to the scanner only if the count type is not 'Beam'
+    _animation = Tween<double>(begin: 0.8, end: 1.2).animate(
+        CurvedAnimation(parent: _animationController, curve: Curves.easeInOut));
+
+    WidgetsBinding.instance.addObserver(this);
+
     final countType =
         Provider.of<StockTakeNotifier>(context, listen: false).countType;
 
@@ -59,8 +63,21 @@ class _CalculatorCardState extends State<CalculatorCard>
 
   @override
   void dispose() {
-    _controller.dispose();
+    controller?.dispose();
+    _animationController.dispose();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (controller != null) {
+      if (state == AppLifecycleState.inactive) {
+        controller!.pauseCamera();
+      } else if (state == AppLifecycleState.resumed) {
+        controller!.resumeCamera();
+      }
+    }
   }
 
   void _setScannedValue(String value) {
@@ -72,25 +89,22 @@ class _CalculatorCardState extends State<CalculatorCard>
   }
 
   void fetchExistingEntry() async {
-    if (widget.recountEntry == true) {
-      final existingEntry = await widget.database!.query(
-        'StockCountEntryItem',
-        where:
-            'stock_count_entry_id = ? AND item_barcode = ? AND warehouse = ?',
-        whereArgs: [widget.entryId, scannedData, widget.warehouse],
-      );
+    final existingEntry = await widget.database!.query(
+      'StockCountEntryItem',
+      where: 'stock_count_entry_id = ? AND item_barcode = ? AND warehouse = ?',
+      whereArgs: [widget.entryId, scannedData, widget.warehouse],
+    );
 
-      print("existingEntry: ${existingEntry}");
+    print("existingEntry: $existingEntry");
 
-      if (existingEntry.isNotEmpty) {
-        setState(() {
-          displayText = existingEntry.first['qty'].toString();
-        });
-      } else {
-        setState(() {
-          displayText = '0';
-        });
-      }
+    if (existingEntry.isNotEmpty) {
+      setState(() {
+        displayText = existingEntry.first['qty'].toString();
+      });
+    } else {
+      setState(() {
+        displayText = '0';
+      });
     }
   }
 
@@ -234,15 +248,19 @@ class _CalculatorCardState extends State<CalculatorCard>
       child: Stack(
         children: [
           QRView(
-            key: GlobalKey(debugLabel: 'QR'),
-            onQRViewCreated: (controller) {
-              controller.scannedDataStream.listen((scanData) {
-                setState(() {
-                  scannedData = scanData.code!;
+            key: qrKey,
+            onQRViewCreated: (QRViewController qrController) {
+              controller = qrController;
+              if (!isCameraInitialized) {
+                controller!.scannedDataStream.listen((scanData) {
+                  setState(() {
+                    scannedData = scanData.code!;
+                  });
+                  print("Scanned QR/Barcode: ${scanData.code}");
+                  fetchExistingEntry();
                 });
-                print("Scanned QR/Barcode: ${scanData.code}");
-                fetchExistingEntry();
-              });
+                isCameraInitialized = true;
+              }
             },
           ),
           Positioned(
