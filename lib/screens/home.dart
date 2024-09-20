@@ -98,12 +98,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void startCount() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? userDetailsJson = prefs.getString('userDetails');
-    var userDetails = jsonDecode(userDetailsJson!);
+    String? company = prefs.getString('company');
+    String? userId = prefs.getString('userId');
 
-    String company = userDetails['message']['stock_count_person']['company'];
-    String stock_count_person_id =
-        userDetails['message']['stock_count_person']['name'];
     String postingDate = DateTime.now().toString().substring(0, 10);
     String postingTime = DateTime.now().toString().substring(11);
 
@@ -112,7 +109,7 @@ class _HomeScreenState extends State<HomeScreen> {
       'warehouse': selectedWarehouse,
       'posting_date': postingDate,
       'posting_time': postingTime,
-      'stock_count_person': stock_count_person_id
+      'stock_count_person': userId
     });
 
     // Fetching and printing the newly added entry
@@ -309,13 +306,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 return ListTile(
                   title: Text(warehouses[index], style: medium14Black33),
                   onTap: () {
-                    startCount();
                     Navigator.of(context).pop(); // Close the dialog
                     setState(() {
                       selectedWarehouse = warehouses[index];
                       isCountStarted = true;
                       showCountTypeButton = false;
                     });
+                    startCount();
                   },
                 );
               },
