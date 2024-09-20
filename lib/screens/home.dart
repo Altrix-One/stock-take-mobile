@@ -227,27 +227,35 @@ class _HomeScreenState extends State<HomeScreen> {
             )
           : null,
       bottomNavigationBar: BottomNavigationBar(
-        items: isCountStarted
+        items: _selectedIndex == 1 && isCountStarted
             ? [
                 const BottomNavigationBarItem(
-                  icon: Icon(Icons.stop_circle_outlined),
-                  label: 'Stop Count',
-                ),
-                const BottomNavigationBarItem(
-                  icon: Iconify(Uil.refresh),
-                  label: 'Re Count',
+                  icon: Icon(Icons.list_alt), // Change to a list icon
+                  label: 'Entries', // Update label to "Entries"
                 ),
               ]
-            : [
-                const BottomNavigationBarItem(
-                  icon: Iconify(Carbon.play_outline),
-                  label: 'Start Count',
-                ),
-                const BottomNavigationBarItem(
-                  icon: Iconify(Uil.refresh),
-                  label: 'Re Count',
-                ),
-              ],
+            : isCountStarted
+                ? [
+                    const BottomNavigationBarItem(
+                      icon: Icon(Icons.stop_circle_outlined),
+                      label: 'Stop Count',
+                    ),
+                    const BottomNavigationBarItem(
+                      icon: Icon(Icons.list_alt), // Change to a list icon
+                      label: 'Entries', // Update label to "Entries"
+                    ),
+                  ]
+                : [
+                    const BottomNavigationBarItem(
+                      icon: Icon(Icons
+                          .play_circle_outline), // Use play icon from Icons
+                      label: 'Start Count',
+                    ),
+                    const BottomNavigationBarItem(
+                      icon: Icon(Icons.list_alt), // Use list icon from Icons
+                      label: 'Entries', // Update label to "Entries"
+                    ),
+                  ],
         currentIndex: _selectedIndex,
         selectedItemColor: primaryColor,
         unselectedItemColor: greyColor,
