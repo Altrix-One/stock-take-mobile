@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -7,6 +6,7 @@ import 'package:stock_count/config.dart';
 import 'package:stock_count/screens/home.dart';
 import 'package:stock_count/utilis/dialog_messages.dart';
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
+import 'package:internet_connection_checker/internet_connection_checker.dart';
 
 class ApiService {
   static const String _baseUrl = AppConfig.baseUrl;
@@ -105,16 +105,13 @@ class ApiService {
       String userEmail = userDetails['email'];
 
       try {
-        // Check for network connectivity
-        List<ConnectivityResult> result =
-            await Connectivity().checkConnectivity();
+        // Check if there is an actual internet connection
+        bool hasInternet = await InternetConnectionChecker().hasConnection;
 
-        // Check if the result is either mobile or Wi-Fi
-        if (result == ConnectivityResult.mobile ||
-            result == ConnectivityResult.wifi) {
+        if (hasInternet) {
+          // If internet is available, fetch the warehouses
           accessToken = accessToken.replaceAll('"', '');
 
-          // Make the API call to fetch warehouses
           final response = await http.post(
             Uri.parse('$_baseUrl/api/method/fetch_user_warehouse'),
             headers: {
@@ -124,24 +121,20 @@ class ApiService {
             body: jsonEncode({'user': userEmail}),
           );
 
-          // Check if the response is successful
           if (response.statusCode == 200) {
             final data = jsonDecode(response.body);
 
-            // Check if the response contains the "message" field with warehouse data
             if (data['message'] != null && data['message'] is List) {
-              // Save the warehouses to SharedPreferences for offline use
+              // Save warehouses to SharedPreferences for offline use
               await prefs.setString('warehouses', jsonEncode(data['message']));
               return List<String>.from(data['message']);
             } else {
-              // Handle unexpected server response
               String errorMessage =
                   data['message'] ?? 'Unexpected response from the server';
               showErrorDialog(context, errorMessage);
               return [];
             }
           } else {
-            // Handle non-200 status codes and extract the message from the backend response
             final errorData = jsonDecode(response.body);
             String errorMessage =
                 errorData['message'] ?? 'Failed to load warehouses.';
@@ -149,7 +142,7 @@ class ApiService {
             return [];
           }
         } else {
-          // If not connected to the internet, retrieve stored warehouses from SharedPreferences
+          // If no internet, load warehouses from SharedPreferences
           String? storedWarehousesJson = prefs.getString('warehouses');
           if (storedWarehousesJson != null) {
             List<String> storedWarehouses =
@@ -162,13 +155,11 @@ class ApiService {
           }
         }
       } catch (e) {
-        // Handle any other errors during the HTTP request
         String errorMessage = 'Error fetching warehouses: $e';
         showErrorDialog(context, errorMessage);
         return [];
       }
     } else {
-      // Handle the case where user details or access token are missing
       String errorMessage =
           'User details or access token missing in SharedPreferences';
       showErrorDialog(context, errorMessage);
