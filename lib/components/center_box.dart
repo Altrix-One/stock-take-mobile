@@ -37,12 +37,15 @@ class _CenterBoxState extends State<CenterBox> {
         if (userDetailsJson != null) {
           String? stockCountPersonId = prefs.getString('userId');
 
+          // Update the query to fetch 'server_id'
           String query = '''
         SELECT 
           s.id, 
+          s.server_id,  -- Fetch server_id
           s.warehouse, 
           s.posting_date, 
           s.posting_time, 
+          s.synced, 
           COUNT(i.id) AS item_count
         FROM StockCountEntry AS s
         LEFT JOIN StockCountEntryItem AS i ON s.id = i.stock_count_entry_id
@@ -113,6 +116,9 @@ class _CenterBoxState extends State<CenterBox> {
                 : ListView.builder(
                     itemCount: entries.length,
                     itemBuilder: (context, index) {
+                      // Use 'server_id' if it exists, otherwise use 'id'
+                      String displayId = entries[index]['server_id'] ??
+                          'Entry ${entries[index]['id']}';
                       return Column(
                         children: [
                           optionWidget(
@@ -121,7 +127,7 @@ class _CenterBoxState extends State<CenterBox> {
                               startEntryDetails(entries[index]['id'],
                                   entries[index]['warehouse']);
                             },
-                            "Entry ${entries[index]['id']} - ${entries[index]['warehouse']}",
+                            "$displayId - ${entries[index]['warehouse']}",
                             "Items : ${entries[index]['item_count']} | ${entries[index]['posting_date']} | ${entries[index]['posting_time']}",
                             () {
                               // Start recount when the refresh icon is tapped
@@ -131,6 +137,9 @@ class _CenterBoxState extends State<CenterBox> {
                                 countType,
                               );
                             },
+                            entries[index]['synced'] == 0
+                                ? whiteColor
+                                : const Color.fromARGB(255, 176, 247, 202),
                           ),
                           const SizedBox(height: 10),
                         ],
@@ -145,7 +154,7 @@ class _CenterBoxState extends State<CenterBox> {
 }
 
 Widget optionWidget(VoidCallback onTap, String title, String subTitle,
-    VoidCallback onRefreshTap) {
+    VoidCallback onRefreshTap, Color circleColor) {
   return GestureDetector(
     onTap: onTap, // This handles the card tap for viewing entry details
     child: Container(
@@ -171,7 +180,7 @@ Widget optionWidget(VoidCallback onTap, String title, String subTitle,
               width: 40.0,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: whiteColor,
+                color: circleColor,
                 boxShadow: [
                   BoxShadow(
                     color: blackColor.withOpacity(0.15),
