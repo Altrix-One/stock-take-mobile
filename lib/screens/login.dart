@@ -76,7 +76,7 @@ class _LoginScreenState extends State<LoginScreen> {
       height: size.height * 0.4,
       color: primaryColor,
       alignment: Alignment.center,
-      child: Lottie.asset('assets/lottie_assets/1.json'),
+      child: Lottie.asset('assets/lottie_assets/2.json'),
     );
   }
 
