@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async'; // For Timer
 import 'package:flutter/material.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/uil.dart';
@@ -22,11 +23,26 @@ class CenterBox extends StatefulWidget {
 
 class _CenterBoxState extends State<CenterBox> {
   List<Map<String, dynamic>> entries = [];
+  Timer? _timer; // Declare a Timer
 
   @override
   void initState() {
     super.initState();
-    fetchEntries();
+    fetchEntries(); // Fetch initial entries
+    startAutoRefresh(); // Start auto-refresh
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel(); // Cancel the timer when the widget is disposed
+    super.dispose();
+  }
+
+  // Function to start auto-refresh every 5 seconds
+  void startAutoRefresh() {
+    _timer = Timer.periodic(Duration(seconds: 5), (timer) {
+      fetchEntries(); // Fetch entries every 5 seconds
+    });
   }
 
   Future<void> fetchEntries() async {
@@ -37,22 +53,22 @@ class _CenterBoxState extends State<CenterBox> {
         if (userDetailsJson != null) {
           String? stockCountPersonId = prefs.getString('userId');
 
-          // Update the query to fetch 'server_id'
+          // Updated query to fetch 'server_id'
           String query = '''
-        SELECT 
-          s.id, 
-          s.server_id,  -- Fetch server_id
-          s.warehouse, 
-          s.posting_date, 
-          s.posting_time, 
-          s.synced, 
-          COUNT(i.id) AS item_count
-        FROM StockCountEntry AS s
-        LEFT JOIN StockCountEntryItem AS i ON s.id = i.stock_count_entry_id
-        WHERE s.stock_count_person = ?
-        GROUP BY s.id
-        ORDER BY s.id DESC
-      ''';
+            SELECT 
+              s.id, 
+              s.server_id,  -- Fetch server_id
+              s.warehouse, 
+              s.posting_date, 
+              s.posting_time, 
+              s.synced, 
+              COUNT(i.id) AS item_count
+            FROM StockCountEntry AS s
+            LEFT JOIN StockCountEntryItem AS i ON s.id = i.stock_count_entry_id
+            WHERE s.stock_count_person = ?
+            GROUP BY s.id
+            ORDER BY s.id DESC
+          ''';
           final List<Map<String, dynamic>> result =
               await widget.database!.rawQuery(query, [stockCountPersonId]);
           setState(() {
