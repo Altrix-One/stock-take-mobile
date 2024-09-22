@@ -147,32 +147,42 @@ class _CalculatorCardState extends State<CalculatorCard>
           );
 
           if (existingEntries.isNotEmpty) {
-            // Update existing entry
+            // Update existing entry and mark as unsynced
             await widget.database!.update(
               'StockCountEntryItem',
-              {'qty': quantity},
+              {'qty': quantity, 'synced': 0}, // Mark item as unsynced
               where:
                   'stock_count_entry_id = ? AND item_barcode = ? AND warehouse = ?',
               whereArgs: [widget.entryId, scannedData, widget.warehouse],
             );
           } else {
-            // Insert new entry
+            // Insert new entry and mark as unsynced
             await widget.database!.insert('StockCountEntryItem', {
               'stock_count_entry_id': widget.entryId,
               'item_barcode': scannedData,
               'warehouse': widget.warehouse,
-              'qty': quantity
+              'qty': quantity,
+              'synced': 0 // Mark new item as unsynced
             });
           }
         } else {
-          // Insert new entry (for normal count)
+          // Insert new entry (for normal count) and mark as unsynced
           await widget.database!.insert('StockCountEntryItem', {
             'stock_count_entry_id': widget.entryId,
             'item_barcode': scannedData,
             'warehouse': widget.warehouse,
-            'qty': quantity
+            'qty': quantity,
+            'synced': 0 // Mark new item as unsynced
           });
         }
+
+        // After modifying/adding items, mark the parent entry as unsynced
+        await widget.database!.update(
+          'StockCountEntry',
+          {'synced': 0}, // Mark the entry as unsynced
+          where: 'id = ?',
+          whereArgs: [widget.entryId],
+        );
 
         // Fetching and printing the item entries for debugging
         List<Map> result = await widget.database!.query(
