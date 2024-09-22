@@ -99,8 +99,12 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Entry: ${widget.entryId}',
-            style: const TextStyle(color: Color.fromRGBO(255, 255, 255, 1))),
+        title: Text(
+          entryDetails != null && entryDetails!['server_id'] != null
+              ? entryDetails!['server_id'] // Show server_id if exists
+              : 'Entry: ${widget.entryId}', // Fallback to entryId
+          style: const TextStyle(color: Color.fromRGBO(255, 255, 255, 1)),
+        ),
         backgroundColor: primaryColor,
         leading: IconButton(
           icon: const Icon(
