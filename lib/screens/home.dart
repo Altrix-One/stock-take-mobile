@@ -154,9 +154,9 @@ class _HomeScreenState extends State<HomeScreen> {
       showErrorDialog(context, "Please select the Count type first.");
       return;
     }
+
     if (index == 0 && !isCountStarted && _selectedIndex != 1) {
       List<String> warehouses = await ApiService.getWarehouses(context);
-      // print(warehouses);
       if (warehouses.isNotEmpty) {
         showWarehouseDialog(context, warehouses);
       }
@@ -168,6 +168,8 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         isCountStarted = false;
         showCountTypeButton = true;
+        _selectedIndex =
+            1; // Navigate to "Entries" tab when stop count is pressed
       });
       return;
     }
