@@ -56,6 +56,7 @@ class _HomeScreenState extends State<HomeScreen>
   // Variables for slide-in dialog
   late AnimationController _animationController;
   late Animation<Offset> _slideAnimation;
+  late Animation<double> _fadeAnimation;
   bool _isDialogVisible = false;
 
   @override
@@ -66,7 +67,7 @@ class _HomeScreenState extends State<HomeScreen>
 
     // Initialize Animation Controller for the slide-in dialog
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 500), // Slow down the transition
       vsync: this,
     );
     _slideAnimation = Tween<Offset>(
@@ -177,13 +178,17 @@ class _HomeScreenState extends State<HomeScreen>
   // Toggle the visibility of the slide-in dialog
   void _toggleDialog() {
     if (_isDialogVisible) {
-      _animationController.reverse();
+      _animationController.reverse().then((_) {
+        setState(() {
+          _isDialogVisible = false;
+        });
+      });
     } else {
+      setState(() {
+        _isDialogVisible = true;
+      });
       _animationController.forward();
     }
-    setState(() {
-      _isDialogVisible = !_isDialogVisible;
-    });
   }
 
   List<Widget> get _pages {
@@ -331,15 +336,17 @@ class _HomeScreenState extends State<HomeScreen>
             onTap: _onItemTapped,
           ),
         ),
-        // Slide-in dialog for settings, appearing over the entire screen
         if (_isDialogVisible) ...[
-          GestureDetector(
-            onTap:
-                _toggleDialog, // Close the drawer if you tap on the dimmed area
-            child: Container(
-              color: Colors.black.withOpacity(0.5), // Dim the background
-              width: double.infinity,
-              height: double.infinity,
+          FadeTransition(
+            opacity: _fadeAnimation,
+            child: GestureDetector(
+              onTap:
+                  _toggleDialog, // Close the drawer if you tap on the dimmed area
+              child: Container(
+                color: Colors.black.withOpacity(0.5), // Dim the background
+                width: double.infinity,
+                height: double.infinity,
+              ),
             ),
           ),
           SlideTransition(
