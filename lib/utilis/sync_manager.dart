@@ -152,6 +152,13 @@ class SyncManager {
         Database db = await getDatabase();
 
         for (var entry in serverEntries) {
+          // Check if the userId is set in authBox, if not set it to entry['st_user']
+          String? userId = authBox.get('userId');
+          if (userId == null || userId.isEmpty) {
+            userId = entry['st_user'];
+            await authBox.put('userId', userId);
+          }
+
           // Check if entry already exists in local database
           List<Map<String, dynamic>> localEntry = await db.query(
             'StockCountEntry',
