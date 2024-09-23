@@ -47,7 +47,7 @@ class ApiService {
         if (tokenResponse.statusCode == 200) {
           final Map<String, dynamic> responseData =
               jsonDecode(tokenResponse.body);
-          final accessToken = responseData['access_token'];
+          final accessToken = responseData['access_token'].replaceAll('"', '');
           final refreshToken = responseData['refresh_token'];
           final expiresIn =
               responseData['expires_in']; // Expiry time in seconds
@@ -109,8 +109,6 @@ class ApiService {
         bool hasInternet = await InternetConnectionChecker().hasConnection;
 
         if (hasInternet) {
-          accessToken = accessToken?.replaceAll('"', '');
-
           final response = await http.post(
             Uri.parse('$_baseUrl/api/method/fetch_user_warehouse'),
             headers: {
