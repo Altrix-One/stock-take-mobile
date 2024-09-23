@@ -84,6 +84,7 @@ class MyApp extends StatelessWidget {
         primaryColor: primaryColor,
         fontFamily: 'Montserrat',
       ),
+      debugShowCheckedModeBanner: false,
       home: const LoginScreen(),
     );
   }
