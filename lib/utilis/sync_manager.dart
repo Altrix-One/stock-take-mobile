@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:stock_count/config.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:hive/hive.dart'; // Hive for token management
 import 'package:sqflite/sqflite.dart';
 import 'dart:convert';
 import 'package:path/path.dart';
@@ -16,15 +16,21 @@ class SyncManager {
     return await openDatabase(path, version: 1, onCreate: DBSchema.initDB);
   }
 
+  // Sync to server without refreshing token automatically
   static Future<void> syncToServer() async {
-    Database db = await getDatabase();
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? accessToken = prefs.getString('accessToken')?.replaceAll('"', '');
+    var authBox = Hive.box('authBox');
+    String? accessToken = authBox.get('accessToken');
+    DateTime? tokenExpiry = authBox.get('tokenExpiry');
 
-    if (accessToken == null) {
-      print("No access token found.");
+    // Proceed only if token is still valid
+    if (accessToken == null ||
+        tokenExpiry == null ||
+        DateTime.now().isAfter(tokenExpiry)) {
+      print("Access token is either missing or expired. Sync aborted.");
       return;
     }
+
+    Database db = await getDatabase();
 
     try {
       // Fetch only unsynced entries (synced = 0)
@@ -76,6 +82,7 @@ class SyncManager {
                 whereArgs: [syncedEntry['local_id']],
               );
 
+              // Update associated items
               List<Map<String, dynamic>> entryItems = await db.query(
                 'StockCountEntryItem',
                 where: 'stock_count_entry_id = ?',
@@ -106,12 +113,17 @@ class SyncManager {
     }
   }
 
+  // Sync from server without refreshing token automatically
   static Future<void> syncFromServer() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? accessToken = prefs.getString('accessToken')?.replaceAll('"', '');
+    var authBox = Hive.box('authBox');
+    String? accessToken = authBox.get('accessToken');
+    DateTime? tokenExpiry = authBox.get('tokenExpiry');
 
-    if (accessToken == null) {
-      print("No access token found.");
+    // Proceed only if token is still valid
+    if (accessToken == null ||
+        tokenExpiry == null ||
+        DateTime.now().isAfter(tokenExpiry)) {
+      print("Access token is either missing or expired. Sync aborted.");
       return;
     }
 
@@ -213,6 +225,46 @@ class SyncManager {
       }
     } catch (e) {
       print("Fetch from server failed: $e");
+    }
+  }
+
+  // Token refreshing logic for login (not used in background tasks)
+  static Future<void> refreshTokenIfNeeded() async {
+    var authBox = Hive.box('authBox');
+    String? refreshToken = authBox.get('refreshToken');
+    DateTime? tokenExpiry = authBox.get('tokenExpiry');
+
+    if (tokenExpiry != null && DateTime.now().isAfter(tokenExpiry)) {
+      print("Token expired, refreshing...");
+      try {
+        var response = await http.post(
+          Uri.parse(
+              '$_baseUrl/api/method/frappe.integrations.oauth2.get_token'),
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: {
+            'grant_type': 'refresh_token',
+            'refresh_token': refreshToken,
+            'client_id': AppConfig.clientId,
+            'redirect_uri': AppConfig.redirectUri,
+          },
+        );
+
+        if (response.statusCode == 200) {
+          var tokenData = jsonDecode(response.body);
+          authBox.put('accessToken', tokenData['access_token']);
+          authBox.put('tokenExpiry',
+              DateTime.now().add(Duration(seconds: tokenData['expires_in'])));
+          print("Token refreshed successfully.");
+        } else {
+          print("Error refreshing token: ${response.body}");
+        }
+      } catch (e) {
+        print("Token refresh failed: $e");
+      }
+    } else {
+      print("Token still valid, no need to refresh.");
     }
   }
 }

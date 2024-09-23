@@ -1,12 +1,12 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stock_count/config.dart';
 import 'package:stock_count/screens/home.dart';
 import 'package:stock_count/utilis/dialog_messages.dart';
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
+import 'package:hive/hive.dart';
 
 class ApiService {
   static const String _baseUrl = AppConfig.baseUrl;
@@ -17,24 +17,20 @@ class ApiService {
   static const String _tokenEndpoint = AppConfig.tokenEndpoint;
   static const String _userInfoEndpoint = AppConfig.userInfoEndpoint;
 
-  // New loginWithFrappe function
+  // Login with Frappe
   static Future<void> loginWithFrappe(BuildContext context) async {
     try {
-      // Construct the authorization URL
       final url = Uri.parse(
           '$_authorizationEndpoint/api/method/frappe.integrations.oauth2.authorize?client_id=$_clientId&response_type=code&scope=all%20openid&redirect_uri=$_redirectUri');
 
-      // Start the web authentication
       final result = await FlutterWebAuth2.authenticate(
         url: url.toString(),
-        callbackUrlScheme: 'stockcount', // The scheme from your redirect URI
+        callbackUrlScheme: 'stockcount',
       );
 
-      // Extract the authorization code from the resulting URL
       final code = Uri.parse(result).queryParameters['code'];
 
       if (code != null) {
-        // Exchange the authorization code for an access token
         final tokenResponse = await http.post(
           Uri.parse('$_authorizationEndpoint$_tokenEndpoint'),
           headers: {
@@ -52,11 +48,18 @@ class ApiService {
           final Map<String, dynamic> responseData =
               jsonDecode(tokenResponse.body);
           final accessToken = responseData['access_token'];
+          final refreshToken = responseData['refresh_token'];
+          final expiresIn =
+              responseData['expires_in']; // Expiry time in seconds
 
-          SharedPreferences prefs = await SharedPreferences.getInstance();
-          await prefs.setString('accessToken', jsonEncode(accessToken));
+          // Save tokens to Hive
+          var authBox = Hive.box('authBox');
+          await authBox.put('accessToken', accessToken);
+          await authBox.put('refreshToken', refreshToken);
+          await authBox.put('tokenExpiry',
+              DateTime.now().add(Duration(seconds: expiresIn)).toString());
 
-          // Fetch user information using the access token
+          // Fetch user information
           final userInfoResponse = await http.get(
             Uri.parse('$_authorizationEndpoint$_userInfoEndpoint'),
             headers: {
@@ -66,13 +69,11 @@ class ApiService {
 
           if (userInfoResponse.statusCode == 200) {
             final userInfo = jsonDecode(userInfoResponse.body);
-            print("userInfo:${userInfo}");
 
-            // Store user information in SharedPreferences
-            SharedPreferences prefs = await SharedPreferences.getInstance();
-            await prefs.setString('userDetails', jsonEncode(userInfo));
+            // Store user details in Hive
+            await authBox.put('userDetails', jsonEncode(userInfo));
 
-            // Navigate to home screen or next part of your app
+            // Navigate to HomeScreen
             Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(builder: (context) => const HomeScreen()),
@@ -96,21 +97,19 @@ class ApiService {
   }
 
   static Future<List<String>> getWarehouses(BuildContext context) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? userDetailsJson = prefs.getString('userDetails');
-    String? accessToken = prefs.getString('accessToken');
+    var authBox = Hive.box('authBox');
+    String? userDetailsJson = authBox.get('userDetails');
+    String? accessToken = authBox.get('accessToken');
 
     if (userDetailsJson != null && accessToken != null) {
       Map<String, dynamic> userDetails = json.decode(userDetailsJson);
       String userEmail = userDetails['email'];
 
       try {
-        // Check if there is an actual internet connection
         bool hasInternet = await InternetConnectionChecker().hasConnection;
 
         if (hasInternet) {
-          // If internet is available, fetch the warehouses, company, and user_id
-          accessToken = accessToken.replaceAll('"', '');
+          accessToken = accessToken?.replaceAll('"', '');
 
           final response = await http.post(
             Uri.parse('$_baseUrl/api/method/fetch_user_warehouse'),
@@ -124,7 +123,6 @@ class ApiService {
           if (response.statusCode == 200) {
             final data = jsonDecode(response.body);
 
-            // Check if the response contains warehouses, company, and user_id
             if (data['message'] != null &&
                 data['message']['warehouses'] != null) {
               List<String> warehouses =
@@ -132,37 +130,31 @@ class ApiService {
               String company = data['message']['company'] ?? 'Unknown Company';
               String userId = data['message']['user_id'] ?? 'Unknown User ID';
 
-              // Save warehouses, company, and user_id to SharedPreferences for offline use
-              await prefs.setString('warehouses', jsonEncode(warehouses));
-              await prefs.setString('company', company);
-              await prefs.setString('userId', userId);
+              await authBox.put('warehouses', jsonEncode(warehouses));
+              await authBox.put('company', company);
+              await authBox.put('userId', userId);
 
               return warehouses;
             } else {
-              String errorMessage =
-                  data['message'] ?? 'Unexpected response from the server';
-              showErrorDialog(context, errorMessage);
+              showErrorDialog(context, 'Unexpected response from the server');
               return [];
             }
           } else {
             final errorData = jsonDecode(response.body);
-            String errorMessage =
-                errorData['message'] ?? 'Failed to load warehouses.';
-            showErrorDialog(context, errorMessage);
+            showErrorDialog(
+                context, errorData['message'] ?? 'Failed to load warehouses.');
             return [];
           }
         } else {
-          // If no internet, load warehouses, company, and user_id from SharedPreferences
-          String? storedWarehousesJson = prefs.getString('warehouses');
-          String? storedCompany = prefs.getString('company');
-          String? storedUserId = prefs.getString('userId');
+          String? storedWarehousesJson = authBox.get('warehouses');
+          String? storedCompany = authBox.get('company');
+          String? storedUserId = authBox.get('userId');
 
           if (storedWarehousesJson != null &&
               storedCompany != null &&
               storedUserId != null) {
             List<String> storedWarehouses =
                 List<String>.from(jsonDecode(storedWarehousesJson));
-            print('Company: $storedCompany, User ID: $storedUserId');
             return storedWarehouses;
           } else {
             showErrorDialog(context,
@@ -171,15 +163,19 @@ class ApiService {
           }
         }
       } catch (e) {
-        String errorMessage = 'Error fetching warehouses: $e';
-        showErrorDialog(context, errorMessage);
+        showErrorDialog(context, 'Error fetching warehouses: $e');
         return [];
       }
     } else {
-      String errorMessage =
-          'User details or access token missing in SharedPreferences';
-      showErrorDialog(context, errorMessage);
+      showErrorDialog(context, 'User details or access token missing in Hive');
       return [];
     }
+  }
+
+  static Future<void> _logout(BuildContext context) async {
+    var authBox = Hive.box('authBox');
+    await authBox.clear(); // Clear all authentication data
+    Navigator.pushReplacementNamed(
+        context, '/login'); // Navigate to login screen
   }
 }

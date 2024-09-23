@@ -4,9 +4,9 @@ import 'package:http/http.dart' as http;
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/carbon.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
+import 'package:hive/hive.dart'; // Hive for token management
 
 import 'package:stock_count/components/calculator_card.dart';
 import 'package:stock_count/components/center_box.dart';
@@ -16,7 +16,7 @@ import 'package:stock_count/utilis/api_service.dart';
 import 'package:stock_count/utilis/change_notifier.dart';
 import 'package:stock_count/utilis/db_schema.dart';
 import 'package:stock_count/utilis/dialog_messages.dart';
-import 'package:iconify_flutter/icons/uil.dart';
+import 'package:stock_count/screens/login.dart'; // Import login screen
 
 class HomeScreen extends StatefulWidget {
   final int? recountEntryId;
@@ -51,6 +51,7 @@ class _HomeScreenState extends State<HomeScreen>
   String? userEmail;
   String? profilePictureUrl;
   String? accessToken;
+  bool isTokenExpired = false; // Variable to track token expiration
 
   // Variables for slide-in dialog
   late AnimationController _animationController;
@@ -60,8 +61,8 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void initState() {
     super.initState();
+    checkAuthentication(); // Check authentication before loading HomeScreen
     initializeDb();
-    fetchUserDetails();
 
     // Initialize Animation Controller for the slide-in dialog
     _animationController = AnimationController(
@@ -86,16 +87,42 @@ class _HomeScreenState extends State<HomeScreen>
     }
   }
 
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
+  // Check if the user is authenticated by verifying the token
+  Future<void> checkAuthentication() async {
+    var authBox = await Hive.openBox('authBox');
+    String? accessToken = authBox.get('accessToken');
+    DateTime? tokenExpiry = authBox.get('tokenExpiry');
+
+    // If no token or token is expired, redirect to login
+    if (accessToken == null ||
+        tokenExpiry == null ||
+        DateTime.now().isAfter(tokenExpiry)) {
+      // Token is invalid or expired, log out and redirect to login
+      logOutUser();
+      return;
+    }
+
+    // If token is valid, proceed to fetch user details
+    fetchUserDetails();
+  }
+
+  // Log out user and clear Hive token data
+  void logOutUser() async {
+    var authBox = await Hive.openBox('authBox');
+    await authBox.clear(); // Clear all stored token data
+
+    // Navigate to login screen
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+      (Route<dynamic> route) => false,
+    );
   }
 
   Future<void> fetchUserDetails() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? userDetailsJson = prefs.getString('userDetails');
-    accessToken = prefs.getString('accessToken');
+    var authBox = await Hive.openBox('authBox');
+    String? userDetailsJson = authBox.get('userDetails');
+    accessToken = authBox.get('accessToken');
 
     if (userDetailsJson != null) {
       Map<String, dynamic> userDetails = json.decode(userDetailsJson);
@@ -107,7 +134,7 @@ class _HomeScreenState extends State<HomeScreen>
         profilePictureUrl = userDetails['picture'];
       });
     } else {
-      showErrorDialog(context, "User details JSON is null.");
+      showErrorDialog(context, "User details are missing.");
     }
   }
 
@@ -119,9 +146,9 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   void startCount() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? company = prefs.getString('company');
-    String? userId = prefs.getString('userId');
+    var authBox = await Hive.openBox('authBox');
+    String? company = authBox.get('company');
+    String? userId = authBox.get('userId');
 
     String postingDate = DateTime.now().toString().substring(0, 10);
     String postingTime = DateTime.now().toString().substring(11);
@@ -336,9 +363,7 @@ class _HomeScreenState extends State<HomeScreen>
                       ListTile(
                         leading: const Icon(Icons.logout),
                         title: const Text('Logout', style: medium14Black33),
-                        onTap: () {
-                          // Handle logout logic here
-                        },
+                        onTap: logOutUser, // Log out when user taps
                       ),
                       const Divider(),
                       const ListTile(

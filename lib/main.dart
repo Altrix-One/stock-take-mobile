@@ -6,11 +6,14 @@ import 'package:stock_count/constants/theme.dart';
 import 'package:stock_count/screens/login.dart';
 import 'package:stock_count/utilis/change_notifier.dart';
 import 'package:stock_count/utilis/sync_manager.dart'; // Import sync manager
+import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart'; // Hive for token management
 import 'dart:isolate';
 import 'dart:ui';
 
 const int fetchDataTaskId = 0;
 const int postDataTaskId = 1;
+const int tokenRefreshTaskId = 2; // Task ID for token refresh
 const String isolateName = 'sync_isolate';
 
 // A port used to communicate from a background isolate to the UI isolate.
@@ -18,6 +21,10 @@ final ReceivePort port = ReceivePort();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Hive
+  await Hive.initFlutter();
+  await Hive.openBox('authBox'); // Box to store tokens
 
   // Initialize Android Alarm Manager
   await AndroidAlarmManager.initialize();
@@ -38,6 +45,15 @@ void main() async {
     const Duration(minutes: 1),
     postDataTaskId,
     postTaskCallback,
+    wakeup: true,
+    exact: true,
+  );
+
+  // Start token refresh task every 30 minutes (adjust timing as needed)
+  await AndroidAlarmManager.periodic(
+    const Duration(minutes: 30),
+    tokenRefreshTaskId,
+    tokenRefreshCallback,
     wakeup: true,
     exact: true,
   );
@@ -88,4 +104,16 @@ void postTaskCallback() async {
   print("[$now] Post task started");
   await SyncManager.syncToServer();
   print("[$now] Post task completed");
+}
+
+// Callback function for refreshing the token
+@pragma('vm:entry-point')
+void tokenRefreshCallback() async {
+  final DateTime now = DateTime.now();
+  print("[$now] Token refresh task started");
+
+  // Check and refresh the token using SyncManager
+  await SyncManager.refreshTokenIfNeeded();
+
+  print("[$now] Token refresh task completed");
 }
