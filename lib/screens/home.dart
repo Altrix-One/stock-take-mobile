@@ -390,10 +390,18 @@ class _HomeScreenState extends State<HomeScreen>
                         title: const Text('Logout', style: medium14Black33),
                         onTap: logOutUser, // Log out when user taps
                       ),
-                      const Divider(),
                       const ListTile(
                         leading: Icon(Icons.info_outline),
                         title: Text('Version 0.0.1', style: medium14Black33),
+                      ),
+                      const Spacer(),
+                      const Divider(),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 16.0),
+                        child: Image.asset(
+                          'assets/images/aakvatech.jpg',
+                          width: MediaQuery.of(context).size.width * 0.5,
+                        ),
                       ),
                     ],
                   ),
