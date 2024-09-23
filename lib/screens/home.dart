@@ -70,11 +70,21 @@ class _HomeScreenState extends State<HomeScreen>
       duration: const Duration(milliseconds: 500), // Slow down the transition
       vsync: this,
     );
+
     _slideAnimation = Tween<Offset>(
       begin: const Offset(1.0, 0.0), // Start off-screen
       end: Offset.zero, // End at screen's center
     ).animate(
-        CurvedAnimation(parent: _animationController, curve: Curves.easeInOut));
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
+
+    // Initialize fade animation
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
 
     if (widget.recountEntryId != null &&
         widget.recountWarehouse != null &&
