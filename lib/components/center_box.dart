@@ -128,7 +128,13 @@ class _CenterBoxState extends State<CenterBox> {
                 horizontal: fixPadding * 1.4, vertical: fixPadding * 3.5),
             margin: const EdgeInsets.symmetric(horizontal: 5),
             child: entries.isEmpty
-                ? const LinearProgressIndicator()
+                ? const Center(
+                    child: Text(
+                      "No entries available",
+                      style: medium15Grey,
+                      textAlign: TextAlign.center,
+                    ),
+                  )
                 : ListView.builder(
                     itemCount: entries.length,
                     itemBuilder: (context, index) {
