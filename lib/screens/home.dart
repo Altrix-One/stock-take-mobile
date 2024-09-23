@@ -91,7 +91,15 @@ class _HomeScreenState extends State<HomeScreen>
   Future<void> checkAuthentication() async {
     var authBox = await Hive.openBox('authBox');
     String? accessToken = authBox.get('accessToken');
-    DateTime? tokenExpiry = authBox.get('tokenExpiry');
+    String? tokenExpiryString =
+        authBox.get('tokenExpiry'); // Retrieve as String
+
+    DateTime? tokenExpiry;
+
+    // Parse the tokenExpiryString to DateTime if it's not null
+    if (tokenExpiryString != null) {
+      tokenExpiry = DateTime.parse(tokenExpiryString);
+    }
 
     // If no token or token is expired, redirect to login
     if (accessToken == null ||
