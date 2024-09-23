@@ -16,11 +16,19 @@ class SyncManager {
     return await openDatabase(path, version: 1, onCreate: DBSchema.initDB);
   }
 
+  // Ensure that the 'authBox' is open before accessing it
+  static Future<Box> _getAuthBox() async {
+    if (!Hive.isBoxOpen('authBox')) {
+      return await Hive.openBox('authBox');
+    }
+    return Hive.box('authBox');
+  }
+
   // Sync to server without refreshing token automatically
   static Future<void> syncToServer() async {
-    var authBox = Hive.box('authBox');
+    var authBox = await _getAuthBox(); // Ensure box is open
     String? accessToken = authBox.get('accessToken');
-    DateTime? tokenExpiry = authBox.get('tokenExpiry');
+    DateTime? tokenExpiry = DateTime.tryParse(authBox.get('tokenExpiry') ?? '');
 
     // Proceed only if token is still valid
     if (accessToken == null ||
@@ -115,9 +123,9 @@ class SyncManager {
 
   // Sync from server without refreshing token automatically
   static Future<void> syncFromServer() async {
-    var authBox = Hive.box('authBox');
+    var authBox = await _getAuthBox(); // Ensure box is open
     String? accessToken = authBox.get('accessToken');
-    DateTime? tokenExpiry = authBox.get('tokenExpiry');
+    DateTime? tokenExpiry = DateTime.tryParse(authBox.get('tokenExpiry') ?? '');
 
     // Proceed only if token is still valid
     if (accessToken == null ||
@@ -230,9 +238,9 @@ class SyncManager {
 
   // Token refreshing logic for login (not used in background tasks)
   static Future<void> refreshTokenIfNeeded() async {
-    var authBox = Hive.box('authBox');
+    var authBox = await _getAuthBox(); // Ensure box is open
     String? refreshToken = authBox.get('refreshToken');
-    DateTime? tokenExpiry = authBox.get('tokenExpiry');
+    DateTime? tokenExpiry = DateTime.tryParse(authBox.get('tokenExpiry') ?? '');
 
     if (tokenExpiry != null && DateTime.now().isAfter(tokenExpiry)) {
       print("Token expired, refreshing...");

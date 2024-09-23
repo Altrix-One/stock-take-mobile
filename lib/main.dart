@@ -10,10 +10,11 @@ import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart'; // Hive for token management
 import 'dart:isolate';
 import 'dart:ui';
+import 'package:path_provider/path_provider.dart'; // For background isolate
 
 const int fetchDataTaskId = 0;
 const int postDataTaskId = 1;
-const int tokenRefreshTaskId = 2; // Task ID for token refresh
+// const int tokenRefreshTaskId = 2; // Task ID for token refresh
 const String isolateName = 'sync_isolate';
 
 // A port used to communicate from a background isolate to the UI isolate.
@@ -50,13 +51,13 @@ void main() async {
   );
 
   // Start token refresh task every 30 minutes (adjust timing as needed)
-  await AndroidAlarmManager.periodic(
-    const Duration(minutes: 30),
-    tokenRefreshTaskId,
-    tokenRefreshCallback,
-    wakeup: true,
-    exact: true,
-  );
+  // await AndroidAlarmManager.periodic(
+  //   const Duration(minutes: 30),
+  //   tokenRefreshTaskId,
+  //   tokenRefreshCallback,
+  //   wakeup: true,
+  //   exact: true,
+  // );
 
   // Run the app
   runApp(
@@ -93,7 +94,10 @@ class MyApp extends StatelessWidget {
 void fetchTaskCallback() async {
   final DateTime now = DateTime.now();
   print("[$now] Fetch task started");
+
+  await initializeHiveForBackgroundTasks(); // Initialize Hive for background tasks
   await SyncManager.syncFromServer();
+
   print("[$now] Fetch task completed");
 }
 
@@ -102,18 +106,31 @@ void fetchTaskCallback() async {
 void postTaskCallback() async {
   final DateTime now = DateTime.now();
   print("[$now] Post task started");
+
+  await initializeHiveForBackgroundTasks(); // Initialize Hive for background tasks
   await SyncManager.syncToServer();
+
   print("[$now] Post task completed");
 }
 
 // Callback function for refreshing the token
-@pragma('vm:entry-point')
-void tokenRefreshCallback() async {
-  final DateTime now = DateTime.now();
-  print("[$now] Token refresh task started");
+// @pragma('vm:entry-point')
+// void tokenRefreshCallback() async {
+//   final DateTime now = DateTime.now();
+//   print("[$now] Token refresh task started");
 
-  // Check and refresh the token using SyncManager
-  await SyncManager.refreshTokenIfNeeded();
+//   await initializeHiveForBackgroundTasks(); // Initialize Hive for background tasks
+//   await SyncManager.refreshTokenIfNeeded();
 
-  print("[$now] Token refresh task completed");
+//   print("[$now] Token refresh task completed");
+// }
+
+// Function to initialize Hive for background tasks
+Future<void> initializeHiveForBackgroundTasks() async {
+  final appDocumentDir = await getApplicationDocumentsDirectory();
+  Hive.init(appDocumentDir.path); // Initialize Hive with directory path
+
+  if (!Hive.isBoxOpen('authBox')) {
+    await Hive.openBox('authBox');
+  }
 }
