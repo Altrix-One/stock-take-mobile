@@ -36,7 +36,8 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
   int _selectedIndex = 0;
   bool showCountTypeButton = true;
   Database? database;
@@ -51,11 +52,28 @@ class _HomeScreenState extends State<HomeScreen> {
   String? profilePictureUrl;
   String? accessToken;
 
+  // Variables for slide-in dialog
+  late AnimationController _animationController;
+  late Animation<Offset> _slideAnimation;
+  bool _isDialogVisible = false;
+
   @override
   void initState() {
     super.initState();
     initializeDb();
     fetchUserDetails();
+
+    // Initialize Animation Controller for the slide-in dialog
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(1.0, 0.0), // Start off-screen
+      end: Offset.zero, // End at screen's center
+    ).animate(
+        CurvedAnimation(parent: _animationController, curve: Curves.easeInOut));
+
     if (widget.recountEntryId != null &&
         widget.recountWarehouse != null &&
         widget.countType != null) {
@@ -66,6 +84,12 @@ class _HomeScreenState extends State<HomeScreen> {
       recountEntry = true;
       database = widget.database;
     }
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
   Future<void> fetchUserDetails() async {
@@ -81,10 +105,8 @@ class _HomeScreenState extends State<HomeScreen> {
         lastName = userDetails['family_name'] ?? "";
         userEmail = userDetails['email'];
         profilePictureUrl = userDetails['picture'];
-        print('Profile Picture URL: $profilePictureUrl');
       });
     } else {
-      print("User details JSON is null.");
       showErrorDialog(context, "User details JSON is null.");
     }
   }
@@ -112,12 +134,20 @@ class _HomeScreenState extends State<HomeScreen> {
       'stock_count_person': userId
     });
 
-    // Fetching and printing the newly added entry
-    List<Map> result = await database!
-        .query('StockCountEntry', where: 'id = ?', whereArgs: [id]);
-    print("New Stock Count Entry: $result");
     setState(() {
-      currentEntryId = id; // Store the new entry ID
+      currentEntryId = id;
+    });
+  }
+
+  // Toggle the visibility of the slide-in dialog
+  void _toggleDialog() {
+    if (_isDialogVisible) {
+      _animationController.reverse();
+    } else {
+      _animationController.forward();
+    }
+    setState(() {
+      _isDialogVisible = !_isDialogVisible;
     });
   }
 
@@ -181,88 +211,148 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: f8Color,
-      appBar: AppBar(
-        elevation: 0,
-        toolbarHeight: 70.0,
-        automaticallyImplyLeading: false,
-        centerTitle: false,
-        backgroundColor: primaryColor,
-        titleSpacing: 20.0,
-        title: headerTitle(),
-        actions: [
-          IconButton(
-            padding: const EdgeInsets.symmetric(horizontal: fixPadding * 2.0),
-            onPressed: () {
-              // Future functionality for settings or notifications
-            },
-            icon: const Iconify(
-              Carbon.settings,
-              color: whiteColor,
-              size: 22.0,
-            ),
-          )
-        ],
-      ),
-      body: Consumer<StockTakeNotifier>(
-        builder: (context, stockTakeNotifier, child) {
-          return _pages.elementAt(_selectedIndex);
-        },
-      ),
-      floatingActionButton: showCountTypeButton
-          ? FloatingActionButton.extended(
-              onPressed: () => _showSelectionDialog(context),
-              backgroundColor: primaryColor,
-              label: Consumer<StockTakeNotifier>(
-                builder: (context, stockTakeNotifier, child) {
-                  return Text(
-                    stockTakeNotifier.countType,
-                    style: const TextStyle(color: Colors.white),
-                  );
-                },
-              ),
-              icon: const Icon(
-                Icons.arrow_drop_down_rounded,
-                color: Colors.white,
-              ),
-            )
-          : null,
-      bottomNavigationBar: BottomNavigationBar(
-        items: _selectedIndex == 1 && isCountStarted
-            ? [
-                const BottomNavigationBarItem(
-                  icon: Icon(Icons.list_alt), // Change to a list icon
-                  label: 'Entries', // Update label to "Entries"
+    return Stack(
+      children: [
+        Scaffold(
+          backgroundColor: f8Color,
+          appBar: AppBar(
+            elevation: 0,
+            toolbarHeight: 70.0,
+            automaticallyImplyLeading: false,
+            centerTitle: false,
+            backgroundColor: primaryColor,
+            titleSpacing: 20.0,
+            title: headerTitle(),
+            actions: [
+              IconButton(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: fixPadding * 2.0),
+                onPressed: _toggleDialog, // Trigger the slide-in dialog
+                icon: const Iconify(
+                  Carbon.settings,
+                  color: whiteColor,
+                  size: 22.0,
                 ),
-              ]
-            : isCountStarted
+              )
+            ],
+          ),
+          body: Consumer<StockTakeNotifier>(
+            builder: (context, stockTakeNotifier, child) {
+              return _pages.elementAt(_selectedIndex);
+            },
+          ),
+          floatingActionButton: showCountTypeButton
+              ? FloatingActionButton.extended(
+                  onPressed: () => _showSelectionDialog(context),
+                  backgroundColor: primaryColor,
+                  label: Consumer<StockTakeNotifier>(
+                    builder: (context, stockTakeNotifier, child) {
+                      return Text(
+                        stockTakeNotifier.countType,
+                        style: const TextStyle(color: Colors.white),
+                      );
+                    },
+                  ),
+                  icon: const Icon(
+                    Icons.arrow_drop_down_rounded,
+                    color: Colors.white,
+                  ),
+                )
+              : null,
+          bottomNavigationBar: BottomNavigationBar(
+            items: _selectedIndex == 1 && isCountStarted
                 ? [
-                    const BottomNavigationBarItem(
-                      icon: Icon(Icons.stop_circle_outlined),
-                      label: 'Stop Count',
-                    ),
                     const BottomNavigationBarItem(
                       icon: Icon(Icons.list_alt), // Change to a list icon
                       label: 'Entries', // Update label to "Entries"
                     ),
                   ]
-                : [
-                    const BottomNavigationBarItem(
-                      icon: Icon(Icons
-                          .play_circle_outline), // Use play icon from Icons
-                      label: 'Start Count',
-                    ),
-                    const BottomNavigationBarItem(
-                      icon: Icon(Icons.list_alt), // Use list icon from Icons
-                      label: 'Entries', // Update label to "Entries"
-                    ),
-                  ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: primaryColor,
-        unselectedItemColor: greyColor,
-        onTap: _onItemTapped,
-      ),
+                : isCountStarted
+                    ? [
+                        const BottomNavigationBarItem(
+                          icon: Icon(Icons.stop_circle_outlined),
+                          label: 'Stop Count',
+                        ),
+                        const BottomNavigationBarItem(
+                          icon: Icon(Icons.list_alt), // Change to a list icon
+                          label: 'Entries', // Update label to "Entries"
+                        ),
+                      ]
+                    : [
+                        const BottomNavigationBarItem(
+                          icon: Icon(Icons
+                              .play_circle_outline), // Use play icon from Icons
+                          label: 'Start Count',
+                        ),
+                        const BottomNavigationBarItem(
+                          icon:
+                              Icon(Icons.list_alt), // Use list icon from Icons
+                          label: 'Entries', // Update label to "Entries"
+                        ),
+                      ],
+            currentIndex: _selectedIndex,
+            selectedItemColor: primaryColor,
+            unselectedItemColor: greyColor,
+            onTap: _onItemTapped,
+          ),
+        ),
+        // Slide-in dialog for settings, appearing over the entire screen
+        if (_isDialogVisible) ...[
+          GestureDetector(
+            onTap:
+                _toggleDialog, // Close the drawer if you tap on the dimmed area
+            child: Container(
+              color: Colors.black.withOpacity(0.5), // Dim the background
+              width: double.infinity,
+              height: double.infinity,
+            ),
+          ),
+          SlideTransition(
+            position: _slideAnimation,
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: Material(
+                color: Colors.white,
+                child: Container(
+                  width: MediaQuery.of(context).size.width *
+                      0.6, // Half-screen width
+                  height: double.infinity,
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Settings', style: semibold16Black33),
+                          IconButton(
+                            icon: const Icon(
+                                Icons.arrow_forward), // Icon to slide back
+                            onPressed: _toggleDialog, // Close the drawer
+                          ),
+                        ],
+                      ),
+                      const Divider(),
+                      ListTile(
+                        leading: const Icon(Icons.logout),
+                        title: const Text('Logout', style: medium14Black33),
+                        onTap: () {
+                          // Handle logout logic here
+                        },
+                      ),
+                      const Divider(),
+                      const ListTile(
+                        leading: Icon(Icons.info_outline),
+                        title: Text('Version 0.0.1', style: medium14Black33),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ]
+      ],
     );
   }
 
@@ -271,10 +361,9 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (BuildContext context) {
         return Dialog(
-          backgroundColor: whiteColor, // Uses whiteColor from your constants
+          backgroundColor: whiteColor,
           shape: RoundedRectangleBorder(
-            borderRadius:
-                BorderRadius.circular(10.0), // Rounded corners for the dialog
+            borderRadius: BorderRadius.circular(10.0),
           ),
           child: Padding(
             padding: const EdgeInsets.all(16.0),
@@ -343,12 +432,11 @@ class _HomeScreenState extends State<HomeScreen> {
         margin: const EdgeInsets.symmetric(vertical: 10.0),
         padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
         decoration: BoxDecoration(
-          color: whiteColor, // Ensures each option is also white
+          color: whiteColor,
           borderRadius: BorderRadius.circular(10.0),
           boxShadow: [
             BoxShadow(
-              color: black3CColor.withOpacity(
-                  0.1), // Subtle shadow with a slightly defined color
+              color: black3CColor.withOpacity(0.1),
               blurRadius: 6.0,
             ),
           ],
@@ -430,17 +518,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ],
     );
   }
-
-  var timerBoxDecoration = BoxDecoration(
-    color: whiteColor,
-    borderRadius: BorderRadius.circular(5.0),
-    boxShadow: [
-      BoxShadow(
-        color: blackColor.withOpacity(0.2),
-        blurRadius: 6.0,
-      )
-    ],
-  );
 }
 
 class ImageWithBearerToken extends StatelessWidget {
@@ -462,18 +539,10 @@ class ImageWithBearerToken extends StatelessWidget {
           return Center(child: Text('Error loading image'));
         } else if (snapshot.connectionState == ConnectionState.done) {
           if (snapshot.hasData) {
-            // Check the status code and content type
             if (snapshot.data!.statusCode == 200 &&
                 snapshot.data!.headers['content-type']!.startsWith('image/')) {
               return Image.memory(snapshot.data!.bodyBytes);
             } else {
-              // Print debug information
-              print('Invalid image data or unauthorized.');
-              print('Status Code: ${snapshot.data!.statusCode}');
-              print('Content-Type: ${snapshot.data!.headers['content-type']}');
-              print(
-                  'Response Body: ${snapshot.data!.bodyBytes.length > 100 ? snapshot.data!.bodyBytes.sublist(0, 100) : snapshot.data!.bodyBytes}');
-
               return Center(child: Text('Invalid image data or unauthorized.'));
             }
           } else {
@@ -489,9 +558,6 @@ class ImageWithBearerToken extends StatelessWidget {
   Future<http.Response> _fetchImage() async {
     final headers = {'Authorization': 'Bearer $bearerToken'};
     final response = await http.get(Uri.parse(imageUrl), headers: headers);
-    print('Bearer Token: $bearerToken');
-    print('Response URL: $imageUrl');
-    print(response.body);
     return response;
   }
 }
