@@ -130,49 +130,40 @@ class _CalculatorCardState extends State<CalculatorCard>
 
   void submitEntry() async {
     try {
-      int quantity = int.tryParse(displayText) ?? 0;
+      int quantity =
+          int.tryParse(displayText) ?? 0; // Parse the quantity from the display
+
       if (widget.database == null) {
         print("Database is null.");
         return;
       }
+
       if (widget.entryId != 0 && scannedData.isNotEmpty && quantity > 0) {
-        // Check if recountEntry is true
-        if (widget.recountEntry == true) {
-          // Fetch existing entry
-          List<Map> existingEntries = await widget.database!.query(
+        // Fetch the existing entry based on item_barcode and stock_count_entry_id
+        List<Map> existingEntries = await widget.database!.query(
+          'StockCountEntryItem',
+          where:
+              'stock_count_entry_id = ? AND item_barcode = ? AND warehouse = ?',
+          whereArgs: [widget.entryId, scannedData, widget.warehouse],
+        );
+
+        if (existingEntries.isNotEmpty) {
+          // Update the existing entry (whether recount or not)
+          await widget.database!.update(
             'StockCountEntryItem',
+            {'qty': quantity, 'synced': 0}, // Update quantity and mark unsynced
             where:
                 'stock_count_entry_id = ? AND item_barcode = ? AND warehouse = ?',
             whereArgs: [widget.entryId, scannedData, widget.warehouse],
           );
-
-          if (existingEntries.isNotEmpty) {
-            // Update existing entry and mark as unsynced
-            await widget.database!.update(
-              'StockCountEntryItem',
-              {'qty': quantity, 'synced': 0}, // Mark item as unsynced
-              where:
-                  'stock_count_entry_id = ? AND item_barcode = ? AND warehouse = ?',
-              whereArgs: [widget.entryId, scannedData, widget.warehouse],
-            );
-          } else {
-            // Insert new entry and mark as unsynced
-            await widget.database!.insert('StockCountEntryItem', {
-              'stock_count_entry_id': widget.entryId,
-              'item_barcode': scannedData,
-              'warehouse': widget.warehouse,
-              'qty': quantity,
-              'synced': 0 // Mark new item as unsynced
-            });
-          }
         } else {
-          // Insert new entry (for normal count) and mark as unsynced
+          // Insert a new entry if no existing entry is found
           await widget.database!.insert('StockCountEntryItem', {
             'stock_count_entry_id': widget.entryId,
             'item_barcode': scannedData,
             'warehouse': widget.warehouse,
             'qty': quantity,
-            'synced': 0 // Mark new item as unsynced
+            'synced': 0 // Mark the new item as unsynced
           });
         }
 
@@ -184,7 +175,7 @@ class _CalculatorCardState extends State<CalculatorCard>
           whereArgs: [widget.entryId],
         );
 
-        // Fetching and printing the item entries for debugging
+        // For debugging, print all entries related to the stock_count_entry_id
         List<Map> result = await widget.database!.query(
           'StockCountEntryItem',
           where: 'stock_count_entry_id = ?',
@@ -192,7 +183,7 @@ class _CalculatorCardState extends State<CalculatorCard>
         );
         print("Stock Count Entry Items: $result");
 
-        // Reset for the next entry
+        // Reset the scanner and calculator for the next entry
         setState(() {
           scannedData = '';
           displayText = '0';
