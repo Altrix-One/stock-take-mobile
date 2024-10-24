@@ -236,9 +236,15 @@ class _HomeScreenState extends State<HomeScreen>
     }
 
     if (index == 0 && !isCountStarted && _selectedIndex != 1) {
-      List<String> warehouses = await ApiService.getWarehouses(context);
+      // Fetch both warehouses and companies
+      Map<String, dynamic> data =
+          await ApiService.getWarehousesAndCompanies(context);
+
+      List<String> warehouses = data['warehouses'] ?? [];
+      List<String> companies = data['companies'] ?? [];
+
       if (warehouses.isNotEmpty) {
-        showWarehouseDialog(context, warehouses);
+        showWarehouseBottomSheet(context, warehouses, companies);
       }
       return;
     } else if (isCountStarted && index == 1) {
@@ -253,10 +259,6 @@ class _HomeScreenState extends State<HomeScreen>
       });
       return;
     }
-
-    setState(() {
-      _selectedIndex = index;
-    });
   }
 
   @override
@@ -440,41 +442,178 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  void showWarehouseDialog(BuildContext context, List<String> warehouses) {
-    showDialog(
+  void showWarehouseBottomSheet(
+      BuildContext context, List<String> warehouses, List<String> companies) {
+    String selectedCompany = companies.isNotEmpty
+        ? companies[0]
+        : 'Select Company'; // Default to first company
+    bool isCompanyExpanded = false; // Track expansion for company section
+    bool isWarehouseExpanded =
+        true; // Default to expanded state for warehouse list
+
+    showModalBottomSheet(
       context: context,
+      isScrollControlled: true, // Allows full height if needed
+      backgroundColor: whiteColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(20.0),
+        ),
+      ),
       builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: whiteColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10.0),
-          ),
-          title: const Text(
-            'Select Warehouse',
-            style: semibold18Primary,
-            textAlign: TextAlign.center,
-          ),
-          content: Container(
-            width: double.maxFinite,
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: warehouses.length,
-              itemBuilder: (BuildContext context, int index) {
-                return ListTile(
-                  title: Text(warehouses[index], style: medium14Black33),
-                  onTap: () {
-                    Navigator.of(context).pop(); // Close the dialog
-                    setState(() {
-                      selectedWarehouse = warehouses[index];
-                      isCountStarted = true;
-                      showCountTypeButton = false;
-                    });
-                    startCount();
-                  },
-                );
-              },
-            ),
-          ),
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Select Options',
+                    style: semibold18Primary,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16.0),
+
+                  // Accordion for Company Selection
+                  GestureDetector(
+                    onTap: () {
+                      // Toggle company section expansion
+                      setState(() {
+                        isCompanyExpanded = !isCompanyExpanded;
+                      });
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16.0, vertical: 12.0),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10.0),
+                        border: Border.all(color: greyColor),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // Use Expanded to prevent overflow and allow ellipsis
+                          Expanded(
+                            child: Text(
+                              selectedCompany,
+                              style: medium14Black33,
+                              overflow: TextOverflow
+                                  .ellipsis, // Add ellipsis if too long
+                              maxLines: 1, // Restrict to a single line
+                            ),
+                          ),
+                          Icon(
+                            isCompanyExpanded
+                                ? Icons.expand_less
+                                : Icons.expand_more,
+                            color: primaryColor,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // Expanded Company ListView inside accordion
+                  AnimatedContainer(
+                    duration:
+                        const Duration(milliseconds: 300), // Smooth transition
+                    height: isCompanyExpanded
+                        ? companies.length * 50.0
+                        : 0, // Dynamic height based on state
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: companies.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        return ListTile(
+                          title: Text(
+                            companies[index],
+                            style: medium14Black33,
+                          ),
+                          onTap: () {
+                            setState(() {
+                              selectedCompany = companies[index];
+                              isCompanyExpanded =
+                                  false; // Collapse after selection
+                            });
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 16.0),
+
+                  // Accordion for Warehouse List
+                  GestureDetector(
+                    onTap: () {
+                      // Toggle warehouse section expansion
+                      setState(() {
+                        isWarehouseExpanded = !isWarehouseExpanded;
+                      });
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16.0, vertical: 12.0),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10.0),
+                        border: Border.all(color: greyColor),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Warehouses',
+                            style: medium14Black33,
+                          ),
+                          Icon(
+                            isWarehouseExpanded
+                                ? Icons.expand_less
+                                : Icons.expand_more,
+                            color: primaryColor,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16.0),
+
+                  // Make the warehouse list scrollable if it overflows the available height
+                  Flexible(
+                    child: AnimatedContainer(
+                      duration: const Duration(
+                          milliseconds: 300), // Smooth transition
+                      height: isWarehouseExpanded
+                          ? MediaQuery.of(context).size.height *
+                              0.5 // Max height for the list
+                          : 0, // Dynamic height based on state
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: warehouses.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          return ListTile(
+                            title: Text(
+                              warehouses[index],
+                              style: medium14Black33,
+                            ),
+                            onTap: () {
+                              Navigator.of(context)
+                                  .pop(); // Close the BottomSheet
+                              setState(() {
+                                selectedWarehouse = warehouses[index];
+                                isCountStarted = true;
+                                showCountTypeButton = false;
+                              });
+                              startCount(); // Call your start count logic
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
         );
       },
     );
@@ -503,7 +642,17 @@ class _HomeScreenState extends State<HomeScreen>
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(type, style: semibold16Black33),
-            const Icon(Icons.check_circle_outline, color: primaryColor),
+            Consumer<StockTakeNotifier>(
+              builder: (context, stockTakeNotifier, child) {
+                // Only show the icon if the type is the selected count type
+                return stockTakeNotifier.countType == type
+                    ? const Icon(
+                        Icons.check_circle,
+                        color: primaryColor,
+                      )
+                    : const SizedBox(); // Empty space if not the selected type
+              },
+            ),
           ],
         ),
       ),
