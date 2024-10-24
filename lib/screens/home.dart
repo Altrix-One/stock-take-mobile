@@ -260,6 +260,9 @@ class _HomeScreenState extends State<HomeScreen>
       });
       return;
     }
+    setState(() {
+      _selectedIndex = index;
+    });
   }
 
   @override
