@@ -445,10 +445,10 @@ class _HomeScreenState extends State<HomeScreen>
 
   void showWarehouseBottomSheet(BuildContext context,
       Map<String, List<String>> warehousesByCompany, List<String> companies) {
-    String selectedCompany =
+    String defaultSelectedCompany =
         companies.isNotEmpty ? companies[0] : 'Select Company';
     List<String> filteredWarehouses =
-        warehousesByCompany[selectedCompany] ?? [];
+        warehousesByCompany[defaultSelectedCompany] ?? [];
     bool isCompanyExpanded = false;
     bool isWarehouseExpanded = true;
 
@@ -490,7 +490,7 @@ class _HomeScreenState extends State<HomeScreen>
                         children: [
                           Expanded(
                             child: Text(
-                              selectedCompany,
+                              defaultSelectedCompany,
                               style: medium14Black33,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -517,9 +517,10 @@ class _HomeScreenState extends State<HomeScreen>
                           title: Text(companies[index], style: medium14Black33),
                           onTap: () {
                             setState(() {
-                              selectedCompany = companies[index];
+                              defaultSelectedCompany = companies[index];
                               filteredWarehouses =
-                                  warehousesByCompany[selectedCompany] ?? [];
+                                  warehousesByCompany[defaultSelectedCompany] ??
+                                      [];
                               isCompanyExpanded = false;
                             });
                           },
@@ -577,6 +578,7 @@ class _HomeScreenState extends State<HomeScreen>
                               Navigator.of(context).pop();
                               setState(() {
                                 selectedWarehouse = filteredWarehouses[index];
+                                selectedCompany = defaultSelectedCompany;
                                 isCountStarted = true;
                                 showCountTypeButton = false;
                               });
