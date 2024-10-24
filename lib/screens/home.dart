@@ -44,6 +44,7 @@ class _HomeScreenState extends State<HomeScreen>
   int currentEntryId = 0;
   bool isCountStarted = false;
   String? selectedWarehouse;
+  String? selectedCompany;
   bool isWarehouseSelected = false;
   bool recountEntry = false;
   String? firstName;
@@ -166,14 +167,13 @@ class _HomeScreenState extends State<HomeScreen>
 
   void startCount() async {
     var authBox = await Hive.openBox('authBox');
-    String? company = authBox.get('company');
     String? userId = authBox.get('userId');
 
     String postingDate = DateTime.now().toString().substring(0, 10);
     String postingTime = DateTime.now().toString().substring(11);
 
     int id = await database!.insert('StockCountEntry', {
-      'company': company,
+      'company': selectedCompany,
       'warehouse': selectedWarehouse,
       'posting_date': postingDate,
       'posting_time': postingTime,
@@ -236,15 +236,16 @@ class _HomeScreenState extends State<HomeScreen>
     }
 
     if (index == 0 && !isCountStarted && _selectedIndex != 1) {
-      // Fetch both warehouses and companies
+      // Fetch both warehouses and companies grouped by company
       Map<String, dynamic> data =
           await ApiService.getWarehousesAndCompanies(context);
 
-      List<String> warehouses = data['warehouses'] ?? [];
+      Map<String, List<String>> warehousesByCompany =
+          data['warehouses_by_company'] ?? {};
       List<String> companies = data['companies'] ?? [];
 
-      if (warehouses.isNotEmpty) {
-        showWarehouseBottomSheet(context, warehouses, companies);
+      if (warehousesByCompany.isNotEmpty) {
+        showWarehouseBottomSheet(context, warehousesByCompany, companies);
       }
       return;
     } else if (isCountStarted && index == 1) {
@@ -442,23 +443,21 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  void showWarehouseBottomSheet(
-      BuildContext context, List<String> warehouses, List<String> companies) {
-    String selectedCompany = companies.isNotEmpty
-        ? companies[0]
-        : 'Select Company'; // Default to first company
-    bool isCompanyExpanded = false; // Track expansion for company section
-    bool isWarehouseExpanded =
-        true; // Default to expanded state for warehouse list
+  void showWarehouseBottomSheet(BuildContext context,
+      Map<String, List<String>> warehousesByCompany, List<String> companies) {
+    String selectedCompany =
+        companies.isNotEmpty ? companies[0] : 'Select Company';
+    List<String> filteredWarehouses =
+        warehousesByCompany[selectedCompany] ?? [];
+    bool isCompanyExpanded = false;
+    bool isWarehouseExpanded = true;
 
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true, // Allows full height if needed
+      isScrollControlled: true,
       backgroundColor: whiteColor,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(20.0),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
       ),
       builder: (BuildContext context) {
         return StatefulBuilder(
@@ -468,17 +467,13 @@ class _HomeScreenState extends State<HomeScreen>
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
-                    'Select Options',
-                    style: semibold18Primary,
-                    textAlign: TextAlign.center,
-                  ),
+                  const Text('Select Options',
+                      style: semibold18Primary, textAlign: TextAlign.center),
                   const SizedBox(height: 16.0),
 
                   // Accordion for Company Selection
                   GestureDetector(
                     onTap: () {
-                      // Toggle company section expansion
                       setState(() {
                         isCompanyExpanded = !isCompanyExpanded;
                       });
@@ -493,14 +488,11 @@ class _HomeScreenState extends State<HomeScreen>
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          // Use Expanded to prevent overflow and allow ellipsis
                           Expanded(
                             child: Text(
                               selectedCompany,
                               style: medium14Black33,
-                              overflow: TextOverflow
-                                  .ellipsis, // Add ellipsis if too long
-                              maxLines: 1, // Restrict to a single line
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           Icon(
@@ -513,28 +505,22 @@ class _HomeScreenState extends State<HomeScreen>
                       ),
                     ),
                   ),
-                  // Expanded Company ListView inside accordion
                   AnimatedContainer(
-                    duration:
-                        const Duration(milliseconds: 300), // Smooth transition
-                    height: isCompanyExpanded
-                        ? companies.length * 50.0
-                        : 0, // Dynamic height based on state
+                    duration: const Duration(milliseconds: 300),
+                    height: isCompanyExpanded ? companies.length * 50.0 : 0,
                     child: ListView.builder(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: companies.length,
                       itemBuilder: (BuildContext context, int index) {
                         return ListTile(
-                          title: Text(
-                            companies[index],
-                            style: medium14Black33,
-                          ),
+                          title: Text(companies[index], style: medium14Black33),
                           onTap: () {
                             setState(() {
                               selectedCompany = companies[index];
-                              isCompanyExpanded =
-                                  false; // Collapse after selection
+                              filteredWarehouses =
+                                  warehousesByCompany[selectedCompany] ?? [];
+                              isCompanyExpanded = false;
                             });
                           },
                         );
@@ -546,7 +532,6 @@ class _HomeScreenState extends State<HomeScreen>
                   // Accordion for Warehouse List
                   GestureDetector(
                     onTap: () {
-                      // Toggle warehouse section expansion
                       setState(() {
                         isWarehouseExpanded = !isWarehouseExpanded;
                       });
@@ -561,10 +546,7 @@ class _HomeScreenState extends State<HomeScreen>
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            'Warehouses',
-                            style: medium14Black33,
-                          ),
+                          Text('Warehouses', style: medium14Black33),
                           Icon(
                             isWarehouseExpanded
                                 ? Icons.expand_less
@@ -577,33 +559,28 @@ class _HomeScreenState extends State<HomeScreen>
                   ),
                   const SizedBox(height: 16.0),
 
-                  // Make the warehouse list scrollable if it overflows the available height
+                  // Limited Height and Scrollable Warehouse List
                   Flexible(
                     child: AnimatedContainer(
-                      duration: const Duration(
-                          milliseconds: 300), // Smooth transition
+                      duration: const Duration(milliseconds: 300),
                       height: isWarehouseExpanded
-                          ? MediaQuery.of(context).size.height *
-                              0.5 // Max height for the list
-                          : 0, // Dynamic height based on state
+                          ? MediaQuery.of(context).size.height * 0.5
+                          : 0,
                       child: ListView.builder(
                         shrinkWrap: true,
-                        itemCount: warehouses.length,
+                        itemCount: filteredWarehouses.length,
                         itemBuilder: (BuildContext context, int index) {
                           return ListTile(
-                            title: Text(
-                              warehouses[index],
-                              style: medium14Black33,
-                            ),
+                            title: Text(filteredWarehouses[index],
+                                style: medium14Black33),
                             onTap: () {
-                              Navigator.of(context)
-                                  .pop(); // Close the BottomSheet
+                              Navigator.of(context).pop();
                               setState(() {
-                                selectedWarehouse = warehouses[index];
+                                selectedWarehouse = filteredWarehouses[index];
                                 isCountStarted = true;
                                 showCountTypeButton = false;
                               });
-                              startCount(); // Call your start count logic
+                              startCount();
                             },
                           );
                         },

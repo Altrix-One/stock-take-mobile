@@ -96,77 +96,98 @@ class ApiService {
     }
   }
 
-  static Future<List<String>> getWarehouses(BuildContext context) async {
+  static Future<Map<String, dynamic>> getWarehousesAndCompanies(
+      BuildContext context) async {
     var authBox = Hive.box('authBox');
     String? userDetailsJson = authBox.get('userDetails');
     String? accessToken = authBox.get('accessToken');
 
     if (userDetailsJson != null && accessToken != null) {
-      Map<String, dynamic> userDetails = json.decode(userDetailsJson);
-      String userEmail = userDetails['email'];
-
       try {
         bool hasInternet = await InternetConnectionChecker().hasConnection;
 
         if (hasInternet) {
           final response = await http.post(
-            Uri.parse('$_baseUrl/api/method/fetch_user_warehouse'),
+            Uri.parse(
+                '$_baseUrl/api/method/nex_bridge.api.stock_take.get_warehouses_grouped_by_company'),
             headers: {
               'Content-Type': 'application/json',
               'Authorization': 'Bearer $accessToken',
             },
-            body: jsonEncode({'user': userEmail}),
           );
+          print(response.body);
 
           if (response.statusCode == 200) {
             final data = jsonDecode(response.body);
 
             if (data['message'] != null &&
-                data['message']['warehouses'] != null) {
-              List<String> warehouses =
-                  List<String>.from(data['message']['warehouses']);
-              String company = data['message']['company'] ?? 'Unknown Company';
-              String userId = data['message']['user_id'] ?? 'Unknown User ID';
+                data['message']['warehouses_by_company'] != null &&
+                data['message']['companies'] != null) {
+              // Correct casting for `warehouses_by_company`
+              Map<String, List<String>> warehousesByCompany = {};
+              (data['message']['warehouses_by_company'] as Map<String, dynamic>)
+                  .forEach((key, value) {
+                warehousesByCompany[key] =
+                    List<String>.from(value as List<dynamic>);
+              });
 
-              await authBox.put('warehouses', jsonEncode(warehouses));
-              await authBox.put('company', company);
-              await authBox.put('userId', userId);
+              // Correct casting for `companies`
+              List<String> companies =
+                  List<String>.from(data['message']['companies']);
 
-              return warehouses;
+              // Store the data in Hive for offline use
+              await authBox.put(
+                  'warehouses_by_company', jsonEncode(warehousesByCompany));
+              await authBox.put('companies', jsonEncode(companies));
+
+              return {
+                'warehouses_by_company': warehousesByCompany,
+                'companies': companies,
+              };
             } else {
               showErrorDialog(context, 'Unexpected response from the server');
-              return [];
+              return {};
             }
           } else {
             final errorData = jsonDecode(response.body);
             showErrorDialog(
-                context, errorData['message'] ?? 'Failed to load warehouses.');
-            return [];
+                context, errorData['message'] ?? 'Failed to load data.');
+            return {};
           }
         } else {
-          String? storedWarehousesJson = authBox.get('warehouses');
-          String? storedCompany = authBox.get('company');
-          String? storedUserId = authBox.get('userId');
+          // No internet: Try fetching from Hive (offline mode)
+          String? storedWarehousesJson = authBox.get('warehouses_by_company');
+          String? storedCompaniesJson = authBox.get('companies');
 
-          if (storedWarehousesJson != null &&
-              storedCompany != null &&
-              storedUserId != null) {
-            List<String> storedWarehouses =
-                List<String>.from(jsonDecode(storedWarehousesJson));
-            return storedWarehouses;
+          if (storedWarehousesJson != null && storedCompaniesJson != null) {
+            Map<String, List<String>> storedWarehousesByCompany = {};
+            (jsonDecode(storedWarehousesJson) as Map<String, dynamic>)
+                .forEach((key, value) {
+              storedWarehousesByCompany[key] =
+                  List<String>.from(value as List<dynamic>);
+            });
+
+            List<String> storedCompanies =
+                List<String>.from(jsonDecode(storedCompaniesJson));
+
+            return {
+              'warehouses_by_company': storedWarehousesByCompany,
+              'companies': storedCompanies,
+            };
           } else {
             showErrorDialog(context,
                 'No internet connection and no stored data available.');
-            return [];
+            return {};
           }
         }
       } catch (e) {
-        showErrorDialog(context, 'Error fetching warehouses: $e');
-        return [];
+        print(e);
+        showErrorDialog(context, 'Error fetching data: $e');
+        return {};
       }
     } else {
       showErrorDialog(context, 'User details or access token missing in Hive');
-      return [];
+      return {};
     }
   }
 
