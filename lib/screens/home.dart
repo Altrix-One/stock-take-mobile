@@ -459,7 +459,6 @@ class _HomeScreenState extends State<HomeScreen>
     ];
   }
 
-  // Build list of assigned items (when counting is initiated)
   List<Widget> buildAssignedItemsList() {
     return [
       Row(
@@ -473,14 +472,22 @@ class _HomeScreenState extends State<HomeScreen>
         ],
       ),
       const Divider(),
-      // Dynamically build ListTiles from assigned items
-      ...assignedItems.map((item) => ListTile(
-            title: Text(item['item'] ?? 'Unnamed Item', style: medium14Black33),
-            onTap: () {
-              // Handle item selection, e.g., show details
-            },
-          )),
-      const Spacer(),
+      // Wrapping the list in a Flexible widget with ListView
+      Flexible(
+        child: ListView.builder(
+          itemCount: assignedItems.length,
+          itemBuilder: (context, index) {
+            var item = assignedItems[index];
+            return ListTile(
+              title:
+                  Text(item['item'] ?? 'Unnamed Item', style: medium14Black33),
+              onTap: () {
+                // Handle item selection, e.g., show details
+              },
+            );
+          },
+        ),
+      ),
       const Divider(),
     ];
   }
