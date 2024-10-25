@@ -243,6 +243,104 @@ class SyncManager {
     }
   }
 
+  // Method to fetch and store warehouses and companies in Hive
+  static Future<void> fetchAndStoreWarehousesAndCompanies() async {
+    var authBox = await _getAuthBox();
+    String? accessToken = authBox.get('accessToken');
+    DateTime? tokenExpiry = DateTime.tryParse(authBox.get('tokenExpiry') ?? '');
+
+    if (accessToken == null ||
+        tokenExpiry == null ||
+        DateTime.now().isAfter(tokenExpiry)) {
+      print("Access token is either missing or expired. Sync aborted.");
+      return;
+    }
+
+    try {
+      var response = await http.post(
+        Uri.parse(
+            '$_baseUrl/api/method/nex_bridge.api.stock_take.get_warehouses_grouped_by_company'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $accessToken',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        // Process and store in Hive
+        if (data['message'] != null &&
+            data['message']['warehouses_by_company'] != null &&
+            data['message']['companies'] != null) {
+          Map<String, List<String>> warehousesByCompany = {};
+          (data['message']['warehouses_by_company'] as Map<String, dynamic>)
+              .forEach((key, value) {
+            warehousesByCompany[key] =
+                List<String>.from(value as List<dynamic>);
+          });
+
+          List<String> companies =
+              List<String>.from(data['message']['companies']);
+
+          await authBox.put(
+              'warehouses_by_company', jsonEncode(warehousesByCompany));
+          await authBox.put('companies', jsonEncode(companies));
+
+          print("Warehouses and companies stored in Hive.");
+        } else {
+          print("Unexpected response format for warehouses and companies.");
+        }
+      } else {
+        print("Failed to fetch warehouses and companies: ${response.body}");
+      }
+    } catch (e) {
+      print("Error fetching warehouses and companies: $e");
+    }
+  }
+
+  // Method to fetch and store assigned items in Hive
+  static Future<void> fetchAndStoreAssignedItems() async {
+    var authBox = await _getAuthBox();
+    String? accessToken = authBox.get('accessToken');
+    DateTime? tokenExpiry = DateTime.tryParse(authBox.get('tokenExpiry') ?? '');
+
+    if (accessToken == null ||
+        tokenExpiry == null ||
+        DateTime.now().isAfter(tokenExpiry)) {
+      print("Access token is either missing or expired. Sync aborted.");
+      return;
+    }
+
+    try {
+      var response = await http.post(
+        Uri.parse(
+            '$_baseUrl/api/method/nex_bridge.api.stock_take.get_user_assigned_items'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $accessToken',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        if (data['message'] != null &&
+            data['message']['assigned_items'] != null) {
+          List<dynamic> assignedItems = data['message']['assigned_items'];
+          await authBox.put('assigned_items', jsonEncode(assignedItems));
+          print("Assigned items stored in Hive.");
+        } else {
+          print("Unexpected response format for assigned items.");
+        }
+      } else {
+        print("Failed to fetch assigned items: ${response.body}");
+      }
+    } catch (e) {
+      print("Error fetching assigned items: $e");
+    }
+  }
+
   // Token refreshing logic for login (not used in background tasks)
   // static Future<void> refreshTokenIfNeeded() async {
   //   var authBox = await _getAuthBox(); // Ensure box is open

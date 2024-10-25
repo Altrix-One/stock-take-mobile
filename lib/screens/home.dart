@@ -53,6 +53,7 @@ class _HomeScreenState extends State<HomeScreen>
   String? profilePictureUrl;
   String? accessToken;
   bool isTokenExpired = false; // Variable to track token expiration
+  List<Map<String, dynamic>> assignedItems = [];
 
   // Variables for slide-in dialog
   late AnimationController _animationController;
@@ -65,6 +66,7 @@ class _HomeScreenState extends State<HomeScreen>
     super.initState();
     checkAuthentication(); // Check authentication before loading HomeScreen
     initializeDb();
+    fetchAssignedItems();
 
     // Initialize Animation Controller for the slide-in dialog
     _animationController = AnimationController(
@@ -236,16 +238,28 @@ class _HomeScreenState extends State<HomeScreen>
     }
 
     if (index == 0 && !isCountStarted && _selectedIndex != 1) {
-      // Fetch both warehouses and companies grouped by company
-      Map<String, dynamic> data =
-          await ApiService.getWarehousesAndCompanies(context);
+      // Fetch both warehouses and companies from Hive storage
+      var authBox = await Hive.openBox('authBox'); // Ensure Hive box is open
 
-      Map<String, List<String>> warehousesByCompany =
-          data['warehouses_by_company'] ?? {};
-      List<String> companies = data['companies'] ?? [];
+      String? warehousesJson = authBox.get('warehouses_by_company');
+      String? companiesJson = authBox.get('companies');
 
-      if (warehousesByCompany.isNotEmpty) {
-        showWarehouseBottomSheet(context, warehousesByCompany, companies);
+      if (warehousesJson != null && companiesJson != null) {
+        Map<String, List<String>> warehousesByCompany = {};
+        (jsonDecode(warehousesJson) as Map<String, dynamic>)
+            .forEach((key, value) {
+          warehousesByCompany[key] = List<String>.from(value as List<dynamic>);
+        });
+
+        List<String> companies = List<String>.from(jsonDecode(companiesJson));
+
+        if (warehousesByCompany.isNotEmpty) {
+          showWarehouseBottomSheet(context, warehousesByCompany, companies);
+        }
+      } else {
+        // Optional: handle the case where no data is found in Hive
+        showErrorDialog(
+            context, 'No warehouse or company data found in local storage.');
       }
       return;
     } else if (isCountStarted && index == 1) {
@@ -263,6 +277,25 @@ class _HomeScreenState extends State<HomeScreen>
     setState(() {
       _selectedIndex = index;
     });
+  }
+
+  Future<void> fetchAssignedItems() async {
+    var authBox = await Hive.openBox('authBox'); // Ensure Hive box is open
+
+    // Fetch assigned items from Hive storage
+    String? assignedItemsJson = authBox.get('assigned_items');
+
+    if (assignedItemsJson != null) {
+      List<Map<String, dynamic>> items =
+          List<Map<String, dynamic>>.from(jsonDecode(assignedItemsJson));
+
+      setState(() {
+        assignedItems = items;
+      });
+    } else {
+      // Optional: handle the case where no assigned items are found in Hive
+      showErrorDialog(context, 'No assigned items found in local storage.');
+    }
   }
 
   @override
@@ -284,8 +317,8 @@ class _HomeScreenState extends State<HomeScreen>
                 padding:
                     const EdgeInsets.symmetric(horizontal: fixPadding * 2.0),
                 onPressed: _toggleDialog, // Trigger the slide-in dialog
-                icon: const Iconify(
-                  Carbon.settings,
+                icon: Iconify(
+                  isCountStarted ? Carbon.list : Carbon.settings,
                   color: whiteColor,
                   size: 22.0,
                 ),
@@ -378,38 +411,9 @@ class _HomeScreenState extends State<HomeScreen>
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text('Settings', style: semibold16Black33),
-                          IconButton(
-                            icon: const Icon(
-                                Icons.arrow_forward), // Icon to slide back
-                            onPressed: _toggleDialog, // Close the drawer
-                          ),
-                        ],
-                      ),
-                      const Divider(),
-                      ListTile(
-                        leading: const Icon(Icons.logout),
-                        title: const Text('Logout', style: medium14Black33),
-                        onTap: logOutUser, // Log out when user taps
-                      ),
-                      const ListTile(
-                        leading: Icon(Icons.info_outline),
-                        title: Text('Version 0.0.1', style: medium14Black33),
-                      ),
-                      const Spacer(),
-                      const Divider(),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 16.0),
-                        child: Image.asset(
-                          'assets/images/aakvatech.jpg',
-                          width: MediaQuery.of(context).size.width * 0.5,
-                        ),
-                      ),
-                    ],
+                    children: isCountStarted
+                        ? buildAssignedItemsList()
+                        : buildSettingsList(),
                   ),
                 ),
               ),
@@ -418,6 +422,67 @@ class _HomeScreenState extends State<HomeScreen>
         ]
       ],
     );
+  }
+
+// Build list of settings items (when not counting)
+  List<Widget> buildSettingsList() {
+    return [
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Text('Settings', style: semibold16Black33),
+          IconButton(
+            icon: const Icon(Icons.arrow_forward),
+            onPressed: _toggleDialog,
+          ),
+        ],
+      ),
+      const Divider(),
+      ListTile(
+        leading: const Icon(Icons.logout),
+        title: const Text('Logout', style: medium14Black33),
+        onTap: logOutUser,
+      ),
+      const ListTile(
+        leading: Icon(Icons.info_outline),
+        title: Text('Version 0.0.1', style: medium14Black33),
+      ),
+      const Spacer(),
+      const Divider(),
+      Padding(
+        padding: const EdgeInsets.only(top: 16.0),
+        child: Image.asset(
+          'assets/images/aakvatech.jpg',
+          width: MediaQuery.of(context).size.width * 0.5,
+        ),
+      ),
+    ];
+  }
+
+  // Build list of assigned items (when counting is initiated)
+  List<Widget> buildAssignedItemsList() {
+    return [
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Text('Assigned Items', style: semibold16Black33),
+          IconButton(
+            icon: const Icon(Icons.arrow_forward),
+            onPressed: _toggleDialog,
+          ),
+        ],
+      ),
+      const Divider(),
+      // Dynamically build ListTiles from assigned items
+      ...assignedItems.map((item) => ListTile(
+            title: Text(item['item'] ?? 'Unnamed Item', style: medium14Black33),
+            onTap: () {
+              // Handle item selection, e.g., show details
+            },
+          )),
+      const Spacer(),
+      const Divider(),
+    ];
   }
 
   void _showSelectionDialog(BuildContext context) {

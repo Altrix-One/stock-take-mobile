@@ -70,6 +70,8 @@ class ApiService {
           if (userInfoResponse.statusCode == 200) {
             final userInfo = jsonDecode(userInfoResponse.body);
 
+            await authBox.put('userId', userInfo['email']);
+
             // Store user details in Hive
             await authBox.put('userDetails', jsonEncode(userInfo));
 
@@ -93,101 +95,6 @@ class ApiService {
       }
     } catch (e) {
       showErrorDialog(context, "An error occurred: $e");
-    }
-  }
-
-  static Future<Map<String, dynamic>> getWarehousesAndCompanies(
-      BuildContext context) async {
-    var authBox = Hive.box('authBox');
-    String? userDetailsJson = authBox.get('userDetails');
-    String? accessToken = authBox.get('accessToken');
-
-    if (userDetailsJson != null && accessToken != null) {
-      try {
-        bool hasInternet = await InternetConnectionChecker().hasConnection;
-
-        if (hasInternet) {
-          final response = await http.post(
-            Uri.parse(
-                '$_baseUrl/api/method/nex_bridge.api.stock_take.get_warehouses_grouped_by_company'),
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer $accessToken',
-            },
-          );
-          print(response.body);
-
-          if (response.statusCode == 200) {
-            final data = jsonDecode(response.body);
-
-            if (data['message'] != null &&
-                data['message']['warehouses_by_company'] != null &&
-                data['message']['companies'] != null) {
-              // Correct casting for `warehouses_by_company`
-              Map<String, List<String>> warehousesByCompany = {};
-              (data['message']['warehouses_by_company'] as Map<String, dynamic>)
-                  .forEach((key, value) {
-                warehousesByCompany[key] =
-                    List<String>.from(value as List<dynamic>);
-              });
-
-              // Correct casting for `companies`
-              List<String> companies =
-                  List<String>.from(data['message']['companies']);
-
-              // Store the data in Hive for offline use
-              await authBox.put(
-                  'warehouses_by_company', jsonEncode(warehousesByCompany));
-              await authBox.put('companies', jsonEncode(companies));
-
-              return {
-                'warehouses_by_company': warehousesByCompany,
-                'companies': companies,
-              };
-            } else {
-              showErrorDialog(context, 'Unexpected response from the server');
-              return {};
-            }
-          } else {
-            final errorData = jsonDecode(response.body);
-            showErrorDialog(
-                context, errorData['message'] ?? 'Failed to load data.');
-            return {};
-          }
-        } else {
-          // No internet: Try fetching from Hive (offline mode)
-          String? storedWarehousesJson = authBox.get('warehouses_by_company');
-          String? storedCompaniesJson = authBox.get('companies');
-
-          if (storedWarehousesJson != null && storedCompaniesJson != null) {
-            Map<String, List<String>> storedWarehousesByCompany = {};
-            (jsonDecode(storedWarehousesJson) as Map<String, dynamic>)
-                .forEach((key, value) {
-              storedWarehousesByCompany[key] =
-                  List<String>.from(value as List<dynamic>);
-            });
-
-            List<String> storedCompanies =
-                List<String>.from(jsonDecode(storedCompaniesJson));
-
-            return {
-              'warehouses_by_company': storedWarehousesByCompany,
-              'companies': storedCompanies,
-            };
-          } else {
-            showErrorDialog(context,
-                'No internet connection and no stored data available.');
-            return {};
-          }
-        }
-      } catch (e) {
-        print(e);
-        showErrorDialog(context, 'Error fetching data: $e');
-        return {};
-      }
-    } else {
-      showErrorDialog(context, 'User details or access token missing in Hive');
-      return {};
     }
   }
 
