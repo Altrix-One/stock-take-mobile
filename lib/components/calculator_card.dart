@@ -29,7 +29,7 @@ class _CalculatorCardState extends State<CalculatorCard>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
   QRViewController? controller;
-  String displayText = '0'; // Used to display numbers on calculator
+  String displayText = '0';
 
   bool isCameraInitialized = false;
 
@@ -49,10 +49,18 @@ class _CalculatorCardState extends State<CalculatorCard>
 
     WidgetsBinding.instance.addObserver(this);
 
-    final countType =
-        Provider.of<StockTakeNotifier>(context, listen: false).countType;
+    final stockTakeNotifier =
+        Provider.of<StockTakeNotifier>(context, listen: false);
 
-    // Listen to the scanner only if the count type is 'Beam'
+    // Listen for changes in scannedData to fetch entry details
+    stockTakeNotifier.addListener(() {
+      if (stockTakeNotifier.scannedData.isNotEmpty) {
+        fetchExistingEntry();
+      }
+    });
+
+    final countType = stockTakeNotifier.countType;
+
     if (countType == 'Beam') {
       SunmiScanner.onBarcodeScanned().listen((event) {
         _setScannedValue(event);
@@ -82,14 +90,13 @@ class _CalculatorCardState extends State<CalculatorCard>
   void _setScannedValue(String value) {
     Provider.of<StockTakeNotifier>(context, listen: false)
         .setScannedData(value);
-    fetchExistingEntry(); // Fetch using the provider value
     print("Scanned: $value");
   }
 
   void fetchExistingEntry() async {
     final stockTakeNotifier =
         Provider.of<StockTakeNotifier>(context, listen: false);
-    String barcode = stockTakeNotifier.scannedData; // Get from provider
+    String barcode = stockTakeNotifier.scannedData;
 
     final existingEntry = await widget.database!.query(
       'StockCountEntryItem',
@@ -129,8 +136,7 @@ class _CalculatorCardState extends State<CalculatorCard>
   void submitEntry() async {
     final stockTakeNotifier =
         Provider.of<StockTakeNotifier>(context, listen: false);
-    String barcode =
-        stockTakeNotifier.scannedData; // Retrieve barcode from provider
+    String barcode = stockTakeNotifier.scannedData;
     int quantity = int.tryParse(displayText) ?? 0;
 
     if (widget.database == null) {
@@ -149,7 +155,7 @@ class _CalculatorCardState extends State<CalculatorCard>
       if (existingEntries.isNotEmpty) {
         await widget.database!.update(
           'StockCountEntryItem',
-          {'qty': quantity, 'synced': 0}, // Update quantity and mark unsynced
+          {'qty': quantity, 'synced': 0},
           where:
               'stock_count_entry_id = ? AND item_barcode = ? AND warehouse = ?',
           whereArgs: [widget.entryId, barcode, widget.warehouse],
@@ -171,7 +177,7 @@ class _CalculatorCardState extends State<CalculatorCard>
         whereArgs: [widget.entryId],
       );
 
-      stockTakeNotifier.setScannedData(''); // Clear scanned data in provider
+      stockTakeNotifier.setScannedData('');
       setState(() {
         displayText = '0';
       });
@@ -241,7 +247,6 @@ class _CalculatorCardState extends State<CalculatorCard>
                   Provider.of<StockTakeNotifier>(context, listen: false)
                       .setScannedData(scanData.code!);
                   print("Scanned QR/Barcode: ${scanData.code}");
-                  fetchExistingEntry();
                 });
                 isCameraInitialized = true;
               }
