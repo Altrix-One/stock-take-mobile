@@ -36,6 +36,9 @@ class _CalculatorCardState extends State<CalculatorCard>
   late AnimationController _animationController;
   late Animation<double> _animation;
 
+  // Track which field is active for editing
+  String activeField = 'value'; // Options: 'value' or 'scannedCode'
+
   @override
   void initState() {
     super.initState();
@@ -55,7 +58,9 @@ class _CalculatorCardState extends State<CalculatorCard>
     // Listen for changes in scannedData to fetch entry details
     stockTakeNotifier.addListener(() {
       if (stockTakeNotifier.scannedData.isNotEmpty) {
-        fetchExistingEntry();
+        if (mounted) {
+          fetchExistingEntry();
+        }
       }
     });
 
@@ -88,12 +93,16 @@ class _CalculatorCardState extends State<CalculatorCard>
   }
 
   void _setScannedValue(String value) {
-    Provider.of<StockTakeNotifier>(context, listen: false)
-        .setScannedData(value);
-    print("Scanned: $value");
+    if (mounted) {
+      Provider.of<StockTakeNotifier>(context, listen: false)
+          .setScannedData(value);
+      print("Scanned: $value");
+    }
   }
 
   void fetchExistingEntry() async {
+    if (!mounted) return;
+
     final stockTakeNotifier =
         Provider.of<StockTakeNotifier>(context, listen: false);
     String barcode = stockTakeNotifier.scannedData;
@@ -104,7 +113,7 @@ class _CalculatorCardState extends State<CalculatorCard>
       whereArgs: [widget.entryId, barcode, widget.warehouse],
     );
 
-    print("existingEntry: $existingEntry");
+    if (!mounted) return;
 
     setState(() {
       displayText = existingEntry.isNotEmpty
@@ -114,26 +123,54 @@ class _CalculatorCardState extends State<CalculatorCard>
   }
 
   void _onButtonPressed(String label) {
+    final stockTakeNotifier =
+        Provider.of<StockTakeNotifier>(context, listen: false);
+
+    if (!mounted) return;
+
     setState(() {
       if (label == 'Clear') {
-        displayText = '0';
-      } else if (label == '<') {
-        if (displayText.length > 1) {
-          displayText = displayText.substring(0, displayText.length - 1);
-        } else {
+        if (activeField == 'value') {
           displayText = '0';
+        } else if (activeField == 'scannedCode') {
+          stockTakeNotifier.setScannedData('');
+        }
+      } else if (label == '<') {
+        if (activeField == 'value') {
+          if (displayText.length > 1) {
+            displayText = displayText.substring(0, displayText.length - 1);
+          } else {
+            displayText = '0';
+          }
+        } else if (activeField == 'scannedCode') {
+          String currentScannedData = stockTakeNotifier.scannedData;
+          if (currentScannedData.isNotEmpty) {
+            stockTakeNotifier.setScannedData(
+                currentScannedData.substring(0, currentScannedData.length - 1));
+          }
         }
       } else {
-        if (displayText == '0') {
-          displayText = label;
-        } else {
-          displayText += label;
+        if (activeField == 'value') {
+          if (displayText == '0') {
+            displayText = label;
+          } else {
+            displayText += label;
+          }
+        } else if (activeField == 'scannedCode') {
+          String currentScannedData = stockTakeNotifier.scannedData;
+          if (currentScannedData == '0') {
+            stockTakeNotifier.setScannedData(label);
+          } else {
+            stockTakeNotifier.setScannedData(currentScannedData + label);
+          }
         }
       }
     });
   }
 
   void submitEntry() async {
+    if (!mounted) return;
+
     final stockTakeNotifier =
         Provider.of<StockTakeNotifier>(context, listen: false);
     String barcode = stockTakeNotifier.scannedData;
@@ -178,9 +215,11 @@ class _CalculatorCardState extends State<CalculatorCard>
       );
 
       stockTakeNotifier.setScannedData('');
-      setState(() {
-        displayText = '0';
-      });
+      if (mounted) {
+        setState(() {
+          displayText = '0';
+        });
+      }
     }
   }
 
@@ -191,11 +230,40 @@ class _CalculatorCardState extends State<CalculatorCard>
         return Column(
           children: [
             if (stockTakeNotifier.countType == 'Beam')
-              _buildBeamScannedDisplay(stockTakeNotifier.scannedData),
-            if (stockTakeNotifier.countType != 'Beam') _buildCameraView(),
+              Expanded(
+                flex: 3,
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      activeField = 'scannedCode';
+                    });
+                  },
+                  child:
+                      _buildScannedCodeDisplay(stockTakeNotifier.scannedData),
+                ),
+              ),
+            if (stockTakeNotifier.countType == 'Camera')
+              Expanded(
+                flex: 3,
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      activeField = 'scannedCode';
+                    });
+                  },
+                  child: _buildCameraView(stockTakeNotifier.scannedData),
+                ),
+              ),
             Expanded(
               flex: 6,
-              child: buildCalculator(),
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    activeField = 'value';
+                  });
+                },
+                child: buildCalculator(),
+              ),
             ),
           ],
         );
@@ -203,39 +271,45 @@ class _CalculatorCardState extends State<CalculatorCard>
     );
   }
 
-  Widget _buildBeamScannedDisplay(String scannedData) {
-    return Expanded(
-      flex: 3,
-      child: Container(
-        color: Colors.white,
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ScaleTransition(
-                scale: _animation,
-                child: Icon(Icons.qr_code_scanner,
-                    size: 48, color: Theme.of(context).primaryColor),
-              ),
-              const SizedBox(height: 20),
-              Text(
+  Widget _buildScannedCodeDisplay(String scannedData) {
+    return Container(
+      color: Colors.white,
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ScaleTransition(
+              scale: _animation,
+              child: Icon(Icons.qr_code_scanner,
+                  size: 48, color: Theme.of(context).primaryColor),
+            ),
+            const SizedBox(height: 20),
+            GestureDetector(
+              onTap: () {
+                setState(() {
+                  activeField = 'scannedCode';
+                });
+              },
+              child: Text(
                 'Scanned Code: $scannedData',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black54,
+                  color: activeField == 'scannedCode'
+                      ? Colors.blue
+                      : Colors.black54,
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildCameraView() {
-    return Expanded(
-      flex: 3,
+  Widget _buildCameraView(String scannedData) {
+    return Container(
+      height: 250, // Set a fixed height for the camera view
       child: Stack(
         children: [
           QRView(
@@ -244,9 +318,11 @@ class _CalculatorCardState extends State<CalculatorCard>
               controller = qrController;
               if (!isCameraInitialized) {
                 controller!.scannedDataStream.listen((scanData) {
-                  Provider.of<StockTakeNotifier>(context, listen: false)
-                      .setScannedData(scanData.code!);
-                  print("Scanned QR/Barcode: ${scanData.code}");
+                  if (mounted) {
+                    Provider.of<StockTakeNotifier>(context, listen: false)
+                        .setScannedData(scanData.code!);
+                    print("Scanned QR/Barcode: ${scanData.code}");
+                  }
                 });
                 isCameraInitialized = true;
               }
@@ -264,14 +340,25 @@ class _CalculatorCardState extends State<CalculatorCard>
                   filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                   child: Consumer<StockTakeNotifier>(
                     builder: (context, stockTakeNotifier, child) {
-                      return Container(
-                        color: Colors.white.withOpacity(0.5),
-                        padding: const EdgeInsets.all(8),
-                        child: Text(
-                          'Scanned Data: ${stockTakeNotifier.scannedData}',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                              fontSize: 18, color: Colors.black),
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            activeField = 'scannedCode';
+                          });
+                        },
+                        child: Container(
+                          color: Colors.white.withOpacity(0.5),
+                          padding: const EdgeInsets.all(8),
+                          child: Text(
+                            'Scanned Data: $scannedData',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: activeField == 'scannedCode'
+                                  ? Colors.blue
+                                  : Colors.black,
+                            ),
+                          ),
                         ),
                       );
                     },
@@ -304,10 +391,20 @@ class _CalculatorCardState extends State<CalculatorCard>
           Container(
             padding: const EdgeInsets.symmetric(vertical: 10.0),
             alignment: Alignment.centerRight,
-            child: Text(
-              displayText,
-              style:
-                  const TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  activeField = 'value';
+                });
+              },
+              child: Text(
+                displayText,
+                style: TextStyle(
+                  fontSize: 24.0,
+                  fontWeight: FontWeight.bold,
+                  color: activeField == 'value' ? Colors.blue : Colors.black,
+                ),
+              ),
             ),
           ),
           Expanded(
