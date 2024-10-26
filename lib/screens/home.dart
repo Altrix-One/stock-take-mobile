@@ -54,6 +54,8 @@ class _HomeScreenState extends State<HomeScreen>
   String? accessToken;
   bool isTokenExpired = false; // Variable to track token expiration
   List<Map<String, dynamic>> assignedItems = [];
+  final TextEditingController _searchController = TextEditingController();
+  String searchQuery = ""; // State to store search input
 
   // Variables for slide-in dialog
   late AnimationController _animationController;
@@ -66,7 +68,6 @@ class _HomeScreenState extends State<HomeScreen>
     super.initState();
     checkAuthentication(); // Check authentication before loading HomeScreen
     initializeDb();
-    fetchAssignedItems();
 
     // Initialize Animation Controller for the slide-in dialog
     _animationController = AnimationController(
@@ -187,7 +188,7 @@ class _HomeScreenState extends State<HomeScreen>
     });
   }
 
-  // Toggle the visibility of the slide-in dialog
+  // Toggle the visibility of the slide-in dialog and fetch assigned items if counting is started
   void _toggleDialog() {
     if (_isDialogVisible) {
       _animationController.reverse().then((_) {
@@ -196,6 +197,9 @@ class _HomeScreenState extends State<HomeScreen>
         });
       });
     } else {
+      if (isCountStarted) {
+        fetchAssignedItems(); // Fetch assigned items only when opening the dialog in count mode
+      }
       setState(() {
         _isDialogVisible = true;
       });
@@ -459,7 +463,14 @@ class _HomeScreenState extends State<HomeScreen>
     ];
   }
 
+  // Updated buildAssignedItemsList with search functionality
   List<Widget> buildAssignedItemsList() {
+    // Filter items based on the search query
+    List<Map<String, dynamic>> filteredItems = assignedItems.where((item) {
+      String itemName = item['item']?.toLowerCase() ?? '';
+      return itemName.contains(searchQuery.toLowerCase());
+    }).toList();
+
     return [
       Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -472,21 +483,65 @@ class _HomeScreenState extends State<HomeScreen>
         ],
       ),
       const Divider(),
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+        child: TextField(
+          controller: _searchController,
+          onChanged: (value) {
+            setState(() {
+              searchQuery = value;
+            });
+          },
+          decoration: InputDecoration(
+            hintText: "Search items...",
+            prefixIcon: const Icon(Icons.search),
+            suffixIcon: searchQuery.isNotEmpty
+                ? IconButton(
+                    icon: const Icon(Icons.clear),
+                    onPressed: () {
+                      _searchController.clear();
+                      setState(() {
+                        searchQuery = "";
+                      });
+                    },
+                  )
+                : null,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10.0),
+            ),
+          ),
+        ),
+      ),
+      const Divider(),
       // Wrapping the list in a Flexible widget with ListView
       Flexible(
-        child: ListView.builder(
-          itemCount: assignedItems.length,
-          itemBuilder: (context, index) {
-            var item = assignedItems[index];
-            return ListTile(
-              title:
-                  Text(item['item'] ?? 'Unnamed Item', style: medium14Black33),
-              onTap: () {
-                // Handle item selection, e.g., show details
-              },
-            );
-          },
-        ),
+        child: filteredItems.isNotEmpty
+            ? ListView.builder(
+                itemCount: filteredItems.length,
+                itemBuilder: (context, index) {
+                  var item = filteredItems[index];
+                  return ListTile(
+                    title: Text(item['item'] ?? 'Unnamed Item',
+                        style: medium14Black33),
+                    onTap: () {
+                      // Handle item selection, e.g., show details
+                    },
+                  );
+                },
+              )
+            : Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.inbox, size: 40, color: Colors.grey[400]),
+                    const SizedBox(height: 8),
+                    const Text(
+                      "No items found",
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  ],
+                ),
+              ),
       ),
       const Divider(),
     ];
