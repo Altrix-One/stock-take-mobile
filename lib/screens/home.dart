@@ -463,7 +463,6 @@ class _HomeScreenState extends State<HomeScreen>
     ];
   }
 
-  // Updated buildAssignedItemsList with search functionality
   List<Widget> buildAssignedItemsList() {
     // Filter items based on the search query
     List<Map<String, dynamic>> filteredItems = assignedItems.where((item) {
@@ -513,7 +512,6 @@ class _HomeScreenState extends State<HomeScreen>
         ),
       ),
       const Divider(),
-      // Wrapping the list in a Flexible widget with ListView
       Flexible(
         child: filteredItems.isNotEmpty
             ? ListView.builder(
@@ -524,7 +522,10 @@ class _HomeScreenState extends State<HomeScreen>
                     title: Text(item['item'] ?? 'Unnamed Item',
                         style: medium14Black33),
                     onTap: () {
-                      // Handle item selection, e.g., show details
+                      // Set scannedData in the provider and close the dialog
+                      Provider.of<StockTakeNotifier>(context, listen: false)
+                          .setScannedData(item['item'] ?? '');
+                      _toggleDialog(); // Hide dialog after item is selected
                     },
                   );
                 },

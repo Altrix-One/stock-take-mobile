@@ -30,7 +30,6 @@ class _CalculatorCardState extends State<CalculatorCard>
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
   QRViewController? controller;
   String displayText = '0'; // Used to display numbers on calculator
-  String scannedData = '';
 
   bool isCameraInitialized = false;
 
@@ -81,31 +80,30 @@ class _CalculatorCardState extends State<CalculatorCard>
   }
 
   void _setScannedValue(String value) {
-    setState(() {
-      scannedData = value;
-    });
-    fetchExistingEntry();
+    Provider.of<StockTakeNotifier>(context, listen: false)
+        .setScannedData(value);
+    fetchExistingEntry(); // Fetch using the provider value
     print("Scanned: $value");
   }
 
   void fetchExistingEntry() async {
+    final stockTakeNotifier =
+        Provider.of<StockTakeNotifier>(context, listen: false);
+    String barcode = stockTakeNotifier.scannedData; // Get from provider
+
     final existingEntry = await widget.database!.query(
       'StockCountEntryItem',
       where: 'stock_count_entry_id = ? AND item_barcode = ? AND warehouse = ?',
-      whereArgs: [widget.entryId, scannedData, widget.warehouse],
+      whereArgs: [widget.entryId, barcode, widget.warehouse],
     );
 
     print("existingEntry: $existingEntry");
 
-    if (existingEntry.isNotEmpty) {
-      setState(() {
-        displayText = existingEntry.first['qty'].toString();
-      });
-    } else {
-      setState(() {
-        displayText = '0';
-      });
-    }
+    setState(() {
+      displayText = existingEntry.isNotEmpty
+          ? existingEntry.first['qty'].toString()
+          : '0';
+    });
   }
 
   void _onButtonPressed(String label) {
@@ -129,68 +127,54 @@ class _CalculatorCardState extends State<CalculatorCard>
   }
 
   void submitEntry() async {
-    try {
-      int quantity =
-          int.tryParse(displayText) ?? 0; // Parse the quantity from the display
+    final stockTakeNotifier =
+        Provider.of<StockTakeNotifier>(context, listen: false);
+    String barcode =
+        stockTakeNotifier.scannedData; // Retrieve barcode from provider
+    int quantity = int.tryParse(displayText) ?? 0;
 
-      if (widget.database == null) {
-        print("Database is null.");
-        return;
-      }
+    if (widget.database == null) {
+      print("Database is null.");
+      return;
+    }
 
-      if (widget.entryId != 0 && scannedData.isNotEmpty && quantity > 0) {
-        // Fetch the existing entry based on item_barcode and stock_count_entry_id
-        List<Map> existingEntries = await widget.database!.query(
+    if (widget.entryId != 0 && barcode.isNotEmpty && quantity > 0) {
+      List<Map> existingEntries = await widget.database!.query(
+        'StockCountEntryItem',
+        where:
+            'stock_count_entry_id = ? AND item_barcode = ? AND warehouse = ?',
+        whereArgs: [widget.entryId, barcode, widget.warehouse],
+      );
+
+      if (existingEntries.isNotEmpty) {
+        await widget.database!.update(
           'StockCountEntryItem',
+          {'qty': quantity, 'synced': 0}, // Update quantity and mark unsynced
           where:
               'stock_count_entry_id = ? AND item_barcode = ? AND warehouse = ?',
-          whereArgs: [widget.entryId, scannedData, widget.warehouse],
+          whereArgs: [widget.entryId, barcode, widget.warehouse],
         );
-
-        if (existingEntries.isNotEmpty) {
-          // Update the existing entry (whether recount or not)
-          await widget.database!.update(
-            'StockCountEntryItem',
-            {'qty': quantity, 'synced': 0}, // Update quantity and mark unsynced
-            where:
-                'stock_count_entry_id = ? AND item_barcode = ? AND warehouse = ?',
-            whereArgs: [widget.entryId, scannedData, widget.warehouse],
-          );
-        } else {
-          // Insert a new entry if no existing entry is found
-          await widget.database!.insert('StockCountEntryItem', {
-            'stock_count_entry_id': widget.entryId,
-            'item_barcode': scannedData,
-            'warehouse': widget.warehouse,
-            'qty': quantity,
-            'synced': 0 // Mark the new item as unsynced
-          });
-        }
-
-        // After modifying/adding items, mark the parent entry as unsynced
-        await widget.database!.update(
-          'StockCountEntry',
-          {'synced': 0}, // Mark the entry as unsynced
-          where: 'id = ?',
-          whereArgs: [widget.entryId],
-        );
-
-        // For debugging, print all entries related to the stock_count_entry_id
-        List<Map> result = await widget.database!.query(
-          'StockCountEntryItem',
-          where: 'stock_count_entry_id = ?',
-          whereArgs: [widget.entryId],
-        );
-        print("Stock Count Entry Items: $result");
-
-        // Reset the scanner and calculator for the next entry
-        setState(() {
-          scannedData = '';
-          displayText = '0';
+      } else {
+        await widget.database!.insert('StockCountEntryItem', {
+          'stock_count_entry_id': widget.entryId,
+          'item_barcode': barcode,
+          'warehouse': widget.warehouse,
+          'qty': quantity,
+          'synced': 0
         });
       }
-    } catch (e) {
-      print("Error in submitEntry: $e");
+
+      await widget.database!.update(
+        'StockCountEntry',
+        {'synced': 0},
+        where: 'id = ?',
+        whereArgs: [widget.entryId],
+      );
+
+      stockTakeNotifier.setScannedData(''); // Clear scanned data in provider
+      setState(() {
+        displayText = '0';
+      });
     }
   }
 
@@ -201,7 +185,7 @@ class _CalculatorCardState extends State<CalculatorCard>
         return Column(
           children: [
             if (stockTakeNotifier.countType == 'Beam')
-              _buildBeamScannedDisplay(),
+              _buildBeamScannedDisplay(stockTakeNotifier.scannedData),
             if (stockTakeNotifier.countType != 'Beam') _buildCameraView(),
             Expanded(
               flex: 6,
@@ -213,7 +197,7 @@ class _CalculatorCardState extends State<CalculatorCard>
     );
   }
 
-  Widget _buildBeamScannedDisplay() {
+  Widget _buildBeamScannedDisplay(String scannedData) {
     return Expanded(
       flex: 3,
       child: Container(
@@ -254,9 +238,8 @@ class _CalculatorCardState extends State<CalculatorCard>
               controller = qrController;
               if (!isCameraInitialized) {
                 controller!.scannedDataStream.listen((scanData) {
-                  setState(() {
-                    scannedData = scanData.code!;
-                  });
+                  Provider.of<StockTakeNotifier>(context, listen: false)
+                      .setScannedData(scanData.code!);
                   print("Scanned QR/Barcode: ${scanData.code}");
                   fetchExistingEntry();
                 });
@@ -274,14 +257,19 @@ class _CalculatorCardState extends State<CalculatorCard>
                 borderRadius: BorderRadius.circular(8),
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                  child: Container(
-                    color: Colors.white.withOpacity(0.5),
-                    padding: const EdgeInsets.all(8),
-                    child: Text(
-                      'Scanned Data: $scannedData',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 18, color: Colors.black),
-                    ),
+                  child: Consumer<StockTakeNotifier>(
+                    builder: (context, stockTakeNotifier, child) {
+                      return Container(
+                        color: Colors.white.withOpacity(0.5),
+                        padding: const EdgeInsets.all(8),
+                        child: Text(
+                          'Scanned Data: ${stockTakeNotifier.scannedData}',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                              fontSize: 18, color: Colors.black),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ),
