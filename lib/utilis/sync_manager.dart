@@ -9,11 +9,14 @@ import 'package:stock_count/utilis/db_schema.dart';
 
 class SyncManager {
   static const _baseUrl = AppConfig.baseUrl;
-
   static Future<Database> getDatabase() async {
     var databasesPath = await getDatabasesPath();
     String path = join(databasesPath, 'stock_count.db');
-    return await openDatabase(path, version: 1, onCreate: DBSchema.initDB);
+    return await openDatabase(
+      path,
+      version: 1,
+      onCreate: DBSchema.initDB,
+    );
   }
 
   // Ensure that the 'authBox' is open before accessing it
@@ -42,8 +45,11 @@ class SyncManager {
 
     try {
       // Fetch only unsynced entries (synced = 0)
-      List<Map<String, dynamic>> unsyncedEntries = await db
-          .query('StockCountEntry', where: 'synced = ?', whereArgs: [0]);
+      List<Map<String, dynamic>> unsyncedEntries = await db.query(
+        'StockCountEntry',
+        where: 'synced = ?',
+        whereArgs: [0],
+      );
 
       if (unsyncedEntries.isNotEmpty) {
         List<Map<String, dynamic>> bulkData = [];
@@ -57,8 +63,25 @@ class SyncManager {
           );
 
           bulkData.add({
-            'entry': entry,
-            'entry_items': entryItems,
+            'entry': {
+              'local_id': entry['id'], // Map 'id' as 'local_id'
+              'company': entry['company'],
+              'set_warehouse':
+                  entry['warehouse'], // Map 'warehouse' to 'set_warehouse'
+              'posting_date': entry['posting_date'],
+              'posting_time': entry['posting_time'],
+            },
+            'entry_items': entryItems.map((item) {
+              return {
+                'local_id': item['id'], // Map 'id' as 'local_id'
+                'barcode': item['item_barcode'],
+                'warehouse': item['warehouse'],
+                'qty': item['qty'],
+                // If you have item_name and item_code locally, include them
+                // Otherwise, you may need to fetch or map them accordingly
+                // For now, we'll omit them as they're not in local schema
+              };
+            }).toList(),
           });
         }
 
@@ -68,7 +91,8 @@ class SyncManager {
         };
 
         var response = await http.post(
-          Uri.parse('$_baseUrl/api/method/sync_entry'),
+          Uri.parse(
+              '$_baseUrl/api/method/nex_bridge.api.stock_take.sync_entry'),
           headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer $accessToken',
@@ -85,24 +109,31 @@ class SyncManager {
               // Update local entries with server_id and mark as synced
               await db.update(
                 'StockCountEntry',
-                {'synced': 1, 'server_id': syncedEntry['server_id']},
+                {
+                  'synced': 1,
+                  'server_id': syncedEntry['server_id'],
+                  'last_sync_time': DateTime.now().toIso8601String(),
+                },
                 where: 'id = ?',
                 whereArgs: [syncedEntry['local_id']],
               );
 
               // Update associated items
-              List<Map<String, dynamic>> entryItems = await db.query(
-                'StockCountEntryItem',
-                where: 'stock_count_entry_id = ?',
-                whereArgs: [syncedEntry['local_id']],
-              );
+              // Assuming the server response includes item mappings
+              List<dynamic> syncedItems = syncedEntry['items'] ?? [];
 
-              for (var item in entryItems) {
+              for (var syncedItem in syncedItems) {
                 await db.update(
                   'StockCountEntryItem',
-                  {'synced': 1},
+                  {
+                    'synced': 1,
+                    'server_id': syncedItem['server_id'],
+                    'last_sync_time': DateTime.now().toIso8601String(),
+                    // 'current_qty' is not present locally; handle accordingly
+                    // 'item_name' and 'item_code' are not present locally; handle if needed
+                  },
                   where: 'id = ?',
-                  whereArgs: [item['id']],
+                  whereArgs: [syncedItem['local_id']],
                 );
               }
             }
@@ -121,7 +152,7 @@ class SyncManager {
     }
   }
 
-  // Sync from server without refreshing token automatically
+  // Revised syncFromServer method based on server_id
   static Future<void> syncFromServer() async {
     var authBox = await _getAuthBox(); // Ensure box is open
     String? accessToken = authBox.get('accessToken');
@@ -139,7 +170,7 @@ class SyncManager {
       var postData = {'api_call_type': 'get_entries'};
 
       var response = await http.post(
-        Uri.parse('$_baseUrl/api/method/sync_entry'),
+        Uri.parse('$_baseUrl/api/method/nex_bridge.api.stock_take.sync_entry'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $accessToken',
@@ -148,99 +179,133 @@ class SyncManager {
       );
 
       if (response.statusCode == 200) {
-        List<dynamic> serverEntries = jsonDecode(response.body)['message'];
+        var responseData = jsonDecode(response.body)['message'];
+        List<dynamic> serverEntries = responseData['entries'] ?? [];
+
         Database db = await getDatabase();
 
         for (var entry in serverEntries) {
-          // Check if the userId is set in authBox, if not set it to entry['st_user']
-          String? userId = authBox.get('userId');
-          if (userId == null || userId.isEmpty) {
-            userId = entry['st_user'];
-            await authBox.put('userId', userId);
-          }
-
-          // Check if entry already exists in local database
+          String? serverId = entry['name'];
           List<Map<String, dynamic>> localEntry = await db.query(
             'StockCountEntry',
             where: 'server_id = ?',
-            whereArgs: [entry['name']],
+            whereArgs: [serverId],
           );
 
           if (localEntry.isEmpty) {
-            // If entry does not exist, insert it
-            int entryId = await db.insert(
+            await db.insert(
               'StockCountEntry',
               {
-                'server_id': entry['name'], // Save server ID for syncing
+                'server_id': serverId,
                 'company': entry['company'],
-                'warehouse': entry['warehouse'],
+                'warehouse': entry['set_warehouse'],
                 'posting_date': entry['posting_date'],
                 'posting_time': entry['posting_time'],
-                'stock_count_person': entry['st_user'],
-                'synced': 1, // Mark as synced
+                'stock_count_person': entry['owner'],
+                'synced': 1,
                 'last_sync_time': DateTime.now().toIso8601String(),
               },
             );
 
-            // Insert associated items for the new entry
-            List<dynamic> entryItems = entry['entry_items'];
+            List<dynamic> entryItems = entry['items'] ?? [];
             for (var item in entryItems) {
               await db.insert(
                 'StockCountEntryItem',
                 {
-                  'stock_count_entry_id': entryId, // Local FK to the new entry
-                  'server_id': item['name'], // Save server item ID
-                  'item_barcode': item['item_barcode'],
-                  'warehouse': entry['warehouse'],
+                  'stock_count_entry_id':
+                      await _getLocalEntryIdByServerId(db, serverId!),
+                  'server_id': item['name'],
+                  'item_barcode': item['barcode'],
+                  'warehouse': item['warehouse'],
                   'qty': item['qty'],
-                  'synced': 1, // Mark as synced
+                  'synced': 1,
                   'last_sync_time': DateTime.now().toIso8601String(),
                 },
               );
             }
           } else {
-            // If entry exists, update it
-            int entryId = await db.update(
+            await db.update(
               'StockCountEntry',
               {
                 'company': entry['company'],
-                'warehouse': entry['warehouse'],
+                'warehouse': entry['set_warehouse'],
                 'posting_date': entry['posting_date'],
                 'posting_time': entry['posting_time'],
-                'stock_count_person': entry['st_user'],
+                'stock_count_person': entry['owner'],
                 'synced': 1,
                 'last_sync_time': DateTime.now().toIso8601String(),
               },
               where: 'server_id = ?',
-              whereArgs: [entry['name']],
+              whereArgs: [serverId],
             );
 
             // Update associated items for the existing entry
-            List<dynamic> entryItems = entry['entry_items'];
+            List<dynamic> entryItems = entry['items'] ?? [];
             for (var item in entryItems) {
-              await db.update(
+              String? itemServerId = item['name'];
+              // Check if item exists
+              List<Map<String, dynamic>> localItem = await db.query(
                 'StockCountEntryItem',
-                {
-                  'item_barcode': item['item_barcode'],
-                  'warehouse': entry['warehouse'],
-                  'qty': item['qty'],
-                  'synced': 1,
-                  'last_sync_time': DateTime.now().toIso8601String(),
-                },
                 where: 'server_id = ?',
-                whereArgs: [item['name']],
+                whereArgs: [itemServerId],
               );
+
+              if (localItem.isEmpty) {
+                // Insert new item
+                await db.insert(
+                  'StockCountEntryItem',
+                  {
+                    'stock_count_entry_id':
+                        await _getLocalEntryIdByServerId(db, serverId!),
+                    'server_id': itemServerId,
+                    'item_barcode': item['barcode'],
+                    'warehouse': item['warehouse'],
+                    'qty': item['qty'],
+                    'synced': 1,
+                    'last_sync_time': DateTime.now().toIso8601String(),
+                  },
+                );
+              } else {
+                await db.update(
+                  'StockCountEntryItem',
+                  {
+                    'item_barcode': item['barcode'],
+                    'warehouse': item['warehouse'],
+                    'qty': item['qty'],
+                    'synced': 1,
+                    'last_sync_time': DateTime.now().toIso8601String(),
+                  },
+                  where: 'server_id = ?',
+                  whereArgs: [itemServerId],
+                );
+              }
             }
           }
         }
 
-        print("Fetch from server completed.");
+        print("Fetch from server completed successfully.");
       } else {
         print("Error fetching from server: ${response.body}");
       }
     } catch (e) {
       print("Fetch from server failed: $e");
     }
+  }
+
+  // Helper method to get local entry id by server_id
+  static Future<int?> _getLocalEntryIdByServerId(
+      Database db, String serverId) async {
+    List<Map<String, dynamic>> result = await db.query(
+      'StockCountEntry',
+      where: 'server_id = ?',
+      whereArgs: [serverId],
+      columns: ['id'],
+    );
+
+    if (result.isNotEmpty) {
+      return result.first['id'] as int?;
+    }
+    return null;
   }
 
   // Method to fetch and store warehouses and companies in Hive
@@ -255,6 +320,12 @@ class SyncManager {
       print("Access token is either missing or expired. Sync aborted.");
       return;
     }
+
+    // Clear previous data
+    await authBox.delete('warehouses_by_company');
+    await authBox.delete('companies');
+    print(
+        "Cleared previous warehouse and company data before fetching new ones.");
 
     try {
       var response = await http.post(
@@ -312,6 +383,10 @@ class SyncManager {
       return;
     }
 
+    // Clear existing data to avoid stale cache issues
+    await authBox.delete('assigned_items');
+    print("Cleared previous assigned items before fetching new ones.");
+
     try {
       var response = await http.post(
         Uri.parse(
@@ -325,13 +400,24 @@ class SyncManager {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
 
-        if (data['message'] != null &&
-            data['message']['assigned_items'] != null) {
+        // Safely check if 'message' and 'assigned_items' are valid keys and if the assigned items are a list.
+        if (data is Map<String, dynamic> &&
+            data['message'] is Map<String, dynamic> &&
+            data['message']['assigned_items'] is List) {
           List<dynamic> assignedItems = data['message']['assigned_items'];
-          await authBox.put('assigned_items', jsonEncode(assignedItems));
-          print("Assigned items stored in Hive.");
+
+          if (assignedItems.isNotEmpty) {
+            await authBox.put('assigned_items', jsonEncode(assignedItems));
+            print("Assigned items stored in Hive.");
+          } else {
+            // No assigned items available
+            print(
+                "Assigned items are empty. Cleared assigned_items from Hive.");
+          }
         } else {
-          print("Unexpected response format for assigned items.");
+          // Response not in expected format, ensure nothing stale is left
+          print(
+              "Unexpected response format for assigned items. Cleared assigned_items from Hive.");
         }
       } else {
         print("Failed to fetch assigned items: ${response.body}");

@@ -7,6 +7,7 @@ import 'package:stock_count/utilis/dialog_messages.dart';
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:hive/hive.dart';
+import 'package:stock_count/utilis/sync_manager.dart'; // Import SyncManager to fetch user data
 
 class ApiService {
   static const String _baseUrl = AppConfig.baseUrl;
@@ -75,6 +76,9 @@ class ApiService {
             // Store user details in Hive
             await authBox.put('userDetails', jsonEncode(userInfo));
 
+            // Fetch user-specific data (warehouses, companies, assigned items)
+            await fetchUserSpecificData();
+
             // Navigate to HomeScreen
             Navigator.pushAndRemoveUntil(
               context,
@@ -96,6 +100,12 @@ class ApiService {
     } catch (e) {
       showErrorDialog(context, "An error occurred: $e");
     }
+  }
+
+  // Fetch user-specific data after successful login
+  static Future<void> fetchUserSpecificData() async {
+    await SyncManager.fetchAndStoreWarehousesAndCompanies();
+    await SyncManager.fetchAndStoreAssignedItems();
   }
 
   static Future<void> _logout(BuildContext context) async {
