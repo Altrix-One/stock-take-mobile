@@ -1,16 +1,33 @@
-# stock_count
+# Stock Take
 
-A new Flutter project.
+**Stock Take** is a Flutter-based mobile application that streamlines and enhances the stock-taking process in warehouses. It integrates with Frappe/ERPNext for powerful data management and supports offline operation for environments with limited connectivity.
 
-## Getting Started
+> **Note:** This app **requires** the [Nex Bridge](https://github.com/Aakvatech-Limited/nex_bridge) application for communication between Flutter and Frappe/ERPNext.
 
-This project is a starting point for a Flutter application.
+---
 
-A few resources to get you started if this is your first Flutter project:
+## Features
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+- **Real-Time Data Integration:** Seamlessly connects with Frappe/ERPNext.
+- **Offline Operation:** Continue stock-taking without an internet connection.
+- **User-Friendly UI:** Built with Flutter for a modern, intuitive experience.
+- **Efficient Inventory Management:** Minimizes human errors and streamlines workflows.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+---
+
+## Screenshots
+
+Below are sample screenshots demonstrating various parts of the app:
+
+| ![](docs/1.png) | ![](docs/2.png) | ![](docs/3.png) |
+|:--------------------------:|:-------------------------------:|:---------------------------:|
+
+| ![](docs/4.png) | ![](docs/5.png) | ![](docs/7.png) |
+|:---------------------------:|:-----------------------:|:---------------------------------:|
+
+| ![](docs/8a.jpg) | ![](docs/8b.png) | ![](docs/9.jpg) |
+|:--------------------------------------:|:--------------------------------------:|:-----------------------------:|
+
+---
+
+
