@@ -22,7 +22,7 @@ Below are sample screenshots demonstrating various parts of the app:
 | ![](docs/1.png) | ![](docs/2.png) | ![](docs/3.png) |
 |:--------------------------:|:-------------------------------:|:---------------------------:|
 
-| ![](docs/4.png) | ![](docs/5.png) | ![](docs/7.png) |
+| ![](docs/4.jpg) | ![](docs/5.jpg) | ![](docs/7.jpg) |
 |:---------------------------:|:-----------------------:|:---------------------------------:|
 
 | ![](docs/8a.jpg) | ![](docs/8b.png) | ![](docs/9.jpg) |
