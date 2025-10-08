@@ -58,6 +58,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Lottie.asset(
                       'assets/lottie_assets/2.json',
                       fit: BoxFit.contain,
+                      delegates: LottieDelegates(values: [
+                        // Target fills within the referenced comp's shape layers
+                        ValueDelegate.color(['**', 'Shape Layer 1', '**', 'Fill 1'], value: const Color(0xFFB5651D)),
+                        ValueDelegate.color(['**', 'Shape Layer 2', '**', 'Fill 1'], value: const Color(0xFFB5651D)),
+                        ValueDelegate.color(['**', 'Shape Layer 3', '**', 'Fill 1'], value: const Color(0xFFB5651D)),
+                        // Fallback: any Fill 1
+                        ValueDelegate.color(['**', 'Fill 1'], value: const Color(0xFFB5651D)),
+                      ]),
                     ),
                   ),
                   const Spacer(flex: 1),

@@ -454,10 +454,20 @@ class _HomeScreenState extends State<HomeScreen>
       const Spacer(),
       const Divider(),
       Padding(
-        padding: const EdgeInsets.only(top: 16.0),
-        child: Image.asset(
-          'assets/images/cohenixlogo.png',
-          width: MediaQuery.of(context).size.width * 0.5,
+        padding: const EdgeInsets.only(top: 16.0, bottom: 8.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset(
+              'assets/images/cohenixlogo.png',
+              width: MediaQuery.of(context).size.width * 0.25,
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Product of Cohenix',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+          ],
         ),
       ),
     ];
