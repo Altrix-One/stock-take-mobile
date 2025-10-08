@@ -782,23 +782,31 @@ class _HomeScreenState extends State<HomeScreen>
   Widget headerTitle() {
     return Row(
       children: [
-        CircleAvatar(
-          maxRadius: 25,
-          backgroundColor: Colors.white,
-          child: profilePictureUrl != null && accessToken != null
-              ? ImageWithBearerToken(
-                  imageUrl: profilePictureUrl!,
-                  bearerToken: accessToken!,
-                )
-              : Text(
-                  firstName != null ? firstName![0].toUpperCase() : 'S',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 25,
-                    color: primaryColor,
-                  ),
-                ),
-        ),
+        // Profile image/avatar
+        if (profilePictureUrl != null && accessToken != null)
+          ClipOval(
+            child: SizedBox(
+              width: 50,
+              height: 50,
+              child: ImageWithBearerToken(
+                imageUrl: profilePictureUrl!,
+                bearerToken: accessToken!,
+              ),
+            ),
+          )
+        else
+          CircleAvatar(
+            maxRadius: 25,
+            backgroundColor: Colors.white,
+            child: Text(
+              firstName != null ? firstName![0].toUpperCase() : 'S',
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 25,
+                color: primaryColor,
+              ),
+            ),
+          ),
         widthSpace,
         Expanded(
           child: Column(
@@ -868,7 +876,12 @@ class ImageWithBearerToken extends StatelessWidget {
           if (snapshot.hasData) {
             if (snapshot.data!.statusCode == 200 &&
                 snapshot.data!.headers['content-type']!.startsWith('image/')) {
-              return Image.memory(snapshot.data!.bodyBytes);
+              return Image.memory(
+                snapshot.data!.bodyBytes,
+                fit: BoxFit.cover,
+                width: double.infinity,
+                height: double.infinity,
+              );
             } else {
               return Center(child: Text('Invalid image data or unauthorized.'));
             }
