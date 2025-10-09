@@ -17,6 +17,7 @@ import 'package:stock_count/utilis/change_notifier.dart';
 import 'package:stock_count/utilis/db_schema.dart';
 import 'package:stock_count/utilis/dialog_messages.dart';
 import 'package:stock_count/screens/login.dart'; // Import login screen
+import 'package:stock_count/screens/move.dart';
 
 class HomeScreen extends StatefulWidget {
   final int? recountEntryId;
@@ -165,7 +166,12 @@ class _HomeScreenState extends State<HomeScreen>
     var databasesPath = await getDatabasesPath();
     String path = p.join(databasesPath, 'stock_count.db');
 
-    database = await openDatabase(path, version: 1, onCreate: DBSchema.initDB);
+    database = await openDatabase(
+      path,
+      version: DBSchema.dbVersion,
+      onCreate: DBSchema.initDB,
+      onUpgrade: DBSchema.upgradeDB,
+    );
   }
 
   void startCount() async {
@@ -442,6 +448,15 @@ class _HomeScreenState extends State<HomeScreen>
         ],
       ),
       const Divider(),
+      ListTile(
+        leading: const Icon(Icons.swap_horiz),
+        title: const Text('Stock Movements', style: medium14Black33),
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const MoveScreen()),
+          );
+        },
+      ),
       ListTile(
         leading: const Icon(Icons.logout),
         title: const Text('Logout', style: medium14Black33),

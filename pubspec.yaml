@@ -52,6 +52,7 @@ dependencies:
   # Using simple Timer for periodic sync instead of background services
   hive: ^2.2.3
   hive_flutter: ^1.1.0
+  uuid: ^4.5.1
 
 dev_dependencies:
   flutter_test:

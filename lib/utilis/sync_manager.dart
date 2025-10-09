@@ -15,8 +15,9 @@ class SyncManager {
     String path = join(databasesPath, 'stock_count.db');
     return await openDatabase(
       path,
-      version: 1,
+      version: DBSchema.dbVersion,
       onCreate: DBSchema.initDB,
+      onUpgrade: DBSchema.upgradeDB,
     );
   }
 

@@ -7,6 +7,7 @@ import 'package:stock_count/screens/login.dart';
 import 'package:stock_count/screens/setup_dialog.dart';
 import 'package:stock_count/utilis/change_notifier.dart';
 import 'package:stock_count/utilis/sync_manager.dart'; // Import sync manager
+import 'package:stock_count/utilis/outbox_queue.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:async';
@@ -35,6 +36,8 @@ void startPeriodicSync() {
     // Post data to server
     try {
       await SyncManager.syncToServer();
+      // Process the Outbox queue for offline operations
+      await OutboxQueue.processQueue();
       print("Post sync completed at ${DateTime.now()}");
     } catch (e) {
       print("Error during post sync: $e");
@@ -43,6 +46,7 @@ void startPeriodicSync() {
 
   print("Periodic sync scheduled every 15 minutes");
 }
+
 
 // Initialize Hive for background tasks
 Future<void> initializeHiveForBackgroundTasks() async {

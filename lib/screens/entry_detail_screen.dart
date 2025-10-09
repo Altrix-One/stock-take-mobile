@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:stock_count/constants/theme.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:stock_count/utilis/outbox_queue.dart';
 
 class EntryDetailsScreen extends StatefulWidget {
   final int entryId;
@@ -21,6 +22,31 @@ class EntryDetailsScreen extends StatefulWidget {
 class _EntryDetailsScreenState extends State<EntryDetailsScreen> {
   List<Map<String, dynamic>> scannedItems = [];
   Map<String, dynamic>? entryDetails;
+
+  Future<void> _queueReconciliation() async {
+    if (entryDetails == null || scannedItems.isEmpty) return;
+    final payload = {
+      'company': entryDetails!['company'],
+      'warehouse': entryDetails!['warehouse'],
+      'posting_date': entryDetails!['posting_date'],
+      'posting_time': entryDetails!['posting_time'],
+      'source_count_local_id': entryDetails!['id'],
+      'items': scannedItems
+          .map((i) => {
+                'barcode': i['item_barcode'],
+                'qty': i['qty'],
+                'warehouse': i['warehouse'],
+              })
+          .toList(),
+    };
+
+    // Insert into Outbox
+    await OutboxQueue.addOperation('stock_reconciliation', payload);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Reconciliation queued for sync')),
+    );
+  }
 
   @override
   void initState() {
@@ -113,6 +139,11 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> {
           ),
           onPressed: () => Navigator.of(context).pop(),
         ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _queueReconciliation,
+        icon: const Icon(Icons.fact_check_outlined),
+        label: const Text('Create Reconciliation'),
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
