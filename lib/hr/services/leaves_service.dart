@@ -9,8 +9,16 @@ class LeavesService {
       final res = await HrmsApiClient.postMethod('hrms.api.get_leave_applications', params: {
         if (emp != null) 'employee': emp,
       });
-      return res['message'] as List<dynamic>? ?? [];
+      final list = (res['message'] as List<dynamic>? ?? []).toList();
+      // Optimistically append queued local leaves
+      try {
+        final queued = await OutboxQueue.pendingLeaveRows();
+        if (queued.isNotEmpty) list.insertAll(0, queued);
+      } catch (_) {}
+      return list;
     } catch (_) {
+      // Fall back to only queued items if server call fails
+      try { return await OutboxQueue.pendingLeaveRows(); } catch (_) {}
       return [];
     }
   }
@@ -96,9 +104,39 @@ class LeavesService {
 
   // Submit leave application (create + optional submit) via a bridged method or direct resource API
   static Future<Map<String, dynamic>> submitLeaveApplication(Map<String, dynamic> payload) async {
-    // Prefer a bridged method to keep payload small and add idempotency server-side
-    final res = await HrmsApiClient.postMethod('hrms.api.submit_leave_application', params: payload);
-    return res['message'] as Map<String, dynamic>? ?? {};
+    // Try dedicated HRMS endpoint (if present on the server)
+    try {
+      final res = await HrmsApiClient.postMethod('hrms.api.submit_leave_application', params: payload);
+      return res['message'] as Map<String, dynamic>? ?? {};
+    } catch (_) {
+      // Fallback: create via resource API then submit the document
+      // Map app payload to Frappe doc fields
+      final doc = <String, dynamic>{
+        'doctype': 'Leave Application',
+        if (payload['employee'] != null) 'employee': payload['employee'],
+        if (payload['leave_type'] != null) 'leave_type': payload['leave_type'],
+        if (payload['from_date'] != null) 'from_date': payload['from_date'],
+        if (payload['to_date'] != null) 'to_date': payload['to_date'],
+        if (payload['half_day'] == 1 || payload['half_day'] == true) 'half_day': 1,
+        if (payload['half_day_date'] != null) 'half_day_date': payload['half_day_date'],
+        if (payload['reason'] != null) 'description': payload['reason'],
+      };
+      // Insert draft
+      final inserted = await HrmsApiClient.postMethod('frappe.client.insert', params: {
+        'doc': doc,
+      });
+      final message = inserted['message'];
+      final name = (message is Map && message['name'] != null) ? message['name'].toString() : null;
+      if (name == null) return message as Map<String, dynamic>? ?? {};
+      // Submit (frappe.client.submit requires a 'doc' payload)
+      final submitted = await HrmsApiClient.postMethod('frappe.client.submit', params: {
+        'doc': {
+          'doctype': 'Leave Application',
+          'name': name,
+        }
+      });
+      return submitted['message'] as Map<String, dynamic>? ?? {};
+    }
   }
 
   static Future<void> cancelLeaveApplication(String name, {String? reason}) async {

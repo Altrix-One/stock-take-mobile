@@ -3,6 +3,7 @@ import 'package:stock_count/hr/services/leaves_service.dart';
 import 'package:stock_count/hr/services/attendance_service.dart';
 import 'package:stock_count/hr/services/claims_service.dart';
 import 'package:stock_count/hr/services/profile_service.dart';
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
@@ -10,6 +11,7 @@ import 'package:stock_count/hr/widgets/doctype_form.dart';
 import 'package:stock_count/hr/widgets/leave_balance_card.dart';
 import 'package:stock_count/utilis/outbox_queue.dart';
 import 'package:hive/hive.dart';
+import 'package:stock_count/ui/glass.dart';
 import 'package:stock_count/utilis/sync_manager.dart';
 import 'package:stock_count/screens/queue_status.dart';
 import 'package:stock_count/screens/login.dart';
@@ -82,12 +84,32 @@ class _ESSHomeScreenState extends State<ESSHomeScreen> {
     // Clamp index if approvals hidden
     if (!_canApprove && _index == 4) _index = 3;
     return Scaffold(
-      body: pages[_index],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _index,
-        type: BottomNavigationBarType.fixed,
-        onTap: (i) => setState(() => _index = i),
-        items: items,
+      extendBody: true,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Theme.of(context).colorScheme.surface, Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.35)],
+          ),
+        ),
+        child: pages[_index],
+      ),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+        child: GlassContainer(
+          padding: EdgeInsets.zero,
+          opacity: 0.18,
+          borderRadius: const BorderRadius.all(Radius.circular(24)),
+          child: BottomNavigationBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            currentIndex: _index,
+            type: BottomNavigationBarType.fixed,
+            onTap: (i) => setState(() => _index = i),
+            items: items,
+          ),
+        ),
       ),
     );
   }
@@ -109,6 +131,8 @@ class _DashboardPageState extends State<_DashboardPage> {
   void initState() {
     super.initState();
     _load();
+    // Auto-refresh when queue updates
+    OutboxQueue.events.listen((_) { if (mounted) _load(); });
   }
   Future<void> _load() async {
     try {
@@ -137,7 +161,7 @@ class _DashboardPageState extends State<_DashboardPage> {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
                 children: [
-                  LeaveBalanceCard(balances: _balance),
+                  GlassContainer(child: LeaveBalanceCard(balances: _balance)),
                   const SizedBox(height: 8),
                   if (widget.canApprove)
                     Card(
@@ -179,7 +203,20 @@ Widget _quickLink(String title, IconData icon, VoidCallback onTap){
 
 class _LeavesPageState extends State<_LeavesPage> {
   List<dynamic> _rows = []; bool _loading = true; Map<String,dynamic>? _balance;
-  @override void initState(){ super.initState(); _load(); }
+  Timer? _autoTimer; int _ticks = 0;
+  @override void initState(){ super.initState(); _load();
+    // Auto-refresh when queue updates
+    OutboxQueue.events.listen((_) { if (mounted) _load(); });
+    // Light periodic refresh for a short window so approvals appear without manual pull
+    _autoTimer = Timer.periodic(const Duration(seconds: 15), (t){
+      if (!mounted) return;
+      _ticks++;
+      _load();
+      if (_ticks >= 8) { // ~2 minutes then stop
+        t.cancel();
+      }
+    });
+  }
   Future<void> _load() async { 
     try { 
       _rows = await LeavesService.myLeaves(); 
@@ -190,6 +227,44 @@ class _LeavesPageState extends State<_LeavesPage> {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to load leaves')));
       }
     } finally { if(mounted) setState(()=>_loading=false);} }
+
+  List<Widget> _unapprovedSection(){
+    final draft = _rows.where((r){
+      if (r is Map) {
+        final s = (r['status']??'').toString().toLowerCase();
+        return s=='open' || s=='draft' || s=='pending' || s=='applied';
+      }
+      return false;
+    }).toList();
+    if (draft.isEmpty) return [const Padding(padding: EdgeInsets.only(top: 8), child: Text('No unapproved leaves'))];
+    return [
+      GlassContainer(
+        child: Column(children:[
+          for(final r in draft) _leaveRow(context, r),
+        ]),
+      )
+    ];
+  }
+
+  List<Widget> _approvedSection(){
+    final approved = _rows.where((r){
+      if (r is Map) {
+        final s = (r['status']??'').toString().toLowerCase();
+        return s=='approved' || s=='sanctioned';
+      }
+      return false;
+    }).toList();
+    if (approved.isEmpty) return [const Padding(padding: EdgeInsets.only(top: 8), child: Text('No approved leaves'))];
+    return [
+      GlassContainer(
+        child: Column(children:[
+          for(final r in approved) _leaveRow(context, r),
+        ]),
+      )
+    ];
+  }
+  @override
+  void dispose(){ _autoTimer?.cancel(); super.dispose(); }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -201,14 +276,13 @@ class _LeavesPageState extends State<_LeavesPage> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
           children: [
-            LeaveBalanceCard(balances: _balance),
-            const SizedBox(height: 12),
-            const Text('My Leaves', style: TextStyle(fontWeight: FontWeight.bold)),
-            if (_rows.isEmpty) const Padding(padding: EdgeInsets.only(top: 8), child: Text('No leaves found')) else ...[
-              for (final r in _rows) ...[
-                if (r is Map) _leaveRow(context, r) else ListTile(title: Text(r.toString())),
-              ]
-            ],
+            GlassContainer(child: LeaveBalanceCard(balances: _balance)),
+            const SizedBox(height: 16),
+            const Text('Unapproved Leave', style: TextStyle(fontWeight: FontWeight.bold)),
+            ..._unapprovedSection(),
+            const SizedBox(height: 16),
+            const Text('Approved Leave', style: TextStyle(fontWeight: FontWeight.bold)),
+            ..._approvedSection(),
           ],
         ),
       ),
@@ -342,8 +416,10 @@ class _ApplyLeavePageState extends State<_ApplyLeavePage> {
       'days': _days,
     };
     await OutboxQueue.addOperation('leave_application', payload);
+    // Kick a best-effort immediate processing to avoid waiting for periodic sync
+    await OutboxQueue.processQueue();
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Leave application queued')));
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Leave application submitted')));
     Navigator.of(context).pop();
   }
 

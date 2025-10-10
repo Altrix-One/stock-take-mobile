@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 import 'package:hive/hive.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
@@ -10,6 +11,10 @@ import 'package:stock_count/hr/services/claims_service.dart';
 
 class OutboxQueue {
   static const _uuid = Uuid();
+
+  // Broadcast simple events to help screens refresh automatically when the queue changes
+  static final StreamController<void> _eventsController = StreamController<void>.broadcast();
+  static Stream<void> get events => _eventsController.stream;
 
   static Future<Database> _db() async {
     var databasesPath = await getDatabasesPath();
@@ -35,6 +40,11 @@ class OutboxQueue {
       'created_at': now,
       'updated_at': now,
     });
+    // Notify listeners and try process immediately (fire-and-forget)
+    _eventsController.add(null);
+    // Best-effort immediate processing; do not await to keep UI snappy
+    // ignore: unawaited_futures
+    processQueue();
     return key;
   }
 
@@ -117,6 +127,7 @@ class OutboxQueue {
         }
 
         await db.update('Outbox', {'status': 'acked', 'updated_at': DateTime.now().toIso8601String()}, where: 'id = ?', whereArgs: [id]);
+        _eventsController.add(null);
       } catch (e) {
         final attempts = (row['attempts'] as int) + 1;
         await db.update(
@@ -130,8 +141,29 @@ class OutboxQueue {
           where: 'id = ?',
           whereArgs: [id],
         );
+        _eventsController.add(null);
       }
     }
+  }
+
+  // Expose pending leave rows for optimistic UI in lists
+  static Future<List<Map<String, dynamic>>> pendingLeaveRows() async {
+    final db = await _db();
+    final rows = await db.query('Outbox', where: "op_type = ? AND status IN ('queued','sending')", whereArgs: ['leave_application']);
+    final list = <Map<String, dynamic>>[];
+    for (final r in rows) {
+      try {
+        final payload = jsonDecode(r['payload'] as String) as Map<String, dynamic>;
+        list.add({
+          'name': null,
+          'leave_type': payload['leave_type'],
+          'from_date': payload['from_date'],
+          'to_date': payload['to_date'],
+          'status': 'Applied (queued)',
+        });
+      } catch (_) {}
+    }
+    return list;
   }
   static Future<void> _handleLeaveApplication(Map<String, dynamic> payload) async {
     await LeavesService.submitLeaveApplication(payload);

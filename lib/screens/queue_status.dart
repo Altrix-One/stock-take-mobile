@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
+import 'dart:convert';
 import 'package:stock_count/utilis/db_schema.dart';
 import 'package:stock_count/utilis/outbox_queue.dart';
 
@@ -13,6 +14,22 @@ class QueueStatusScreen extends StatefulWidget {
 class _QueueStatusScreenState extends State<QueueStatusScreen> {
   List<Map<String, Object?>> _rows = [];
   bool _loading = true;
+
+  String _prettyError(String raw){
+    if (raw.isEmpty) return '';
+    // Try to extract the Python exception message from Frappe's JSON error
+    try {
+      // Common pattern: "HRMS API error 500: {\"exception\":\"TypeError: ...\" ... }"
+      final idx = raw.indexOf('{');
+      if (idx > 0) {
+        final jsonPart = raw.substring(idx);
+        final map = json.decode(jsonPart) as Map<String, dynamic>;
+        final exc = map['exception']?.toString();
+        if (exc != null && exc.isNotEmpty) return exc;
+      }
+    } catch (_) {}
+    return raw.length > 500 ? raw.substring(0, 500) + '…' : raw;
+  }
 
   @override
   void initState() {
@@ -51,9 +68,11 @@ class _QueueStatusScreenState extends State<QueueStatusScreen> {
                 itemCount: _rows.length,
                 itemBuilder: (_, i) {
                   final r = _rows[i];
+                  final lastError = (r['last_error']?.toString() ?? '');
+                  final subtitle = lastError.isEmpty ? (r['updated_at']?.toString() ?? '') : _prettyError(lastError);
                   return ListTile(
                     title: Text('${r['op_type']} • ${r['status']}'),
-                    subtitle: Text((r['last_error']?.toString() ?? '').isEmpty ? (r['updated_at']?.toString() ?? '') : r['last_error']!.toString()),
+                    subtitle: Text(subtitle),
                     trailing: IconButton(icon: const Icon(Icons.refresh), onPressed: () => _retry(r['id'] as int)),
                   );
                 },
