@@ -24,7 +24,7 @@ class LeaveHeroAnimation extends StatefulWidget {
     this.tiles = 12,
     this.columns = 4,
     required this.accent,
-    this.duration = const Duration(milliseconds: 2200),
+    this.duration = const Duration(milliseconds: 4000),
     this.mode = LeaveHeroMode.calendar,
     this.icons,
   });
@@ -105,11 +105,11 @@ class _LeaveHeroAnimationState extends State<LeaveHeroAnimation>
               }
             }
 
-            const dropDur = 0.45;   // portion of cycle spent on drop per tile
-            const holdDur = 0.25;   // hold visible
-            const fadeDur = 0.20;   // fade away before next cycle
+            const dropDur = 0.35;   // portion of cycle spent on drop per tile
+            const holdDur = 0.45;   // hold visible longer for better shape formation
+            const fadeDur = 0.15;   // quick fade away before next cycle
             final cycle = dropDur + holdDur + fadeDur; // < 1.0 leaves some idle per tile
-            final stagger = (1.0 - cycle) / max(1, widget.tiles); // spread across timeline
+            final stagger = 0.08; // more dramatic staggered timing for better cascading effect
 
             // Icon set to cycle
             final defaultIcons = <IconData>[
@@ -140,15 +140,15 @@ class _LeaveHeroAnimationState extends State<LeaveHeroAnimation>
                 if (t < 0) t += 1.0; // wrap around
 
                 double opacity = 0.0;
-                double translateY = -size * 1.6; // start above
-                double scale = 0.85;
+                double translateY = -size * 2.5; // start higher for more dramatic drop
+                double scale = 0.75;
 
                 if (t < dropDur) {
-                  // Drop-in with a little bounce
-                  final p = Curves.easeOutBack.transform((t / dropDur).clamp(0.0, 1.0));
-                  translateY = lerpDouble(-size * 1.6, 0.0, p)!;
-                  opacity = lerpDouble(0.0, 1.0, p)!;
-                  scale = lerpDouble(0.9, 1.0, p)!;
+                  // Drop-in with a bigger bounce and more dramatic curve
+                  final p = Curves.elasticOut.transform((t / dropDur).clamp(0.0, 1.0));
+                  translateY = lerpDouble(-size * 2.5, 0.0, p)!;
+                  opacity = lerpDouble(0.0, 1.0, Curves.easeIn.transform((t / dropDur).clamp(0.0, 1.0)))!;
+                  scale = lerpDouble(0.75, 1.05, p)!;
                 } else if (t < dropDur + holdDur) {
                   opacity = 1.0;
                   translateY = 0.0;
@@ -227,7 +227,7 @@ class _LeaveHeroAnimationState extends State<LeaveHeroAnimation>
       },
     );
 
-    final gridHeight = rows * 30 + (rows - 1) * 8;
+    final gridHeight = (rows * 30 + (rows - 1) * 8).toDouble();
     Widget composed = SizedBox(height: gridHeight, child: grid);
 
     // Foreground silhouette painter (calendar or box) for WOW moment
@@ -245,7 +245,7 @@ class _LeaveHeroAnimationState extends State<LeaveHeroAnimation>
           child: Opacity(
             opacity: overlayOpacity,
             child: CustomPaint(
-              size: Size(double.infinity, gridHeight.toDouble()),
+              size: Size(double.infinity, gridHeight),
               painter: _SilhouettePainter(mode: widget.mode, color: accent.withOpacity(0.75)),
             ),
           ),

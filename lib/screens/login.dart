@@ -51,7 +51,63 @@ class _LoginScreenState extends State<LoginScreen> {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  const Spacer(flex: 2),
+                  const Spacer(flex: 1),
+                  // Logo and Brand Section
+                  Container(
+                    constraints: const BoxConstraints(maxWidth: 400),
+                    child: Column(
+                      children: [
+                        // Logo
+                        Container(
+                          width: 80,
+                          height: 80,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: secondaryColor.withOpacity(0.2),
+                                blurRadius: 20,
+                                offset: const Offset(0, 10),
+                              ),
+                            ],
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: Image.asset(
+                              'assets/images/cohenixess.png',
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  decoration: BoxDecoration(
+                                    color: secondaryColor,
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: const Icon(
+                                    Icons.business_rounded,
+                                    color: Colors.white,
+                                    size: 40,
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        // Brand Name
+                        Text(
+                          "Cohenix ESS",
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineSmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: primaryColor,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 32),
                   // Header Animation (HR leave themed)
                   Container(
                     constraints: const BoxConstraints(maxWidth: 400),
@@ -65,12 +121,19 @@ class _LoginScreenState extends State<LoginScreen> {
                       mode: LeaveHeroMode.calendar,
                     ),
                   ),
-                  const Spacer(flex: 1),
-                  // Title and Description Information
-                  const LoginInfo(
-                    title: "Cohenix ESS",
-                    description:
-                        "Manage your team with ease through real-time data, automation, and effortless integration. Cohenix ESS makes HR simple.",
+                  const SizedBox(height: 24),
+                  // Description Information
+                  Container(
+                    constraints: const BoxConstraints(maxWidth: 400),
+                    alignment: Alignment.center,
+                    child: Text(
+                      "Manage your team with ease through real-time data, automation, and effortless integration. Cohenix ESS makes HR simple.",
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Colors.grey[600],
+                        height: 1.5,
+                      ),
+                    ),
                   ),
                   const Spacer(flex: 2),
                   // Login Button with fixed height
@@ -170,42 +233,3 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
-class LoginInfo extends StatelessWidget {
-  const LoginInfo({
-    super.key,
-    required this.title,
-    required this.description,
-  });
-
-  final String title;
-  final String description;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 400),
-        alignment: Alignment.center,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: Theme.of(context)
-                  .textTheme
-                  .headlineSmall
-                  ?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              description,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
