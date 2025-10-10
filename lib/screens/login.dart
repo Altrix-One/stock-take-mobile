@@ -1,11 +1,11 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:lottie/lottie.dart';
 import 'package:stock_count/config.dart';
 import 'package:stock_count/constants/theme.dart';
 import 'package:stock_count/screens/setup_dialog.dart';
 import 'package:stock_count/utilis/api_service.dart';
+import 'package:stock_count/hr/widgets/leave_hero_animation.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -52,20 +52,17 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 children: [
                   const Spacer(flex: 2),
-                  // Header Animation (Lottie)
+                  // Header Animation (HR leave themed)
                   Container(
                     constraints: const BoxConstraints(maxWidth: 400),
-                    child: Lottie.asset(
-                      'assets/lottie_assets/2.json',
-                      fit: BoxFit.contain,
-                      delegates: LottieDelegates(values: [
-                        // Target fills within the referenced comp's shape layers
-                        ValueDelegate.color(['**', 'Shape Layer 1', '**', 'Fill 1'], value: const Color(0xFFB5651D)),
-                        ValueDelegate.color(['**', 'Shape Layer 2', '**', 'Fill 1'], value: const Color(0xFFB5651D)),
-                        ValueDelegate.color(['**', 'Shape Layer 3', '**', 'Fill 1'], value: const Color(0xFFB5651D)),
-                        // Fallback: any Fill 1
-                        ValueDelegate.color(['**', 'Fill 1'], value: const Color(0xFFB5651D)),
-                      ]),
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: LeaveHeroAnimation(
+                      allocated: 20,
+                      used: 7.5,
+                      tiles: 16,
+                      columns: 4,
+                      accent: secondaryColor,
+                      mode: LeaveHeroMode.calendar,
                     ),
                   ),
                   const Spacer(flex: 1),
