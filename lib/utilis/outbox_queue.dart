@@ -4,6 +4,9 @@ import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 import 'package:stock_count/utilis/db_schema.dart';
 import 'package:stock_count/services/stock_service.dart';
+import 'package:stock_count/hr/services/leaves_service.dart';
+import 'package:stock_count/hr/services/attendance_service.dart';
+import 'package:stock_count/hr/services/claims_service.dart';
 
 class OutboxQueue {
   static const _uuid = Uuid();
@@ -35,6 +38,24 @@ class OutboxQueue {
     return key;
   }
 
+  // Totals of pending leave applications grouped by leave_type
+  static Future<Map<String, double>> pendingLeaveByType() async {
+    final db = await _db();
+    final rows = await db.query('Outbox', where: "op_type = ? AND status IN ('queued','sending')", whereArgs: ['leave_application']);
+    final totals = <String, double>{};
+    for (final r in rows) {
+      try {
+        final payload = jsonDecode(r['payload'] as String) as Map<String, dynamic>;
+        final lt = payload['leave_type']?.toString();
+        final days = (payload['days'] is num) ? (payload['days'] as num).toDouble() : double.tryParse('${payload['days']}') ?? 0;
+        if (lt != null && lt.isNotEmpty && days > 0) {
+          totals[lt] = (totals[lt] ?? 0) + days;
+        }
+      } catch (_) {}
+    }
+    return totals;
+  }
+
   // Process queued operations (minimal: stock_entry only)
   static Future<void> processQueue() async {
     final db = await _db();
@@ -47,11 +68,21 @@ class OutboxQueue {
       return; // Skip until user is authenticated
     }
 
-    final rows = await db.query('Outbox', where: 'status = ?', whereArgs: ['queued'], limit: 20);
+    final rows = await db.query('Outbox', where: 'status = ?', whereArgs: ['queued'], orderBy: 'id asc', limit: 50);
+    final now = DateTime.now();
     for (final row in rows) {
       final id = row['id'] as int;
       final opType = row['op_type'] as String;
       final payload = jsonDecode(row['payload'] as String) as Map<String, dynamic>;
+      final attempts = (row['attempts'] as int?) ?? 0;
+      // simple exponential backoff: 0s, 30s, 2m, 6m, 30m, 60m cap
+      final delays = [0, 30, 120, 360, 1800, 3600];
+      final delay = delays[attempts.clamp(0, delays.length - 1)];
+      final updatedAt = DateTime.tryParse(row['updated_at']?.toString() ?? row['created_at']?.toString() ?? '') ?? now;
+      if (now.difference(updatedAt).inSeconds < delay) {
+        // Skip until backoff window expires
+        continue;
+      }
 
       try {
         await db.update('Outbox', {'status': 'sending', 'updated_at': DateTime.now().toIso8601String()}, where: 'id = ?', whereArgs: [id]);
@@ -62,6 +93,24 @@ class OutboxQueue {
             break;
           case 'stock_reconciliation':
             await StockService.createReconciliation(payload);
+            break;
+          case 'leave_application':
+            await _handleLeaveApplication(payload);
+            break;
+          case 'attendance_request':
+            await _handleAttendanceRequest(payload);
+            break;
+          case 'shift_request':
+            await _handleShiftRequest(payload);
+            break;
+          case 'expense_claim':
+            await _handleExpenseClaim(payload);
+            break;
+          case 'approval_action':
+            await _handleApprovalAction(payload);
+            break;
+          case 'cancel_leave':
+            await _handleCancelLeave(payload);
             break;
           default:
             throw Exception('Unsupported operation: $opType');
@@ -83,5 +132,36 @@ class OutboxQueue {
         );
       }
     }
+  }
+  static Future<void> _handleLeaveApplication(Map<String, dynamic> payload) async {
+    await LeavesService.submitLeaveApplication(payload);
+  }
+
+  static Future<void> _handleAttendanceRequest(Map<String, dynamic> payload) async {
+    await AttendanceService.submitAttendanceRequest(payload);
+  }
+
+  static Future<void> _handleShiftRequest(Map<String, dynamic> payload) async {
+    await AttendanceService.submitShiftRequest(payload);
+  }
+
+  static Future<void> _handleExpenseClaim(Map<String, dynamic> payload) async {
+    await ClaimsService.submitExpenseClaim(payload);
+  }
+
+  static Future<void> _handleApprovalAction(Map<String, dynamic> payload) async {
+    await AttendanceService.approvalAction(
+      doctype: payload['doctype'] as String,
+      name: payload['name'] as String,
+      approve: (payload['approve'] as bool?) ?? true,
+      comment: payload['comment'] as String?,
+    );
+  }
+
+  static Future<void> _handleCancelLeave(Map<String, dynamic> payload) async {
+    final name = payload['name']?.toString();
+    final reason = payload['reason']?.toString();
+    if (name == null || name.isEmpty) throw Exception('Missing leave application name');
+    await LeavesService.cancelLeaveApplication(name, reason: reason);
   }
 }

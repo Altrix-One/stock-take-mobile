@@ -71,9 +71,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   const Spacer(flex: 1),
                   // Title and Description Information
                   const LoginInfo(
-                    title: "STOCK TAKE",
+                    title: "Cohenix ESS",
                     description:
-                        "Streamline your stock management with real-time data integration and easy ERPNext connectivity. Simplifying your stock-taking process for higher efficiency.",
+                        "Manage your team with ease through real-time data, automation, and effortless integration. Cohenix ESS makes HR simple.",
                   ),
                   const Spacer(flex: 2),
                   // Login Button with fixed height

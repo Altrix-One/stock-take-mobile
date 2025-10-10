@@ -6,6 +6,7 @@ import 'package:sqflite/sqflite.dart';
 import 'dart:convert';
 import 'package:path/path.dart';
 import 'package:stock_count/utilis/db_schema.dart';
+import 'package:stock_count/utilis/auth_service.dart';
 
 class SyncManager {
   // Use a method to get the base URL asynchronously
@@ -29,16 +30,22 @@ class SyncManager {
     return Hive.box('authBox');
   }
 
-  // Sync to server without refreshing token automatically
-  static Future<void> syncToServer() async {
-    var authBox = await _getAuthBox(); // Ensure box is open
-    String? accessToken = authBox.get('accessToken');
-    DateTime? tokenExpiry = DateTime.tryParse(authBox.get('tokenExpiry') ?? '');
+  // Ensure we have a valid access token (refreshing if needed)
+  static Future<String?> _getValidAccessToken() async {
+    final box = await _getAuthBox();
+    String? token = box.get('accessToken');
+    final DateTime? expiry = DateTime.tryParse(box.get('tokenExpiry') ?? '');
+    if (token == null || expiry == null || DateTime.now().isAfter(expiry)) {
+      final refreshed = await AuthService.refreshTokenIfNeeded(force: true);
+      if (refreshed) token = box.get('accessToken');
+    }
+    return token;
+  }
 
-    // Proceed only if token is still valid
-    if (accessToken == null ||
-        tokenExpiry == null ||
-        DateTime.now().isAfter(tokenExpiry)) {
+  // Sync to server with automatic token refresh
+  static Future<void> syncToServer() async {
+    final accessToken = await _getValidAccessToken();
+    if (accessToken == null) {
       print("Access token is either missing or expired. Sync aborted.");
       return;
     }
@@ -156,14 +163,8 @@ class SyncManager {
 
   // Revised syncFromServer method based on server_id
   static Future<void> syncFromServer() async {
-    var authBox = await _getAuthBox(); // Ensure box is open
-    String? accessToken = authBox.get('accessToken');
-    DateTime? tokenExpiry = DateTime.tryParse(authBox.get('tokenExpiry') ?? '');
-
-    // Proceed only if token is still valid
-    if (accessToken == null ||
-        tokenExpiry == null ||
-        DateTime.now().isAfter(tokenExpiry)) {
+    final accessToken = await _getValidAccessToken();
+    if (accessToken == null) {
       print("Access token is either missing or expired. Sync aborted.");
       return;
     }
@@ -314,12 +315,8 @@ class SyncManager {
   // Method to fetch and store warehouses and companies in Hive
   static Future<void> fetchAndStoreWarehousesAndCompanies() async {
     var authBox = await _getAuthBox();
-    String? accessToken = authBox.get('accessToken');
-    DateTime? tokenExpiry = DateTime.tryParse(authBox.get('tokenExpiry') ?? '');
-
-    if (accessToken == null ||
-        tokenExpiry == null ||
-        DateTime.now().isAfter(tokenExpiry)) {
+    final accessToken = await _getValidAccessToken();
+    if (accessToken == null) {
       print("Access token is either missing or expired. Sync aborted.");
       return;
     }
@@ -377,12 +374,8 @@ class SyncManager {
   // Method to fetch and store assigned items in Hive
   static Future<void> fetchAndStoreAssignedItems() async {
     var authBox = await _getAuthBox();
-    String? accessToken = authBox.get('accessToken');
-    DateTime? tokenExpiry = DateTime.tryParse(authBox.get('tokenExpiry') ?? '');
-
-    if (accessToken == null ||
-        tokenExpiry == null ||
-        DateTime.now().isAfter(tokenExpiry)) {
+    final accessToken = await _getValidAccessToken();
+    if (accessToken == null) {
       print("Access token is either missing or expired. Sync aborted.");
       return;
     }
@@ -405,24 +398,28 @@ class SyncManager {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
 
-        // Safely check if 'message' and 'assigned_items' are valid keys and if the assigned items are a list.
-        if (data is Map<String, dynamic> &&
-            data['message'] is Map<String, dynamic> &&
-            data['message']['assigned_items'] is List) {
-          List<dynamic> assignedItems = data['message']['assigned_items'];
-
-          if (assignedItems.isNotEmpty) {
-            await authBox.put('assigned_items', jsonEncode(assignedItems));
-            print("Assigned items stored in Hive.");
-          } else {
-            // No assigned items available
-            print(
-                "Assigned items are empty. Cleared assigned_items from Hive.");
+        // Parse flexibly: message may be a List or a Map containing list under common keys
+        List<dynamic> assignedItems = const [];
+        if (data is Map<String, dynamic>) {
+          final msg = data['message'];
+          if (msg is List) {
+            assignedItems = msg;
+          } else if (msg is Map<String, dynamic>) {
+            if (msg['assigned_items'] is List) {
+              assignedItems = msg['assigned_items'];
+            } else if (msg['items'] is List) {
+              assignedItems = msg['items'];
+            } else if (msg['data'] is List) {
+              assignedItems = msg['data'];
+            }
           }
+        }
+
+        if (assignedItems.isNotEmpty) {
+          await authBox.put('assigned_items', jsonEncode(assignedItems));
+          print("Assigned items stored in Hive.");
         } else {
-          // Response not in expected format, ensure nothing stale is left
-          print(
-              "Unexpected response format for assigned items. Cleared assigned_items from Hive.");
+          print("Assigned items not found or empty. Cleared assigned_items from Hive.");
         }
       } else {
         print("Failed to fetch assigned items: ${response.body}");

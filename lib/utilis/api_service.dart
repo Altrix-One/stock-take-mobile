@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:stock_count/config.dart';
-import 'package:stock_count/screens/home.dart';
+import 'package:stock_count/screens/ess_home.dart';
 import 'package:stock_count/utilis/dialog_messages.dart';
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
@@ -89,7 +89,7 @@ class ApiService {
             // Navigate to HomeScreen
             Navigator.pushAndRemoveUntil(
               context,
-              MaterialPageRoute(builder: (context) => const HomeScreen()),
+              MaterialPageRoute(builder: (context) => const ESSHomeScreen()),
               (Route<dynamic> route) => false,
             );
           } else {
