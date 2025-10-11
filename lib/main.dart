@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:stock_count/config.dart';
 import 'package:stock_count/constants/theme.dart';
+import 'package:stock_count/constants/app_theme.dart';
 import 'package:stock_count/screens/login.dart';
 import 'package:stock_count/screens/setup_dialog.dart';
 import 'package:stock_count/utilis/change_notifier.dart';
@@ -118,15 +119,9 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Stock Taking',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: primaryColor,
-          primary: primaryColor,
-          secondary: secondaryColor,
-        ),
-        primaryColor: primaryColor,
-        fontFamily: 'Montserrat',
-      ),
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.system, // Automatically follow system theme
       debugShowCheckedModeBanner: false,
       home: _isLoading
           ? const Scaffold(

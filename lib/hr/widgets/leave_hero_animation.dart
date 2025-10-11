@@ -16,6 +16,7 @@ class LeaveHeroAnimation extends StatefulWidget {
   final Duration duration; // total duration for one reveal cycle
   final LeaveHeroMode mode; // visual silhouette to resolve into
   final List<IconData>? icons; // optional icon set to cycle on tiles
+  final bool showLabels; // whether to show header and remaining count labels
 
   const LeaveHeroAnimation({
     super.key,
@@ -27,6 +28,7 @@ class LeaveHeroAnimation extends StatefulWidget {
     this.duration = const Duration(milliseconds: 4000),
     this.mode = LeaveHeroMode.calendar,
     this.icons,
+    this.showLabels = true,
   });
 
   @override
@@ -257,14 +259,15 @@ class _LeaveHeroAnimationState extends State<LeaveHeroAnimation>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          header,
-          const SizedBox(height: 14),
+          if (widget.showLabels) header,
+          if (widget.showLabels) const SizedBox(height: 14),
           composed,
-          const SizedBox(height: 6),
-          Text(
-            '${(widget.allocated - widget.used).clamp(0, widget.allocated).toStringAsFixed(1)} remaining of ${widget.allocated}',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: onBg),
-          )
+          if (widget.showLabels) const SizedBox(height: 6),
+          if (widget.showLabels)
+            Text(
+              '${(widget.allocated - widget.used).clamp(0, widget.allocated).toStringAsFixed(1)} remaining of ${widget.allocated}',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: onBg),
+            )
         ],
       ),
     );

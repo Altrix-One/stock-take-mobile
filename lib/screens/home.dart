@@ -12,6 +12,7 @@ import 'package:stock_count/components/calculator_card.dart';
 import 'package:stock_count/components/center_box.dart';
 import 'package:stock_count/config.dart';
 import 'package:stock_count/constants/theme.dart';
+import 'package:stock_count/constants/app_theme.dart';
 import 'package:stock_count/utilis/api_service.dart';
 import 'package:stock_count/utilis/change_notifier.dart';
 import 'package:stock_count/utilis/db_schema.dart';
@@ -313,7 +314,7 @@ class _HomeScreenState extends State<HomeScreen>
     return Stack(
       children: [
         Scaffold(
-          backgroundColor: f8Color,
+          backgroundColor: AppTheme.getBackgroundColor(context),
           appBar: AppBar(
             elevation: 0,
             toolbarHeight: 70.0,
