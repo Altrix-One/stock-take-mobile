@@ -21,6 +21,8 @@ import 'package:stock_count/widgets/section_header.dart';
 import 'package:stock_count/widgets/status_badge.dart';
 import 'package:stock_count/widgets/professional_list_item.dart';
 import 'package:stock_count/widgets/professional_loading.dart';
+import 'package:stock_count/widgets/professional_error_dialog.dart';
+import 'package:stock_count/utils/error_message_parser.dart';
 
 class ESSHomeScreen extends StatefulWidget {
   const ESSHomeScreen({super.key});
@@ -403,30 +405,164 @@ class _ApplyLeavePageState extends State<_ApplyLeavePage> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    if ((_days ?? 0) <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Invalid date range')));
-      return;
+    
+    setState(() => _loading = true);
+    
+    try {
+      // Client-side validation
+      if ((_days ?? 0) <= 0) {
+        await ProfessionalErrorDialog.show(
+          context: context,
+          title: '📅 Invalid Date Range',
+          errorMessage: 'The selected date range is invalid. Please ensure the end date is after the start date.',
+          canRetry: false,
+        );
+        return;
+      }
+      
+      if (_balance != null && _days != null && _days! > _balance!) {
+        await ProfessionalErrorDialog.show(
+          context: context,
+          title: '⚖️ Insufficient Leave Balance',
+          errorMessage: 'You do not have sufficient leave balance (${_balance!.toStringAsFixed(1)} days available) for this ${_days!.toStringAsFixed(1)}-day request. Please adjust your dates or choose a different leave type.',
+          canRetry: false,
+        );
+        return;
+      }
+
+      // Check for overlapping leave applications
+      if (!await _validateNoOverlappingLeaves()) {
+        return; // Error dialog already shown in validation method
+      }
+      
+      final payload = {
+        'leave_type': _leaveType,
+        'from_date': _fromDate,
+        'to_date': _toDate,
+        'reason': _reason,
+        if (_employeeId != null) 'employee': _employeeId,
+        'half_day': _halfDay ? 1 : 0,
+        if (_halfDay) 'half_day_date': _halfDayDate ?? _fromDate,
+        'days': _days,
+      };
+      
+      // Try immediate submission first
+      try {
+        await LeavesService.submitLeaveApplication(payload);
+        
+        // Success - show confirmation
+        if (mounted) {
+          await ProfessionalSuccessDialog.show(
+            context: context,
+            title: '✅ Leave Application Submitted',
+            message: 'Your leave application for ${_days!.toStringAsFixed(1)} day(s) from ${_fromDate!} to ${_toDate!} has been successfully submitted for approval.',
+          );
+          Navigator.of(context).pop();
+        }
+      } catch (e) {
+        // If immediate submission fails, add to queue as fallback
+        final errorMessage = e.toString();
+        final friendlyMessage = ErrorMessageParser.parseLeaveApplicationError(errorMessage);
+        
+        // Check if this is a recoverable error that should be queued
+        if (_isRecoverableError(errorMessage)) {
+          await OutboxQueue.addOperation('leave_application', payload);
+          
+          if (mounted) {
+            await ProfessionalSuccessDialog.show(
+              context: context,
+              title: '📤 Leave Application Queued',
+              message: 'Your leave application has been queued for submission. It will be automatically submitted when connection is restored.',
+            );
+            Navigator.of(context).pop();
+          }
+        } else if (_isConcurrencyError(errorMessage)) {
+          // Handle concurrency errors with retry option
+          if (mounted) {
+            await ProfessionalErrorDialog.showLeaveApplicationError(
+              context: context,
+              rawErrorMessage: errorMessage,
+              onRetry: () async {
+                // Refresh metadata and retry
+                await _loadMeta();
+                await _recalc();
+                await _submit();
+              },
+            );
+          }
+        } else {
+          // Show user-friendly error for non-recoverable errors
+          if (mounted) {
+            await ProfessionalErrorDialog.showLeaveApplicationError(
+              context: context,
+              rawErrorMessage: errorMessage,
+            );
+          }
+        }
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
     }
-    if (_balance != null && _days != null && _days! > _balance!) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Insufficient leave balance')));
-      return;
+  }
+  
+  bool _isRecoverableError(String errorMessage) {
+    final lowerError = errorMessage.toLowerCase();
+    return lowerError.contains('network') || 
+           lowerError.contains('timeout') ||
+           lowerError.contains('connection') ||
+           lowerError.contains('unreachable') ||
+           lowerError.contains('500') ||
+           lowerError.contains('502') ||
+           lowerError.contains('503') ||
+           lowerError.contains('504');
+  }
+  
+  bool _isConcurrencyError(String errorMessage) {
+    final lowerError = errorMessage.toLowerCase();
+    return lowerError.contains('timestampmismatcherror') ||
+           lowerError.contains('has been modified after you have opened it');
+  }
+  
+  Future<bool> _validateNoOverlappingLeaves() async {
+    try {
+      // Get existing leave applications
+      final existingLeaves = await LeavesService.myLeaves();
+      final currentFrom = DateTime.parse(_fromDate!);
+      final currentTo = DateTime.parse(_toDate!);
+      
+      for (final leave in existingLeaves) {
+        if (leave is Map) {
+          final status = leave['status']?.toString().toLowerCase();
+          // Skip cancelled or rejected leaves
+          if (status == 'cancelled' || status == 'rejected') continue;
+          
+          final existingFrom = DateTime.tryParse(leave['from_date']?.toString() ?? '');
+          final existingTo = DateTime.tryParse(leave['to_date']?.toString() ?? '');
+          
+          if (existingFrom != null && existingTo != null) {
+            // Check for date overlap
+            if ((currentFrom.isBefore(existingTo) || currentFrom.isAtSameMomentAs(existingTo)) &&
+                (currentTo.isAfter(existingFrom) || currentTo.isAtSameMomentAs(existingFrom))) {
+              
+              if (mounted) {
+                await ProfessionalErrorDialog.show(
+                  context: context,
+                  title: '📅 Overlapping Leave Application',
+                  errorMessage: 'You already have a ${leave['leave_type']} leave application from ${leave['from_date']} to ${leave['to_date']} that overlaps with your selected dates. Please choose different dates or cancel the existing application first.',
+                  canRetry: false,
+                );
+              }
+              return false;
+            }
+          }
+        }
+      }
+      
+      return true;
+    } catch (e) {
+      // If validation fails due to network issues, allow submission (server will validate)
+      return true;
     }
-    final payload = {
-      'leave_type': _leaveType,
-      'from_date': _fromDate,
-      'to_date': _toDate,
-      'reason': _reason,
-      if (_employeeId != null) 'employee': _employeeId,
-      'half_day': _halfDay ? 1 : 0,
-      if (_halfDay) 'half_day_date': _halfDayDate ?? _fromDate,
-      'days': _days,
-    };
-    await OutboxQueue.addOperation('leave_application', payload);
-    // Kick a best-effort immediate processing to avoid waiting for periodic sync
-    await OutboxQueue.processQueue();
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Leave application submitted')));
-    Navigator.of(context).pop();
   }
 
   @override
