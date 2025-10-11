@@ -359,41 +359,177 @@ class _HomeScreenState extends State<HomeScreen>
                   ),
                 )
               : null,
-          bottomNavigationBar: BottomNavigationBar(
-            items: _selectedIndex == 1 && isCountStarted
-                ? [
-                    const BottomNavigationBarItem(
-                      icon: Icon(Icons.list_alt), // Change to a list icon
-                      label: 'Entries', // Update label to "Entries"
-                    ),
-                  ]
-                : isCountStarted
+          bottomNavigationBar: Container(
+            margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface.withOpacity(0.85),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Theme.of(context).colorScheme.shadow.withOpacity(0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: BottomNavigationBar(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                type: BottomNavigationBarType.fixed,
+                selectedItemColor: Theme.of(context).colorScheme.primary,
+                unselectedItemColor: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.6),
+                selectedLabelStyle: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                unselectedLabelStyle: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.6),
+                ),
+                items: _selectedIndex == 1 && isCountStarted
                     ? [
-                        const BottomNavigationBarItem(
-                          icon: Icon(Icons.stop_circle_outlined),
-                          label: 'Stop Count',
-                        ),
-                        const BottomNavigationBarItem(
-                          icon: Icon(Icons.list_alt), // Change to a list icon
-                          label: 'Entries', // Update label to "Entries"
+                        BottomNavigationBarItem(
+                          icon: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.primaryContainer,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              Icons.list_alt_rounded,
+                              color: Theme.of(context).colorScheme.onPrimaryContainer,
+                            ),
+                          ),
+                          activeIcon: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.primary,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              Icons.list_alt_rounded,
+                              color: Theme.of(context).colorScheme.onPrimary,
+                            ),
+                          ),
+                          label: 'Entries',
                         ),
                       ]
-                    : [
-                        const BottomNavigationBarItem(
-                          icon: Icon(Icons
-                              .play_circle_outline), // Use play icon from Icons
-                          label: 'Start Count',
-                        ),
-                        const BottomNavigationBarItem(
-                          icon:
-                              Icon(Icons.list_alt), // Use list icon from Icons
-                          label: 'Entries', // Update label to "Entries"
-                        ),
-                      ],
-            currentIndex: _selectedIndex,
-            selectedItemColor: primaryColor,
-            unselectedItemColor: greyColor,
-            onTap: _onItemTapped,
+                    : isCountStarted
+                        ? [
+                            BottomNavigationBarItem(
+                              icon: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.errorContainer,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(
+                                  Icons.stop_circle_outlined,
+                                  color: Theme.of(context).colorScheme.onErrorContainer,
+                                ),
+                              ),
+                              activeIcon: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.error,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(
+                                  Icons.stop_circle,
+                                  color: Theme.of(context).colorScheme.onError,
+                                ),
+                              ),
+                              label: 'Stop Count',
+                            ),
+                            BottomNavigationBarItem(
+                              icon: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.primaryContainer,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(
+                                  Icons.list_alt_rounded,
+                                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                ),
+                              ),
+                              activeIcon: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(
+                                  Icons.list_alt_rounded,
+                                  color: Theme.of(context).colorScheme.onPrimary,
+                                ),
+                              ),
+                              label: 'Entries',
+                            ),
+                          ]
+                        : [
+                            BottomNavigationBarItem(
+                              icon: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.primaryContainer,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(
+                                  Icons.play_circle_outline_rounded,
+                                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                ),
+                              ),
+                              activeIcon: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(
+                                  Icons.play_circle_rounded,
+                                  color: Theme.of(context).colorScheme.onPrimary,
+                                ),
+                              ),
+                              label: 'Start Count',
+                            ),
+                            BottomNavigationBarItem(
+                              icon: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.primaryContainer,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(
+                                  Icons.list_alt_rounded,
+                                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                ),
+                              ),
+                              activeIcon: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(
+                                  Icons.list_alt_rounded,
+                                  color: Theme.of(context).colorScheme.onPrimary,
+                                ),
+                              ),
+                              label: 'Entries',
+                            ),
+                          ],
+                currentIndex: _selectedIndex,
+                onTap: _onItemTapped,
+              ),
+            ),
           ),
         ),
         if (_isDialogVisible) ...[
