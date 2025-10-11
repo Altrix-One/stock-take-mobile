@@ -23,6 +23,7 @@ import 'package:stock_count/widgets/professional_list_item.dart';
 import 'package:stock_count/widgets/professional_loading.dart';
 import 'package:stock_count/widgets/professional_error_dialog.dart';
 import 'package:stock_count/utils/error_message_parser.dart';
+import 'package:stock_count/widgets/modern_leave_item.dart';
 
 class ESSHomeScreen extends StatefulWidget {
   const ESSHomeScreen({super.key});
@@ -240,17 +241,58 @@ class _LeavesPageState extends State<_LeavesPage> {
     final draft = _rows.where((r){
       if (r is Map) {
         final s = (r['status']??'').toString().toLowerCase();
-        return s=='open' || s=='draft' || s=='pending' || s=='applied';
+        return s=='open' || s=='draft' || s=='pending' || s=='applied' || s.contains('queued');
       }
       return false;
     }).toList();
-    if (draft.isEmpty) return [const Padding(padding: EdgeInsets.only(top: 8), child: Text('No unapproved leaves'))];
+    
+    if (draft.isEmpty) {
+      return [
+        Container(
+          margin: const EdgeInsets.only(top: 16),
+          padding: const EdgeInsets.all(32),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+            ),
+          ),
+          child: Column(
+            children: [
+              Icon(
+                Icons.pending_actions_outlined,
+                size: 48,
+                color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.6),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'No Pending Applications',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Your pending leave applications will appear here',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.7),
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        )
+      ];
+    }
+    
     return [
-      GlassContainer(
-        child: Column(children:[
-          for(final r in draft) _leaveRow(context, r),
-        ]),
-      )
+      for(final r in draft) 
+        ModernLeaveItem(
+          leave: r as Map<String, dynamic>,
+          onCancel: () => _handleCancelLeave(r),
+        ),
     ];
   }
 
@@ -262,38 +304,292 @@ class _LeavesPageState extends State<_LeavesPage> {
       }
       return false;
     }).toList();
-    if (approved.isEmpty) return [const Padding(padding: EdgeInsets.only(top: 8), child: Text('No approved leaves'))];
+    
+    if (approved.isEmpty) {
+      return [
+        Container(
+          margin: const EdgeInsets.only(top: 16),
+          padding: const EdgeInsets.all(32),
+          decoration: BoxDecoration(
+            color: Colors.green.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Colors.green.withOpacity(0.2),
+            ),
+          ),
+          child: Column(
+            children: [
+              Icon(
+                Icons.check_circle_outline,
+                size: 48,
+                color: Colors.green.withOpacity(0.7),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'No Approved Leaves',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: Colors.green.withOpacity(0.8),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Your approved leave applications will appear here',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.green.withOpacity(0.6),
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        )
+      ];
+    }
+    
     return [
-      GlassContainer(
-        child: Column(children:[
-          for(final r in approved) _leaveRow(context, r),
-        ]),
-      )
+      for(final r in approved) 
+        ModernLeaveItem(
+          leave: r as Map<String, dynamic>,
+        ),
     ];
   }
+  Future<void> _handleCancelLeave(Map r) async {
+    final name = r['name']?.toString();
+    final lt = r['leave_type']?.toString() ?? '';
+    final fd = r['from_date']?.toString() ?? '';
+    final td = r['to_date']?.toString() ?? '';
+    final st = r['status']?.toString() ?? '';
+    
+    // Check if cancellable
+    if (st.toLowerCase() == 'cancelled') return;
+    
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Theme.of(context).colorScheme.error),
+            const SizedBox(width: 8),
+            const Text('Cancel Leave?'),
+          ],
+        ),
+        content: Text('Do you want to cancel your $lt leave application from $fd to $td?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('No'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+            child: const Text('Yes, Cancel'),
+          ),
+        ],
+      ),
+    );
+    
+    if (confirm == true) {
+      try {
+        // Resolve document name if missing
+        String? doc = name;
+        if (doc == null || doc.isEmpty) {
+          final emp = await ProfileService.currentEmployee();
+          doc = await LeavesService.resolveLeaveName(
+            leaveType: lt,
+            fromDate: fd,
+            toDate: td,
+            employee: emp,
+          );
+        }
+        
+        if (doc == null || doc.isEmpty) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Could not locate leave document to cancel')),
+            );
+          }
+          return;
+        }
+        
+        // Perform immediate cancel (fall back to queue only if it fails)
+        try {
+          await LeavesService.cancelLeaveApplication(doc);
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('✅ Leave cancelled successfully'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
+        } catch (_) {
+          await OutboxQueue.addOperation('cancel_leave', {'name': doc});
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('📤 Cancellation queued (offline mode)'),
+              ),
+            );
+          }
+        }
+        
+        // Refresh list and balances
+        await _load();
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error cancelling leave: ${e.toString()}')),
+          );
+        }
+      }
+    }
+  }
+  
+  Widget _buildFormSection({
+    required String title,
+    required IconData icon,
+    required Widget child,
+  }) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                icon,
+                size: 16,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              title,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        child,
+      ],
+    );
+  }
+  
+  Widget _buildStatItem(String label, String value, IconData icon, Color color) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: color.withOpacity(0.3),
+        ),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: 20),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w500,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+  
   @override
   void dispose(){ _autoTimer?.cancel(); super.dispose(); }
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('My Leaves'), actions: [
-        IconButton(onPressed: () async { await Navigator.of(context).push(MaterialPageRoute(builder: (_) => _ApplyLeavePage())); if (mounted) _load(); }, icon: const Icon(Icons.add)),
-      ]),
-      body: _loading ? const Center(child: CircularProgressIndicator()) : RefreshIndicator(
-        onRefresh: _load,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
-          children: [
-            GlassContainer(child: LeaveBalanceCard(balances: _balance)),
-            const SizedBox(height: 16),
-            const Text('Unapproved Leave', style: TextStyle(fontWeight: FontWeight.bold)),
-            ..._unapprovedSection(),
-            const SizedBox(height: 16),
-            const Text('Approved Leave', style: TextStyle(fontWeight: FontWeight.bold)),
-            ..._approvedSection(),
-          ],
-        ),
+      appBar: AppBar(
+        title: const Text('My Leaves'),
+        elevation: 0,
+        actions: [
+          Container(
+            margin: const EdgeInsets.only(right: 16),
+            child: FilledButton.icon(
+              onPressed: () async {
+                await Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => _ApplyLeavePage()),
+                );
+                if (mounted) _load();
+              },
+              icon: const Icon(Icons.add, size: 18),
+              label: const Text('Apply'),
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              ),
+            ),
+          ),
+        ],
       ),
+      body: _loading 
+        ? const ProfessionalLoading(message: 'Loading your leave applications...')
+        : RefreshIndicator(
+            onRefresh: _load,
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+              children: [
+                // Leave Balance Card
+                LeaveBalanceCard(balances: _balance),
+                const SizedBox(height: 24),
+                
+                // Pending Applications Section
+                SectionHeader(
+                  title: 'Pending Applications',
+                  subtitle: 'Applications awaiting approval',
+                  icon: Icons.pending_actions_rounded,
+                  iconColor: Colors.orange,
+                ),
+                const SizedBox(height: 12),
+                ..._unapprovedSection(),
+                
+                const SizedBox(height: 32),
+                
+                // Approved Applications Section
+                SectionHeader(
+                  title: 'Approved Applications',
+                  subtitle: 'Your approved leave history',
+                  icon: Icons.check_circle_rounded,
+                  iconColor: Colors.green,
+                ),
+                const SizedBox(height: 12),
+                ..._approvedSection(),
+                
+                // Bottom padding for navigation
+                const SizedBox(height: 100),
+              ],
+            ),
+          ),
     );
   }
 }
@@ -567,61 +863,456 @@ class _ApplyLeavePageState extends State<_ApplyLeavePage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
     return Scaffold(
-      appBar: AppBar(title: const Text('Apply Leave')),
-      body: _loadingMeta ? const Center(child: CircularProgressIndicator()) : Form(
-        key: _formKey,
-        child: ListView(padding: const EdgeInsets.all(16), children: [
-          DropdownButtonFormField<String>(
-            isExpanded: true,
-            value: _leaveType,
-            items: _leaveTypes.map((e)=>DropdownMenuItem(value: e, child: Text(e))).toList(),
-            onChanged: (v){ setState(()=>_leaveType=v); _recalc(); },
-            decoration: const InputDecoration(labelText: 'Leave Type'),
-            validator: (v)=> v==null? 'Leave Type required' : null,
+      appBar: AppBar(
+        title: const Text('Apply for Leave'),
+        elevation: 0,
+        backgroundColor: theme.colorScheme.surface,
+      ),
+      body: _loadingMeta 
+        ? const ProfessionalLoading(message: 'Loading leave types...')
+        : Form(
+            key: _formKey,
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+              children: [
+                // Header Section
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        theme.colorScheme.primaryContainer.withOpacity(0.3),
+                        theme.colorScheme.primaryContainer.withOpacity(0.1),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: theme.colorScheme.primary.withOpacity(0.2),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primary,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              Icons.event_note_rounded,
+                              color: theme.colorScheme.onPrimary,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            'New Leave Application',
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: theme.colorScheme.onSurface,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Please fill in the details below to submit your leave request',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 32),
+
+                // Leave Type Dropdown
+                _buildFormSection(
+                  title: 'Leave Details',
+                  icon: Icons.category_rounded,
+                  child: Column(
+                    children: [
+                      DropdownButtonFormField<String>(
+                        isExpanded: true,
+                        value: _leaveType,
+                        items: _leaveTypes.map((e) => DropdownMenuItem(
+                          value: e,
+                          child: Text(e),
+                        )).toList(),
+                        onChanged: (v) {
+                          setState(() => _leaveType = v);
+                          _recalc();
+                        },
+                        decoration: InputDecoration(
+                          labelText: 'Leave Type',
+                          prefixIcon: const Icon(Icons.work_outline_rounded),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          filled: true,
+                          fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                        ),
+                        validator: (v) => v == null ? 'Please select a leave type' : null,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Date Selection
+                _buildFormSection(
+                  title: 'Duration',
+                  icon: Icons.date_range_rounded,
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              readOnly: true,
+                              controller: TextEditingController(text: _fromDate ?? ''),
+                              onTap: () => _pickDate(true),
+                              decoration: InputDecoration(
+                                labelText: 'From Date',
+                                labelStyle: const TextStyle(fontSize: 14),
+                                prefixIcon: const Icon(Icons.calendar_today_rounded),
+                                suffixIcon: const Icon(Icons.arrow_drop_down_rounded),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                filled: true,
+                                fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                              ),
+                              validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: TextFormField(
+                              readOnly: true,
+                              controller: TextEditingController(text: _toDate ?? ''),
+                              onTap: () => _pickDate(false),
+                              decoration: InputDecoration(
+                                labelText: 'To Date',
+                                labelStyle: const TextStyle(fontSize: 14),
+                                prefixIcon: const Icon(Icons.event_rounded),
+                                suffixIcon: const Icon(Icons.arrow_drop_down_rounded),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                filled: true,
+                                fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                              ),
+                              validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      
+                      // Half Day Option
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primaryContainer.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: theme.colorScheme.primary.withOpacity(0.2),
+                          ),
+                        ),
+                        child: SwitchListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(
+                            'Half Day Leave',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: theme.colorScheme.onSurface,
+                            ),
+                          ),
+                          subtitle: Text(
+                            'Check this if you need only half day off',
+                            style: TextStyle(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          value: _halfDay,
+                          onChanged: (v) {
+                            setState(() => _halfDay = v);
+                            _recalc();
+                          },
+                          activeColor: theme.colorScheme.primary,
+                        ),
+                      ),
+                      
+                      if (_halfDay) ...[
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          readOnly: true,
+                          controller: TextEditingController(text: _halfDayDate ?? _fromDate ?? ''),
+                          onTap: () async {
+                            final now = DateTime.now();
+                            final picked = await showDatePicker(
+                              context: context,
+                              firstDate: DateTime(now.year - 2),
+                              lastDate: DateTime(now.year + 2),
+                              initialDate: DateTime.tryParse((_halfDayDate ?? _fromDate) ?? '') ?? now,
+                            );
+                            if (picked != null) {
+                              setState(() => _halfDayDate = picked.toIso8601String().substring(0, 10));
+                              await _recalc();
+                            }
+                          },
+                          decoration: InputDecoration(
+                            labelText: 'Half Day Date',
+                            labelStyle: const TextStyle(fontSize: 14),
+                            prefixIcon: const Icon(Icons.schedule_rounded),
+                            suffixIcon: const Icon(Icons.arrow_drop_down_rounded),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            filled: true,
+                            fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                          ),
+                          validator: (v) {
+                            if (!_halfDay) return null;
+                            return (v == null || v.isEmpty) ? 'Half day date is required' : null;
+                          },
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Reason Section
+                _buildFormSection(
+                  title: 'Additional Information',
+                  icon: Icons.edit_note_rounded,
+                  child: TextFormField(
+                    maxLines: 3,
+                    onChanged: (v) => _reason = v,
+                    decoration: InputDecoration(
+                      labelText: 'Reason (Optional)',
+                      hintText: 'Please provide a brief reason for your leave...',
+                      prefixIcon: const Icon(Icons.notes_rounded),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      filled: true,
+                      fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                    ),
+                  ),
+                ),
+
+                // Leave Calculation Display
+                if (_days != null || _balance != null) ...[
+                  const SizedBox(height: 24),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          theme.colorScheme.primaryContainer.withOpacity(0.2),
+                          theme.colorScheme.primaryContainer.withOpacity(0.1),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: theme.colorScheme.primary.withOpacity(0.3),
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.calculate_rounded,
+                              color: theme.colorScheme.primary,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Leave Calculation',
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: theme.colorScheme.primary,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildStatItem(
+                                'Requested Days',
+                                _days?.toStringAsFixed(1) ?? '-',
+                                Icons.event_note_rounded,
+                                theme.colorScheme.primary,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: _buildStatItem(
+                                'Available Balance',
+                                _balance?.toStringAsFixed(1) ?? '-',
+                                Icons.account_balance_rounded,
+                                _balance != null && _days != null && _days! <= _balance!
+                                    ? Colors.green
+                                    : Colors.orange,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+
+                const SizedBox(height: 32),
+
+                // Loading indicator
+                if (_loading) ...[
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    child: const LinearProgressIndicator(),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
+                // Submit Button
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: FilledButton.icon(
+                    onPressed: _loading ? null : _submit,
+                    icon: _loading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          )
+                        : const Icon(Icons.send_rounded),
+                    label: Text(
+                      _loading ? 'Submitting...' : 'Submit Leave Application',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: theme.colorScheme.primary,
+                      foregroundColor: theme.colorScheme.onPrimary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-          TextFormField(
-            readOnly: true,
-            decoration: const InputDecoration(labelText: 'From Date'),
-            controller: TextEditingController(text: _fromDate ?? ''),
-            onTap: ()=>_pickDate(true),
-            validator: (v)=> (v==null||v.isEmpty)?'Required':null,
+    );
+  }
+
+  Widget _buildFormSection({
+    required String title,
+    required IconData icon,
+    required Widget child,
+  }) {
+    final theme = Theme.of(context);
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainer.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.colorScheme.outline.withOpacity(0.2),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                icon,
+                color: theme.colorScheme.primary,
+                size: 20,
+              ),
+              const SizedBox(width: 10),
+              Text(
+                title,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+            ],
           ),
-          TextFormField(
-            readOnly: true,
-            decoration: const InputDecoration(labelText: 'To Date'),
-            controller: TextEditingController(text: _toDate ?? ''),
-            onTap: ()=>_pickDate(false),
-            validator: (v)=> (v==null||v.isEmpty)?'Required':null,
-          ),
-          SwitchListTile(
-            title: const Text('Half Day'),
-            value: _halfDay,
-            onChanged: (v){ setState(()=>_halfDay=v); _recalc(); },
-          ),
-          if (_halfDay) TextFormField(
-            readOnly: true,
-            decoration: const InputDecoration(labelText: 'Half Day Date'),
-            controller: TextEditingController(text: _halfDayDate ?? _fromDate ?? ''),
-            onTap: () async {
-              final now = DateTime.now();
-              final picked = await showDatePicker(context: context, firstDate: DateTime(now.year-2), lastDate: DateTime(now.year+2), initialDate: DateTime.tryParse((_halfDayDate ?? _fromDate) ?? '') ?? now);
-              if (picked != null) setState((){ _halfDayDate = picked.toIso8601String().substring(0,10); });
-              await _recalc();
-            },
-            validator: (v){ if(!_halfDay) return null; return (v==null||v.isEmpty)?'Half Day Date required':null; },
-          ),
-          TextFormField(
-            decoration: const InputDecoration(labelText: 'Reason'),
-            onChanged: (v)=>_reason=v,
-          ),
-          const SizedBox(height: 12),
-          if (_loading) const LinearProgressIndicator(),
-          if (_days != null || _balance != null)
-            Text('Days: ${_days?.toStringAsFixed(2) ?? '-'}   Balance: ${_balance?.toStringAsFixed(2) ?? '-'}'),
           const SizedBox(height: 16),
-          ElevatedButton.icon(onPressed: _submit, icon: const Icon(Icons.send), label: const Text('Submit')),
-        ]),
+          child,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatItem(String label, String value, IconData icon, Color color) {
+    final theme = Theme.of(context);
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: color.withOpacity(0.3),
+        ),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: color, size: 14),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  label,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: color,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 11,
+                  ),
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: color,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }

@@ -42,15 +42,6 @@ class LeaveBalanceCard extends StatelessWidget {
     final used = usedRaw > 0 ? usedRaw : (allocated - balance).clamp(0.0, allocated);
     final pct = allocated > 0 ? (used / allocated).clamp(0.0, 1.0) : 0.0;
 
-    final tileBg = LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [
-        accent.withOpacity(0.14),
-        accent.withOpacity(0.06),
-      ],
-    );
-
     IconData iconFor(String t) {
       final lt = t.toLowerCase();
       if (lt.contains('sick')) return Icons.healing_outlined;
@@ -60,81 +51,134 @@ class LeaveBalanceCard extends StatelessWidget {
       return Icons.event_available_outlined;
     }
 
+    // Calculate remaining balance percentage for color coding
+    final remaining = allocated > 0 ? (balance / allocated).clamp(0.0, 1.0) : 1.0;
+    Color progressColor;
+    if (remaining >= 0.5) {
+      progressColor = Colors.green;
+    } else if (remaining >= 0.25) {
+      progressColor = Colors.orange;
+    } else {
+      progressColor = Colors.redAccent;
+    }
+
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      padding: const EdgeInsets.all(14),
+      margin: const EdgeInsets.symmetric(horizontal: 6),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: tileBg,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: accent.withOpacity(0.18), width: 1),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            accent.withOpacity(0.08),
+            accent.withOpacity(0.03),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: accent.withOpacity(0.15),
+          width: 1,
+        ),
         boxShadow: [
-          BoxShadow(color: accent.withOpacity(0.08), blurRadius: 10, offset: const Offset(0, 6)),
+          BoxShadow(
+            color: accent.withOpacity(0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
+          // Header row with icon, title, and balance
           Row(
             children: [
               Container(
-                width: 32,
-                height: 32,
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(colors: [accent, accent.withOpacity(0.7)]),
+                  gradient: LinearGradient(
+                    colors: [accent, accent.withOpacity(0.8)],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(iconFor(title), size: 18, color: Colors.white),
+                child: Icon(iconFor(title), size: 20, color: Colors.white),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Expanded(
-                child: Text(title, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+                child: Text(
+                  title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                  ),
+                ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.surface.withOpacity(0.7),
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: accent.withOpacity(0.2)),
+                  color: progressColor.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                child: Text('Bal: ${balance.toStringAsFixed(1)}', style: theme.textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w700)),
-              )
+                child: Text(
+                  '${balance.toStringAsFixed(1)} days',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: progressColor,
+                  ),
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: 10),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0, end: pct),
-              duration: const Duration(milliseconds: 650),
-              curve: Curves.easeOutCubic,
-              builder: (context, value, _) {
-                // Bar color based on remaining balance ratio
-                final remaining = allocated > 0 ? (balance / allocated).clamp(0.0, 1.0) : 1.0;
-                Color barColor;
-                if (remaining >= 0.5) {
-                  barColor = Colors.green;
-                } else if (remaining >= 0.25) {
-                  barColor = Colors.orange;
-                } else {
-                  barColor = Colors.redAccent;
-                }
-                return LinearProgressIndicator(
-                  value: value,
-                  minHeight: 10,
-                  backgroundColor: theme.colorScheme.onSurface.withOpacity(0.06),
-                  valueColor: AlwaysStoppedAnimation<Color>(barColor),
-                );
-              },
-            ),
-          ),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 6,
+          const SizedBox(height: 12),
+          
+          // Progress bar with usage info
+          Row(
             children: [
-              _pill(theme, 'Allocated', allocated, accent),
-              _pill(theme, 'Used', used, accent.withOpacity(0.85)),
-              _pill(theme, 'Balance', balance, accent),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '${(pct * 100).toStringAsFixed(0)}% used',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: progressColor,
+                          ),
+                        ),
+                        Text(
+                          '${used.toStringAsFixed(1)} / ${allocated.toStringAsFixed(1)}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: TweenAnimationBuilder<double>(
+                        tween: Tween(begin: 0, end: pct),
+                        duration: const Duration(milliseconds: 800),
+                        curve: Curves.easeOutCubic,
+                        builder: (context, value, _) {
+                          return LinearProgressIndicator(
+                            value: value,
+                            minHeight: 6,
+                            backgroundColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                            valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ],
@@ -142,19 +186,36 @@ class LeaveBalanceCard extends StatelessWidget {
     );
   }
 
-  Widget _pill(ThemeData theme, String label, double value, Color accent) {
+  Widget _statCard(BuildContext context, String label, double value, Color color) {
+    final theme = Theme.of(context);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
       decoration: BoxDecoration(
-        color: accent.withOpacity(label == 'Balance' ? 0.18 : 0.10),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: accent.withOpacity(0.22)),
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: color.withOpacity(0.2),
+          width: 1,
+        ),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
+      child: Column(
         children: [
-          Text('$label: ', style: theme.textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w600)),
-          Text(value.toStringAsFixed(2), style: theme.textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w800)),
+          Text(
+            value.toStringAsFixed(1),
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: theme.textTheme.labelSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8),
+            ),
+          ),
         ],
       ),
     );
@@ -206,12 +267,38 @@ class LeaveBalanceCard extends StatelessWidget {
                 const SizedBox(height: 10),
               ],
               if (entries.isEmpty)
-                Text('No balances', style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.6)))
+                Padding(
+                  padding: const EdgeInsets.all(32),
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.event_available_outlined,
+                        size: 48,
+                        color: theme.colorScheme.onSurfaceVariant.withOpacity(0.6),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'No leave balances available',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Your leave balances will appear here',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant.withOpacity(0.6),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
               else
                 SizedBox(
-                  height: 180,
+                  height: 120,
                   child: PageView.builder(
-                    controller: PageController(viewportFraction: 0.92),
+                    controller: PageController(viewportFraction: 0.98),
                     itemCount: entries.length,
                     padEnds: false,
                     itemBuilder: (context, i) {
