@@ -6,7 +6,6 @@ import 'package:stock_count/hr/services/profile_service.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:ui';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:stock_count/hr/widgets/leave_balance_card.dart';
@@ -138,38 +137,20 @@ class _ESSHomeScreenState extends State<ESSHomeScreen> with TickerProviderStateM
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            theme.colorScheme.surface.withOpacity(0.95),
-            theme.colorScheme.surfaceVariant.withOpacity(0.9),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: [
-          BoxShadow(
-            color: theme.shadowColor.withOpacity(0.15),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-          BoxShadow(
-            color: theme.colorScheme.primary.withOpacity(0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        color: theme.brightness == Brightness.dark
+            ? theme.colorScheme.surface
+            : theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: theme.colorScheme.outline.withOpacity(0.12),
+          color: theme.brightness == Brightness.dark
+              ? theme.colorScheme.outline.withOpacity(0.3)
+              : theme.colorScheme.outline.withOpacity(0.2),
+          width: 1.5,
         ),
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(28),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Container(
-              height: 68,
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+      child: Container(
+        height: 68,
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: items.asMap().entries.map((entry) {
@@ -188,8 +169,6 @@ class _ESSHomeScreenState extends State<ESSHomeScreen> with TickerProviderStateM
                   ),
                 );
               }).toList(),
-            ),
-          ),
         ),
       ),
     );
@@ -231,18 +210,18 @@ class _ESSHomeScreenState extends State<ESSHomeScreen> with TickerProviderStateM
             margin: const EdgeInsets.symmetric(horizontal: 1),
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
             decoration: BoxDecoration(
-              gradient: isSelected
-                  ? LinearGradient(
-                      colors: [
-                        theme.colorScheme.primary.withOpacity(0.15),
-                        theme.colorScheme.primary.withOpacity(0.08),
-                      ],
-                    )
+              color: isSelected
+                  ? (theme.brightness == Brightness.dark
+                      ? theme.colorScheme.primary.withOpacity(0.2)
+                      : theme.colorScheme.primary.withOpacity(0.15))
                   : null,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(16),
               border: isSelected
                   ? Border.all(
-                      color: theme.colorScheme.primary.withOpacity(0.2),
+                      color: theme.brightness == Brightness.dark
+                          ? theme.colorScheme.primary.withOpacity(0.8)
+                          : theme.colorScheme.primary,
+                      width: 1.5,
                     )
                   : null,
             ),
@@ -423,13 +402,12 @@ class _DashboardPageState extends State<_DashboardPage> {
     return Container(
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
-        boxShadow: [
-          BoxShadow(
-            color: theme.shadowColor.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+        border: Border(
+          bottom: BorderSide(
+            color: theme.colorScheme.outline.withOpacity(0.2),
+            width: 0.5,
           ),
-        ],
+        ),
       ),
       child: SafeArea(
         bottom: false,
@@ -445,14 +423,16 @@ class _DashboardPageState extends State<_DashboardPage> {
               child: Row(
                 children: [
                       Container(
-                        padding: const EdgeInsets.all(2),
+                        padding: const EdgeInsets.all(3),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(4),
+                          color: theme.brightness == Brightness.dark
+                              ? Colors.blue.shade400
+                              : Colors.blue.shade600,
+                          borderRadius: BorderRadius.circular(6),
                         ),
-                        child: Icon(
-                          Icons.business_center,
-                          color: theme.colorScheme.primary,
+                        child: const Icon(
+                          Icons.business_center_rounded,
+                          color: Colors.white,
                           size: 12,
                         ),
                       ),
@@ -570,10 +550,15 @@ class _DashboardPageState extends State<_DashboardPage> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              theme.colorScheme.surface,
-              theme.colorScheme.surfaceVariant.withOpacity(0.15),
-            ],
+            colors: theme.brightness == Brightness.dark
+                ? [
+                    theme.colorScheme.surface,
+                    theme.colorScheme.surfaceVariant.withOpacity(0.1),
+                  ]
+                : [
+                    theme.colorScheme.surface,
+                    theme.colorScheme.surfaceVariant.withOpacity(0.15),
+                  ],
           ),
         ),
         child: Column(
@@ -619,19 +604,17 @@ class _DashboardPageState extends State<_DashboardPage> {
     
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            theme.colorScheme.primary.withOpacity(0.08),
-            theme.colorScheme.primary.withOpacity(0.02),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
+        color: theme.brightness == Brightness.dark
+            ? theme.colorScheme.surfaceVariant.withOpacity(0.3)
+            : Colors.indigo.shade50,
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: theme.colorScheme.primary.withOpacity(0.12),
+          color: theme.brightness == Brightness.dark
+              ? theme.colorScheme.outline.withOpacity(0.4)
+              : Colors.indigo.shade200,
+          width: 1.5,
         ),
       ),
       child: Column(
@@ -642,18 +625,15 @@ class _DashboardPageState extends State<_DashboardPage> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      theme.colorScheme.primary,
-                      theme.colorScheme.primary.withOpacity(0.8),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(10),
+                  color: theme.brightness == Brightness.dark
+                      ? Colors.orange.shade400
+                      : Colors.orange.shade500,
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(
-                  Icons.waving_hand_rounded,
+                  Icons.waving_hand,
                   color: Colors.white,
-                  size: 20,
+                  size: 18,
                 ),
               ),
               const SizedBox(width: 12),
@@ -686,10 +666,10 @@ class _DashboardPageState extends State<_DashboardPage> {
                   ],
                 ),
               ),
-              Icon(
-                Icons.sunny,
-                color: Colors.amber.withOpacity(0.8),
-                size: 24,
+              const Icon(
+                Icons.wb_sunny_rounded,
+                color: Colors.amber,
+                size: 22,
               ),
             ],
           ),
@@ -702,43 +682,37 @@ class _DashboardPageState extends State<_DashboardPage> {
     final theme = Theme.of(context);
     
     return Card(
-      elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Colors.orange.withOpacity(0.06),
-              Colors.orange.withOpacity(0.02),
-            ],
+          color: theme.brightness == Brightness.dark
+              ? Colors.orange.shade900.withOpacity(0.2)
+              : Colors.orange.shade50,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: theme.brightness == Brightness.dark
+                ? Colors.orange.shade700.withOpacity(0.5)
+                : Colors.orange.shade200,
+            width: 1.5,
           ),
-          borderRadius: BorderRadius.circular(16),
         ),
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Colors.orange, Colors.deepOrange],
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.orange.withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+                  color: theme.brightness == Brightness.dark
+                      ? Colors.orange.shade500
+                      : Colors.orange.shade600,
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(
-                  Icons.verified_outlined,
+                  Icons.verified,
                   color: Colors.white,
-                  size: 24,
+                  size: 22,
                 ),
               ),
               const SizedBox(width: 16),
@@ -772,23 +746,21 @@ class _DashboardPageState extends State<_DashboardPage> {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: Colors.orange.withOpacity(0.3),
-                    width: 1.5,
-                  ),
+                  color: theme.brightness == Brightness.dark
+                      ? Colors.orange.shade500
+                      : Colors.orange.shade600,
+                  borderRadius: BorderRadius.circular(16),
                 ),
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
                   child: Text(
                     '$_pendingApprovals',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w800,
-                      color: Colors.orange.shade700,
+                      color: Colors.white,
                     ),
                   ),
                 ),
@@ -894,25 +866,23 @@ class _DashboardPageState extends State<_DashboardPage> {
     final theme = Theme.of(context);
     
     return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         onTap: onTap,
         child: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                color.withOpacity(0.06),
-                color.withOpacity(0.02),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(16),
+            color: theme.brightness == Brightness.dark
+                ? color.withOpacity(0.15)
+                : color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: color.withOpacity(0.12),
+              color: theme.brightness == Brightness.dark
+                  ? color.withOpacity(0.4)
+                  : color.withOpacity(0.3),
+              width: 1.5,
             ),
           ),
           child: Row(
@@ -920,17 +890,10 @@ class _DashboardPageState extends State<_DashboardPage> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [color, color.withOpacity(0.8)],
-                  ),
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    BoxShadow(
-                      color: color.withOpacity(0.3),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+                  color: theme.brightness == Brightness.dark
+                      ? Color.lerp(color, Colors.white, 0.2)!
+                      : color,
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
                   icon,
