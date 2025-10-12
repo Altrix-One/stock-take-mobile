@@ -304,19 +304,25 @@ class _ESSHomeScreenState extends State<ESSHomeScreen> with TickerProviderStateM
                   ],
                 ),
                 const SizedBox(height: 2),
-                AnimatedDefaultTextStyle(
-                  duration: const Duration(milliseconds: 200),
-                  style: TextStyle(
-                    fontSize: isSelected ? 10 : 9,
-                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                    color: isSelected
-                        ? theme.colorScheme.primary
-                        : theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
-                  ),
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    textAlign: TextAlign.center,
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: AnimatedDefaultTextStyle(
+                      duration: const Duration(milliseconds: 200),
+                      style: TextStyle(
+                        fontSize: isSelected ? 8 : 7,
+                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                        color: isSelected
+                            ? theme.colorScheme.primary
+                            : theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
+                      ),
+                      child: Text(
+                        label,
+                        maxLines: 1,
+                        textAlign: TextAlign.center,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -345,7 +351,6 @@ class _DashboardPage extends StatefulWidget {
 
 class _DashboardPageState extends State<_DashboardPage> {
   Map<String, dynamic>? _balance;
-  List<dynamic> _shifts = [];
   int _pendingApprovals = 0;
   bool _loading = true;
   Map<String, dynamic>? _userInfo;
@@ -360,7 +365,6 @@ class _DashboardPageState extends State<_DashboardPage> {
   Future<void> _load() async {
     try {
       final bal = await LeavesService.leaveBalanceWithPending();
-      final shifts = await AttendanceService.upcomingShifts();
       
       // Load user info from Hive
       await _loadUserInfo();
@@ -374,7 +378,7 @@ class _DashboardPageState extends State<_DashboardPage> {
         approvals = (a1.length + a2.length + a3.length + a4.length);
       }
       if (!mounted) return;
-      setState(() { _balance = bal; _shifts = shifts; _pendingApprovals = approvals; _loading = false; });
+      setState(() { _balance = bal; _pendingApprovals = approvals; _loading = false; });
     } catch (_) { if(mounted) setState(() => _loading = false); }
   }
   
@@ -591,17 +595,13 @@ class _DashboardPageState extends State<_DashboardPage> {
                           LeaveBalanceCard(balances: _balance),
                           const SizedBox(height: 16),
                           
-                          // Approvals card (if user can approve)
+                          // Approvals card (if user can approve - HR Manager role only)
                           if (widget.canApprove)
                             _buildApprovalsCard(context),
                           if (widget.canApprove) const SizedBox(height: 16),
                           
                           // Quick actions section
                           _buildQuickActionsSection(context),
-                          const SizedBox(height: 20),
-                          
-                          // Upcoming shifts section
-                          _buildUpcomingShiftsSection(context),
                         ],
                       ),
                     ),
@@ -661,18 +661,26 @@ class _DashboardPageState extends State<_DashboardPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Welcome back,',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w500,
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        'Welcome back,',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 10,
+                        ),
                       ),
                     ),
-                    Text(
-                      firstName,
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: theme.colorScheme.primary,
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        firstName,
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: theme.colorScheme.primary,
+                          fontSize: 14,
+                        ),
                       ),
                     ),
                   ],
@@ -738,19 +746,26 @@ class _DashboardPageState extends State<_DashboardPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Pending Approvals',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 16,
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        'Pending Approvals',
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12,
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Items awaiting your approval',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w500,
+                    const SizedBox(height: 1),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        'Items awaiting your approval',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 9,
+                        ),
                       ),
                     ),
                   ],
@@ -766,12 +781,15 @@ class _DashboardPageState extends State<_DashboardPage> {
                     width: 1.5,
                   ),
                 ),
-                child: Text(
-                  '$_pendingApprovals',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.orange.shade700,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    '$_pendingApprovals',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.orange.shade700,
+                    ),
                   ),
                 ),
               ),
@@ -798,24 +816,28 @@ class _DashboardPageState extends State<_DashboardPage> {
                 size: 20,
               ),
               const SizedBox(width: 8),
-              Text(
-                'Quick Actions',
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: theme.colorScheme.onSurface,
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  'Quick Actions',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: theme.colorScheme.onSurface,
+                    fontSize: 14,
+                  ),
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 6),
         GridView.count(
           crossAxisCount: 2,
-          childAspectRatio: 2.2,
+          childAspectRatio: 2.8,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
+          mainAxisSpacing: 10,
+          crossAxisSpacing: 10,
           children: [
             _buildModernQuickLink(
               context,
@@ -878,7 +900,7 @@ class _DashboardPageState extends State<_DashboardPage> {
         borderRadius: BorderRadius.circular(16),
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
@@ -918,11 +940,16 @@ class _DashboardPageState extends State<_DashboardPage> {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: Text(
-                  title,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: theme.colorScheme.onSurface,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    title,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: theme.colorScheme.onSurface,
+                      fontSize: 11,
+                    ),
                   ),
                 ),
               ),
@@ -934,125 +961,6 @@ class _DashboardPageState extends State<_DashboardPage> {
             ],
           ),
         ),
-      ),
-    );
-  }
-  
-  Widget _buildUpcomingShiftsSection(BuildContext context) {
-    final theme = Theme.of(context);
-    
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          child: Row(
-            children: [
-              Icon(
-                Icons.schedule_rounded,
-                color: theme.colorScheme.primary,
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Upcoming Shifts',
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: theme.colorScheme.onSurface,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-        Card(
-          elevation: 2,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  theme.colorScheme.surfaceVariant.withOpacity(0.3),
-                  theme.colorScheme.surface,
-                ],
-              ),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: _shifts.isEmpty
-                ? Column(
-                    children: [
-                      Icon(
-                        Icons.event_busy_rounded,
-                        size: 40,
-                        color: theme.colorScheme.onSurfaceVariant.withOpacity(0.6),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'No Upcoming Shifts',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Your scheduled shifts will appear here',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  )
-                : Column(
-                    children: _shifts.map((shift) => _buildShiftItem(context, shift)).toList(),
-                  ),
-          ),
-        ),
-      ],
-    );
-  }
-  
-  Widget _buildShiftItem(BuildContext context, dynamic shift) {
-    final theme = Theme.of(context);
-    
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            theme.colorScheme.primaryContainer.withOpacity(0.3),
-            theme.colorScheme.primaryContainer.withOpacity(0.1),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: theme.colorScheme.primary.withOpacity(0.2),
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.work_outline_rounded,
-            color: theme.colorScheme.primary,
-            size: 20,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              shift.toString(),
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: theme.colorScheme.onSurface,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
