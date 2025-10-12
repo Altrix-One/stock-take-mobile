@@ -6,20 +6,15 @@ import 'package:stock_count/hr/services/profile_service.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:stock_count/hr/widgets/doctype_form.dart';
 import 'package:stock_count/hr/widgets/leave_balance_card.dart';
 import 'package:stock_count/utilis/outbox_queue.dart';
 import 'package:hive/hive.dart';
 import 'package:stock_count/ui/glass.dart';
-import 'package:stock_count/utilis/sync_manager.dart';
 import 'package:stock_count/screens/queue_status.dart';
 import 'package:stock_count/screens/login.dart';
-import 'package:stock_count/constants/theme.dart';
-import 'package:stock_count/widgets/professional_card.dart';
 import 'package:stock_count/widgets/section_header.dart';
-import 'package:stock_count/widgets/status_badge.dart';
-import 'package:stock_count/widgets/professional_list_item.dart';
 import 'package:stock_count/widgets/professional_loading.dart';
 import 'package:stock_count/widgets/professional_error_dialog.dart';
 import 'package:stock_count/utils/error_message_parser.dart';
@@ -55,7 +50,8 @@ class _ESSHomeScreenState extends State<ESSHomeScreen> {
         final m = jsonDecode(raw) as Map<String, dynamic>;
         final roles = (m['roles'] as List?)?.map((e) => e.toString()).toList() ?? [];
         setState(() {
-          _canApprove = roles.any((r) => r.contains('Approver') || r.contains('Manager'));
+          // Only show approvals for HR Manager, not HR User
+          _canApprove = roles.any((r) => r.contains('HR Manager'));
         });
       }
     } catch (_) {}
@@ -139,6 +135,8 @@ class _DashboardPageState extends State<_DashboardPage> {
   List<dynamic> _shifts = [];
   int _pendingApprovals = 0;
   bool _loading = true;
+  Map<String, dynamic>? _userInfo;
+  String? _profileImageUrl;
   @override
   void initState() {
     super.initState();
@@ -150,6 +148,10 @@ class _DashboardPageState extends State<_DashboardPage> {
     try {
       final bal = await LeavesService.leaveBalanceWithPending();
       final shifts = await AttendanceService.upcomingShifts();
+      
+      // Load user info from Hive
+      await _loadUserInfo();
+      
       int approvals = 0;
       if (widget.canApprove) {
         final a1 = await LeavesService.teamLeaves();
@@ -162,17 +164,200 @@ class _DashboardPageState extends State<_DashboardPage> {
       setState(() { _balance = bal; _shifts = shifts; _pendingApprovals = approvals; _loading = false; });
     } catch (_) { if(mounted) setState(() => _loading = false); }
   }
+  
+  Future<void> _loadUserInfo() async {
+    try {
+      if (!Hive.isBoxOpen('authBox')) await Hive.openBox('authBox');
+      final box = Hive.box('authBox');
+      final raw = box.get('userDetails');
+      if (raw is String && raw.isNotEmpty) {
+        final userDetails = jsonDecode(raw) as Map<String, dynamic>;
+        
+        // Try to get employee details for more complete info
+        final employeeDetails = await ProfileService.getEmployeeDetails();
+        
+        setState(() {
+          _userInfo = {
+            'full_name': employeeDetails?['employee_name'] ?? userDetails['full_name'] ?? userDetails['name'] ?? 'User',
+            'email': employeeDetails?['company_email'] ?? userDetails['email'] ?? '',
+            'employee_number': employeeDetails?['employee_number'] ?? '',
+            'designation': employeeDetails?['designation'] ?? '',
+            'department': employeeDetails?['department'] ?? '',
+          };
+        });
+        
+        // Load profile image
+        final imagePath = employeeDetails?['image']?.toString();
+        if (imagePath != null && imagePath.isNotEmpty) {
+          final fullUrl = await ProfileService.getFullImageUrl(imagePath);
+          if (mounted) {
+            setState(() {
+              _profileImageUrl = fullUrl;
+            });
+          }
+        }
+      }
+    } catch (e) {
+      print('Error loading user info: $e');
+    }
+  }
+  Widget _buildCustomNavBar(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        boxShadow: [
+          BoxShadow(
+            color: theme.shadowColor.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 2, 16, 2),
+          child: SizedBox(
+            height: 32, // Fixed small height
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+            // Company Logo/Name Section
+            Expanded(
+              child: Row(
+                children: [
+                      Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Icon(
+                          Icons.business_center,
+                          color: theme.colorScheme.primary,
+                          size: 12,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Cohenix ESS',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.primary,
+                          fontSize: 14,
+                          height: 1.0,
+                        ),
+                      ),
+                    ],
+                  ),
+            ),
+            
+            // User Profile Section
+            if (_userInfo != null)
+              GestureDetector(
+                onTap: () {
+                  // Navigate to profile page
+                  final parentState = context.findAncestorStateOfType<_ESSHomeScreenState>();
+                  if (parentState != null) {
+                    // Profile tab index depends on whether approvals are visible
+                    final profileIndex = widget.canApprove ? 5 : 4;
+                    parentState.setState(() {
+                      parentState._index = profileIndex;
+                    });
+                  }
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primaryContainer.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircleAvatar(
+                        radius: 12,
+                        backgroundColor: theme.colorScheme.primary,
+                        backgroundImage: _profileImageUrl != null
+                            ? NetworkImage(_profileImageUrl!)
+                            : null,
+                        child: _profileImageUrl == null
+                            ? Text(
+                                (_userInfo!['full_name']?.toString() ?? 'U')
+                                    .substring(0, 1)
+                                    .toUpperCase(),
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : null,
+                      ),
+                      const SizedBox(width: 3),
+                      Flexible(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              _userInfo!['full_name']?.toString() ?? 'User',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: theme.colorScheme.onSurface,
+                                fontSize: 10,
+                                height: 1.0,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            if (_userInfo!['designation']?.toString().isNotEmpty == true)
+                              Text(
+                                _userInfo!['designation']?.toString() ?? '',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                  fontSize: 8,
+                                  height: 1.0,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 1),
+                      Icon(
+                        Icons.arrow_forward_ios,
+                        size: 8,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Home')),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _load,
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
-                children: [
+      body: Column(
+        children: [
+          _buildCustomNavBar(context),
+          Expanded(
+            child: _loading
+                ? const Center(child: CircularProgressIndicator())
+                : RefreshIndicator(
+                    onRefresh: _load,
+                    child: ListView(
+                      padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
+                      children: [
                   GlassContainer(child: LeaveBalanceCard(balances: _balance)),
                   const SizedBox(height: 8),
                   if (widget.canApprove)
@@ -201,9 +386,12 @@ class _DashboardPageState extends State<_DashboardPage> {
                   const Text('Upcoming Shifts', style: TextStyle(fontWeight: FontWeight.bold)),
                   if (_shifts.isEmpty) const ListTile(title: Text('None')),
                   for (final s in _shifts) ListTile(title: Text(s.toString())),
-                ],
-              ),
+                      ],
+                    ),
+                  ),
             ),
+          ],
+        ),
     );
   }
 }
@@ -2238,59 +2426,930 @@ Widget _approvalTile(String doctype, dynamic row){
   );
 }
 
-class _ProfilePage extends StatelessWidget {
+class _ProfilePage extends StatefulWidget {
   @override
-  Widget build(BuildContext context){
-    Map<String,dynamic>? profile;
-    try {
-      final box = Hive.box('authBox');
-      final raw = box.get('userDetails');
-      if (raw is String) profile = jsonDecode(raw) as Map<String,dynamic>;
-    } catch(_) {}
+  State<_ProfilePage> createState() => _ProfilePageState();
+}
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
-      body: ListView(padding: const EdgeInsets.fromLTRB(16,24,16,16), children: [
-        ListTile(
-          title: Text(profile?['full_name']?.toString() ?? 'Profile'),
-          subtitle: Text(profile?['email']?.toString() ?? 'Employee details'),
-        ),
-        const Divider(),
-        ListTile(
-          leading: const Icon(Icons.cloud_sync_outlined),
-          title: const Text('Queue status'),
-          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_)=>QueueStatusScreen())),
-        ),
-        ListTile(
-          leading: const Icon(Icons.sync),
-          title: const Text('Sync HR data'),
-          onTap: () async {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('HR sync started...')));
+class _ProfilePageState extends State<_ProfilePage> {
+  Map<String, dynamic>? _employeeData;
+  bool _loading = true;
+  bool _editing = false;
+  bool _saving = false;
+  bool _uploadingImage = false;
+  String? _profileImageUrl;
+  
+  // Form controllers
+  final _formKey = GlobalKey<FormState>();
+  late TextEditingController _nameController;
+  late TextEditingController _emailController;
+  late TextEditingController _cellController;
+  late TextEditingController _personalEmailController;
+  late TextEditingController _currentAddressController;
+  late TextEditingController _permanentAddressController;
+  late TextEditingController _emergencyNameController;
+  late TextEditingController _emergencyContactController;
+  late TextEditingController _panController;
+  late TextEditingController _bankNameController;
+  late TextEditingController _accountNumberController;
+  late TextEditingController _ifscController;
+  
+  @override
+  void initState() {
+    super.initState();
+    _initControllers();
+    _loadEmployeeData();
+  }
+  
+  void _initControllers() {
+    _nameController = TextEditingController();
+    _emailController = TextEditingController();
+    _cellController = TextEditingController();
+    _personalEmailController = TextEditingController();
+    _currentAddressController = TextEditingController();
+    _permanentAddressController = TextEditingController();
+    _emergencyNameController = TextEditingController();
+    _emergencyContactController = TextEditingController();
+    _panController = TextEditingController();
+    _bankNameController = TextEditingController();
+    _accountNumberController = TextEditingController();
+    _ifscController = TextEditingController();
+  }
+  
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _cellController.dispose();
+    _personalEmailController.dispose();
+    _currentAddressController.dispose();
+    _permanentAddressController.dispose();
+    _emergencyNameController.dispose();
+    _emergencyContactController.dispose();
+    _panController.dispose();
+    _bankNameController.dispose();
+    _accountNumberController.dispose();
+    _ifscController.dispose();
+    super.dispose();
+  }
+  
+  Future<void> _loadEmployeeData() async {
+    try {
+      final data = await ProfileService.getEmployeeDetails();
+      if (mounted) {
+        setState(() {
+          _employeeData = data;
+          _loading = false;
+        });
+        _populateControllers();
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _loading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to load employee details')),
+        );
+      }
+    }
+  }
+  
+  void _populateControllers() {
+    if (_employeeData != null) {
+      _nameController.text = _employeeData!['employee_name']?.toString() ?? '';
+      _emailController.text = _employeeData!['company_email']?.toString() ?? '';
+      _cellController.text = _employeeData!['cell_number']?.toString() ?? '';
+      _personalEmailController.text = _employeeData!['personal_email']?.toString() ?? '';
+      _currentAddressController.text = _employeeData!['current_address']?.toString() ?? '';
+      _permanentAddressController.text = _employeeData!['permanent_address']?.toString() ?? '';
+      _emergencyNameController.text = _employeeData!['emergency_contact_name']?.toString() ?? '';
+      _emergencyContactController.text = _employeeData!['emergency_contact_number']?.toString() ?? '';
+      _panController.text = _employeeData!['pan_number']?.toString() ?? '';
+      _bankNameController.text = _employeeData!['bank_name']?.toString() ?? '';
+      _accountNumberController.text = _employeeData!['bank_ac_no']?.toString() ?? '';
+      _ifscController.text = _employeeData!['ifsc_code']?.toString() ?? '';
+      
+      // Load profile image URL
+      _loadProfileImage();
+    }
+  }
+  
+  Future<void> _loadProfileImage() async {
+    if (_employeeData != null) {
+      final imagePath = _employeeData!['image']?.toString();
+      final fullUrl = await ProfileService.getFullImageUrl(imagePath);
+      if (mounted) {
+        setState(() {
+          _profileImageUrl = fullUrl;
+        });
+      }
+    }
+  }
+  
+  Future<void> _pickAndUploadImage() async {
+    try {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 500,
+        maxHeight: 500,
+        imageQuality: 85,
+      );
+      
+      if (pickedFile == null) return;
+      
+      setState(() => _uploadingImage = true);
+      
+      final file = File(pickedFile.path);
+      final uploadedUrl = await ProfileService.uploadProfileImage(file);
+      
+      if (uploadedUrl != null && mounted) {
+        setState(() {
+          _profileImageUrl = uploadedUrl;
+          // Update employee data locally
+          _employeeData!['image'] = uploadedUrl;
+        });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Profile image updated successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to update profile image'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error updating image: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _uploadingImage = false);
+      }
+    }
+  }
+  
+  Future<void> _showImagePicker() async {
+    final choice = await showModalBottomSheet<String>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Wrap(
+            children: [
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Choose from Gallery'),
+                onTap: () => Navigator.pop(context, 'gallery'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text('Take Photo'),
+                onTap: () => Navigator.pop(context, 'camera'),
+              ),
+              if (_profileImageUrl != null)
+                ListTile(
+                  leading: const Icon(Icons.delete, color: Colors.red),
+                  title: const Text('Remove Photo'),
+                  onTap: () => Navigator.pop(context, 'remove'),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+    
+    if (choice != null) {
+      if (choice == 'remove') {
+        await _removeProfileImage();
+      } else {
+        final picker = ImagePicker();
+        final source = choice == 'gallery' ? ImageSource.gallery : ImageSource.camera;
+        final pickedFile = await picker.pickImage(
+          source: source,
+          maxWidth: 500,
+          maxHeight: 500,
+          imageQuality: 85,
+        );
+        
+        if (pickedFile != null) {
+          setState(() => _uploadingImage = true);
+          
           try {
-            await OutboxQueue.processQueue();
-            // Process HR-related queue items (leaves, claims, attendance)
+            final file = File(pickedFile.path);
+            final uploadedUrl = await ProfileService.uploadProfileImage(file);
+            
+            if (uploadedUrl != null && mounted) {
+              setState(() {
+                _profileImageUrl = uploadedUrl;
+                _employeeData!['image'] = uploadedUrl;
+              });
+              
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Profile image updated successfully'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            }
           } catch (e) {
-            // ignore
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Error updating image: $e'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          } finally {
+            if (mounted) {
+              setState(() => _uploadingImage = false);
+            }
           }
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('HR sync complete')));
-          }
-        },
+        }
+      }
+    }
+  }
+  
+  Future<void> _removeProfileImage() async {
+    try {
+      setState(() => _uploadingImage = true);
+      
+      await ProfileService.updateEmployeeDetails({'image': null});
+      
+      if (mounted) {
+        setState(() {
+          _profileImageUrl = null;
+          _employeeData!['image'] = null;
+        });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Profile image removed successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error removing image: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _uploadingImage = false);
+      }
+    }
+  }
+  
+  Future<void> _saveChanges() async {
+    if (!_formKey.currentState!.validate()) return;
+    
+    setState(() => _saving = true);
+    
+    try {
+      final updateData = {
+        'cell_number': _cellController.text.trim(),
+        'personal_email': _personalEmailController.text.trim(),
+        'current_address': _currentAddressController.text.trim(),
+        'permanent_address': _permanentAddressController.text.trim(),
+        'emergency_contact_name': _emergencyNameController.text.trim(),
+        'emergency_contact_number': _emergencyContactController.text.trim(),
+        'pan_number': _panController.text.trim(),
+        'bank_name': _bankNameController.text.trim(),
+        'bank_ac_no': _accountNumberController.text.trim(),
+        'ifsc_code': _ifscController.text.trim(),
+      };
+      
+      // Add to queue for offline support
+      await OutboxQueue.addOperation('update_employee_profile', updateData);
+      
+      if (mounted) {
+        setState(() {
+          _editing = false;
+          _saving = false;
+        });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Profile updated successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        
+        // Reload data
+        await _loadEmployeeData();
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _saving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to update profile'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+  
+  Widget _buildFormSection({required String title, required IconData icon, required Widget child}) {
+    final theme = Theme.of(context);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 24),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.colorScheme.outline.withOpacity(0.2),
         ),
-        ListTile(
-          leading: const Icon(Icons.logout),
-          title: const Text('Logout'),
-          onTap: () async {
-            var authBox = await Hive.openBox('authBox');
-            await authBox.clear();
-            if (!context.mounted) return;
-            Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (_)=> LoginScreen()),
-              (route)=>false,
-            );
-          },
-        ),
-      ]),
+        boxShadow: [
+          BoxShadow(
+            color: theme.shadowColor.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primaryContainer.withOpacity(0.3),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: theme.colorScheme.primary,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: child,
+          ),
+        ],
+      ),
+    );
+  }
+  
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
+    if (_loading) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Profile')),
+        body: const Center(child: ProfessionalLoading()),
+      );
+    }
+    
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Profile'),
+        actions: [
+          if (!_editing && _employeeData != null)
+            IconButton(
+              icon: const Icon(Icons.edit_outlined),
+              onPressed: () => setState(() => _editing = true),
+            ),
+          if (_editing) ...[
+            TextButton(
+              onPressed: _saving ? null : () {
+                setState(() => _editing = false);
+                _populateControllers(); // Reset form
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: _saving ? null : _saveChanges,
+              child: _saving 
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Text('Save'),
+            ),
+          ],
+        ],
+      ),
+      body: _employeeData == null 
+        ? const Center(child: Text('No employee data found'))
+        : Form(
+            key: _formKey,
+            child: RefreshIndicator(
+              onRefresh: _loadEmployeeData,
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
+                children: [
+                  // Profile Header
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primaryContainer.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      children: [
+                        Stack(
+                          alignment: Alignment.bottomRight,
+                          children: [
+                            GestureDetector(
+                              onTap: _uploadingImage ? null : _showImagePicker,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: theme.colorScheme.primary.withOpacity(0.3),
+                                    width: 3,
+                                  ),
+                                ),
+                                child: CircleAvatar(
+                                  radius: 40,
+                                  backgroundColor: theme.colorScheme.primary,
+                                  backgroundImage: _profileImageUrl != null
+                                      ? NetworkImage(_profileImageUrl!)
+                                      : null,
+                                  child: _uploadingImage
+                                      ? const SizedBox(
+                                          width: 24,
+                                          height: 24,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                          ),
+                                        )
+                                      : _profileImageUrl == null
+                                          ? Text(
+                                              (_employeeData!['employee_name']?.toString() ?? 'U')
+                                                  .substring(0, 1)
+                                                  .toUpperCase(),
+                                              style: const TextStyle(
+                                                fontSize: 28,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.white,
+                                              ),
+                                            )
+                                          : null,
+                                ),
+                              ),
+                            ),
+                            if (!_uploadingImage)
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primary,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: theme.colorScheme.surface,
+                                    width: 2,
+                                  ),
+                                ),
+                                child: IconButton(
+                                  icon: const Icon(Icons.camera_alt, size: 16),
+                                  color: Colors.white,
+                                  onPressed: _showImagePicker,
+                                  iconSize: 16,
+                                  constraints: const BoxConstraints(
+                                    minWidth: 32,
+                                    minHeight: 32,
+                                  ),
+                                  padding: const EdgeInsets.all(4),
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          _employeeData!['employee_name']?.toString() ?? 'Unknown',
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _employeeData!['designation']?.toString() ?? '',
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        if (_employeeData!['employee_number'] != null) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            'ID: ${_employeeData!['employee_number']}',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 24),
+                  
+                  // Personal Information (Read-only)
+                  if (!_editing)
+                    _buildFormSection(
+                      title: 'Personal Information',
+                      icon: Icons.person_outline,
+                      child: Column(
+                        children: [
+                          _buildInfoRow('Full Name', _employeeData!['employee_name']?.toString()),
+                          _buildInfoRow('Gender', _employeeData!['gender']?.toString()),
+                          _buildInfoRow('Date of Birth', _employeeData!['date_of_birth']?.toString()),
+                          _buildInfoRow('Date of Joining', _employeeData!['date_of_joining']?.toString()),
+                          _buildInfoRow('Blood Group', _employeeData!['blood_group']?.toString()),
+                        ],
+                      ),
+                    ),
+                  
+                  // Company Information (Read-only)
+                  if (!_editing)
+                    _buildFormSection(
+                      title: 'Company Information',
+                      icon: Icons.business_outlined,
+                      child: Column(
+                        children: [
+                          _buildInfoRow('Company', _employeeData!['company']?.toString()),
+                          _buildInfoRow('Department', _employeeData!['department']?.toString()),
+                          _buildInfoRow('Designation', _employeeData!['designation']?.toString()),
+                          _buildInfoRow('Branch', _employeeData!['branch']?.toString()),
+                          _buildInfoRow('Employment Type', _employeeData!['employment_type']?.toString()),
+                        ],
+                      ),
+                    ),
+                  
+                  // Contact Information (Editable)
+                  _buildFormSection(
+                    title: 'Contact Information',
+                    icon: Icons.contact_phone_outlined,
+                    child: Column(
+                      children: [
+                        if (!_editing) ...[
+                          _buildInfoRow('Company Email', _employeeData!['company_email']?.toString()),
+                          _buildInfoRow('Personal Email', _employeeData!['personal_email']?.toString()),
+                          _buildInfoRow('Mobile Number', _employeeData!['cell_number']?.toString()),
+                        ] else ...[
+                          TextFormField(
+                            controller: _personalEmailController,
+                            keyboardType: TextInputType.emailAddress,
+                            decoration: InputDecoration(
+                              labelText: 'Personal Email',
+                              prefixIcon: const Icon(Icons.email_outlined),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              filled: true,
+                              fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                            ),
+                            validator: (v) {
+                              if (v?.isNotEmpty == true && !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v!)) {
+                                return 'Enter a valid email';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _cellController,
+                            keyboardType: TextInputType.phone,
+                            decoration: InputDecoration(
+                              labelText: 'Mobile Number',
+                              prefixIcon: const Icon(Icons.phone_outlined),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              filled: true,
+                              fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                            ),
+                            validator: (v) {
+                              if (v?.isNotEmpty == true && v!.length < 10) {
+                                return 'Enter a valid mobile number';
+                              }
+                              return null;
+                            },
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  
+                  // Address Information (Editable)
+                  _buildFormSection(
+                    title: 'Address Information',
+                    icon: Icons.location_on_outlined,
+                    child: Column(
+                      children: [
+                        if (!_editing) ...[
+                          _buildInfoRow('Current Address', _employeeData!['current_address']?.toString()),
+                          _buildInfoRow('Permanent Address', _employeeData!['permanent_address']?.toString()),
+                        ] else ...[
+                          TextFormField(
+                            controller: _currentAddressController,
+                            maxLines: 3,
+                            decoration: InputDecoration(
+                              labelText: 'Current Address',
+                              prefixIcon: const Icon(Icons.home_outlined),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              filled: true,
+                              fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _permanentAddressController,
+                            maxLines: 3,
+                            decoration: InputDecoration(
+                              labelText: 'Permanent Address',
+                              prefixIcon: const Icon(Icons.location_city_outlined),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              filled: true,
+                              fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  
+                  // Emergency Contact (Editable)
+                  _buildFormSection(
+                    title: 'Emergency Contact',
+                    icon: Icons.emergency_outlined,
+                    child: Column(
+                      children: [
+                        if (!_editing) ...[
+                          _buildInfoRow('Contact Name', _employeeData!['emergency_contact_name']?.toString()),
+                          _buildInfoRow('Contact Number', _employeeData!['emergency_contact_number']?.toString()),
+                        ] else ...[
+                          TextFormField(
+                            controller: _emergencyNameController,
+                            decoration: InputDecoration(
+                              labelText: 'Emergency Contact Name',
+                              prefixIcon: const Icon(Icons.person_outline),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              filled: true,
+                              fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _emergencyContactController,
+                            keyboardType: TextInputType.phone,
+                            decoration: InputDecoration(
+                              labelText: 'Emergency Contact Number',
+                              prefixIcon: const Icon(Icons.phone_outlined),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              filled: true,
+                              fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  
+                  // Financial Information (Editable)
+                  _buildFormSection(
+                    title: 'Financial Information',
+                    icon: Icons.account_balance_outlined,
+                    child: Column(
+                      children: [
+                        if (!_editing) ...[
+                          _buildInfoRow('PAN Number', _employeeData!['pan_number']?.toString()),
+                          _buildInfoRow('Bank Name', _employeeData!['bank_name']?.toString()),
+                          _buildInfoRow('Account Number', _employeeData!['bank_ac_no']?.toString()),
+                          _buildInfoRow('IFSC Code', _employeeData!['ifsc_code']?.toString()),
+                        ] else ...[
+                          TextFormField(
+                            controller: _panController,
+                            decoration: InputDecoration(
+                              labelText: 'PAN Number',
+                              prefixIcon: const Icon(Icons.credit_card_outlined),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              filled: true,
+                              fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _bankNameController,
+                            decoration: InputDecoration(
+                              labelText: 'Bank Name',
+                              prefixIcon: const Icon(Icons.account_balance),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              filled: true,
+                              fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _accountNumberController,
+                            decoration: InputDecoration(
+                              labelText: 'Account Number',
+                              prefixIcon: const Icon(Icons.numbers_outlined),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              filled: true,
+                              fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _ifscController,
+                            decoration: InputDecoration(
+                              labelText: 'IFSC Code',
+                              prefixIcon: const Icon(Icons.code_outlined),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              filled: true,
+                              fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  
+                  // Settings Section
+                  _buildFormSection(
+                    title: 'Settings',
+                    icon: Icons.settings_outlined,
+                    child: Column(
+                      children: [
+                        ListTile(
+                          leading: const Icon(Icons.cloud_sync_outlined),
+                          title: const Text('Queue Status'),
+                          subtitle: const Text('View pending operations'),
+                          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => QueueStatusScreen()),
+                          ),
+                        ),
+                        const Divider(height: 1),
+                        ListTile(
+                          leading: const Icon(Icons.sync_outlined),
+                          title: const Text('Sync HR Data'),
+                          subtitle: const Text('Synchronize with server'),
+                          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                          onTap: () async {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('HR sync started...')),
+                            );
+                            try {
+                              await OutboxQueue.processQueue();
+                            } catch (e) {
+                              // ignore
+                            }
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('HR sync complete'),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                            }
+                          },
+                        ),
+                        const Divider(height: 1),
+                        ListTile(
+                          leading: const Icon(Icons.logout, color: Colors.red),
+                          title: const Text('Logout'),
+                          subtitle: const Text('Sign out of your account'),
+                          trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.red),
+                          onTap: () async {
+                            final confirmed = await showDialog<bool>(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('Confirm Logout'),
+                                content: const Text('Are you sure you want to logout?'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.of(context).pop(false),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () => Navigator.of(context).pop(true),
+                                    child: const Text('Logout'),
+                                  ),
+                                ],
+                              ),
+                            );
+                            
+                            if (confirmed == true) {
+                              var authBox = await Hive.openBox('authBox');
+                              await authBox.clear();
+                              if (!context.mounted) return;
+                              Navigator.of(context).pushAndRemoveUntil(
+                                MaterialPageRoute(builder: (_) => LoginScreen()),
+                                (route) => false,
+                              );
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  // Bottom padding for navigation
+                  const SizedBox(height: 100),
+                ],
+              ),
+            ),
+          ),
+    );
+  }
+  
+  Widget _buildInfoRow(String label, String? value) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(
+              label,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              value?.isNotEmpty == true ? value! : 'Not provided',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: value?.isNotEmpty == true 
+                  ? theme.colorScheme.onSurface
+                  : theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
+                fontStyle: value?.isNotEmpty == true ? FontStyle.normal : FontStyle.italic,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -2351,45 +3410,644 @@ class _NewShiftRequestPageState extends State<_NewShiftRequestPage> {
 class _NewClaimPage extends StatefulWidget { @override State<_NewClaimPage> createState()=>_NewClaimPageState(); }
 class _NewClaimPageState extends State<_NewClaimPage> {
   final _formKey = GlobalKey<FormState>();
-  String? _type; String? _company; double? _amount; String? _desc;
+  
+  // Form fields based on HRMS Expense Claim structure
+  String? _employee;
+  String? _company;
+  String? _expenseType;
+  String? _postingDate;
+  double? _totalClaimedAmount;
+  String? _purpose;
+  String? _remark;
+  String? _expenseApprover;
+  String? _costCenter;
+  String? _payableAccount;
+  String? _project;
+  String? _modeOfPayment;
   final List<File> _attachments = [];
+  
+  bool _loading = false;
+  bool _loadingMeta = true;
+  List<String> _companies = [];
+  List<String> _expenseTypes = [];
+  List<String> _expenseApprovers = [];
+  Map<String, dynamic>? _companyDetails;
+  String? _employeeId;
 
-  Future<void> _pickFiles() async {
+  @override
+  void initState() {
+    super.initState();
+    _loadMeta();
+  }
+
+  Future<void> _loadMeta() async {
     try {
-      final res = await FilePicker.platform.pickFiles(allowMultiple: true, withData: false);
-      if (res != null) {
-        setState(() {
-          for (final f in res.files) { if (f.path != null) _attachments.add(File(f.path!)); }
-        });
+      // Get current employee
+      _employeeId = await ProfileService.currentEmployee();
+      
+      // Get companies from userDetails (assuming it's available there)
+      try {
+        final box = await Hive.openBox('authBox');
+        final raw = box.get('userDetails');
+        if (raw is String) {
+          final m = jsonDecode(raw) as Map<String, dynamic>;
+          _company = m['company']?.toString();
+          if (_company != null) {
+            _companies = [_company!]; // For now, just use the user's company
+          }
+        }
+      } catch (_) {}
+      
+      // Get expense claim types
+      final types = await ClaimsService.claimTypes();
+      final expenseTypesList = <String>[];
+      for (final x in types) {
+        if (x is Map && x['name'] != null) expenseTypesList.add(x['name'].toString());
+        else if (x is String) expenseTypesList.add(x);
       }
+      
+      // Set today as default posting date
+      final today = DateTime.now();
+      _postingDate = '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+      
+      if (!mounted) return;
+      setState(() {
+        _expenseTypes = expenseTypesList;
+        _loadingMeta = false;
+      });
+      
+      // Load company details if company is selected
+      if (_company != null) {
+        await _loadCompanyDetails();
+      }
+      
+      // Load expense approver details
+      if (_employeeId != null) {
+        await _loadApproverDetails();
+      }
+      
+    } catch (_) { 
+      if(mounted) setState(()=> _loadingMeta = false); 
+    }
+  }
+  
+  Future<void> _loadCompanyDetails() async {
+    if (_company == null) return;
+    try {
+      final details = await ClaimsService.getCompanyAccounts(_company!);
+      setState(() {
+        _companyDetails = details;
+        _costCenter = details['cost_center']?.toString();
+        _payableAccount = details['default_expense_claim_payable_account']?.toString();
+      });
+    } catch (_) {}
+  }
+  
+  Future<void> _loadApproverDetails() async {
+    if (_employeeId == null) return;
+    try {
+      final details = await ClaimsService.getExpenseApprovalDetails(_employeeId!);
+      final approvers = details['department_approvers'] as List<dynamic>? ?? [];
+      final approversList = <String>[];
+      
+      for (final approver in approvers) {
+        if (approver is Map) {
+          final name = approver['name']?.toString();
+          if (name != null) approversList.add(name);
+        }
+      }
+      
+      setState(() {
+        _expenseApprovers = approversList;
+        _expenseApprover = details['expense_approver']?.toString();
+      });
     } catch (_) {}
   }
 
-  Future<void> _submit() async {
-    if(!_formKey.currentState!.validate()) return;
-    final atts = <Map<String, dynamic>>[];
-    for (final f in _attachments) {
-      try {
-        final bytes = await f.readAsBytes();
-        final b64 = base64Encode(bytes);
-        atts.add({'filename': f.uri.pathSegments.isNotEmpty ? f.uri.pathSegments.last : 'file', 'data': b64});
-      } catch (_) {}
+  Future<void> _pickDate() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      firstDate: DateTime(now.year - 2),
+      lastDate: DateTime(now.year + 2),
+      initialDate: now,
+    );
+    if (picked != null) {
+      setState(() {
+        _postingDate = '${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}';
+      });
     }
-    await OutboxQueue.addOperation('expense_claim', {'company': _company, 'type': _type, 'amount': _amount, 'description': _desc, 'attachments': atts});
-    if(!mounted) return; ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Expense claim queued'))); Navigator.of(context).pop();
   }
-  @override Widget build(BuildContext context){
-    return Scaffold(appBar: AppBar(title: const Text('New Expense Claim')),
-      body: Form(key: _formKey, child: ListView(padding: const EdgeInsets.all(16), children: [
-        TextFormField(decoration: const InputDecoration(labelText:'Company'), onChanged:(v)=>_company=v, validator:(v)=>(v==null||v.isEmpty)?'Required':null),
-        TextFormField(decoration: const InputDecoration(labelText:'Claim Type'), onChanged:(v)=>_type=v, validator:(v)=>(v==null||v.isEmpty)?'Required':null),
-        TextFormField(decoration: const InputDecoration(labelText:'Amount'), keyboardType: const TextInputType.numberWithOptions(decimal:true), onChanged:(v)=>_amount=double.tryParse(v)),
-        TextFormField(decoration: const InputDecoration(labelText:'Description'), onChanged:(v)=>_desc=v),
-        const SizedBox(height:12),
-        Wrap(spacing: 8, runSpacing: 4, children: [for(final f in _attachments) Chip(label: Text(f.uri.pathSegments.isNotEmpty? f.uri.pathSegments.last : 'file'))]),
-        TextButton.icon(onPressed: _pickFiles, icon: const Icon(Icons.attachment), label: const Text('Add attachments')),
-        const SizedBox(height:16),
-        ElevatedButton(onPressed:_submit, child: const Text('Submit'))
-      ])));
+
+  Future<void> _pickFiles() async {
+    try {
+      final res = await FilePicker.platform.pickFiles(
+        allowMultiple: true, 
+        withData: false,
+        type: FileType.custom,
+        allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx'],
+      );
+      if (res != null) {
+        setState(() {
+          for (final f in res.files) { 
+            if (f.path != null && _attachments.length < 10) { // Limit to 10 attachments
+              _attachments.add(File(f.path!)); 
+            }
+          }
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to pick files. Please try again.'))
+        );
+      }
+    }
+  }
+  
+  void _removeAttachment(int index) {
+    setState(() {
+      _attachments.removeAt(index);
+    });
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    
+    setState(() => _loading = true);
+    
+    try {
+      // Validate required fields
+      if (_totalClaimedAmount == null || _totalClaimedAmount! <= 0) {
+        await ProfessionalErrorDialog.show(
+          context: context,
+          title: '💰 Invalid Amount',
+          errorMessage: 'Please enter a valid claim amount greater than zero.',
+          canRetry: false,
+        );
+        return;
+      }
+
+      // Process attachments
+      final atts = <Map<String, dynamic>>[];
+      for (final f in _attachments) {
+        try {
+          final bytes = await f.readAsBytes();
+          final b64 = base64Encode(bytes);
+          final filename = f.uri.pathSegments.isNotEmpty ? f.uri.pathSegments.last : 'attachment';
+          atts.add({
+            'filename': filename, 
+            'data': b64,
+            'is_private': 1,
+          });
+        } catch (_) {
+          // Skip files that can't be read
+        }
+      }
+      
+      final payload = {
+        'employee': _employeeId,
+        'company': _company,
+        'posting_date': _postingDate,
+        'expense_type': _expenseType,
+        'total_claimed_amount': _totalClaimedAmount,
+        'purpose': _purpose,
+        'remark': _remark,
+        if (_expenseApprover != null) 'expense_approver': _expenseApprover,
+        if (_costCenter != null) 'cost_center': _costCenter,
+        if (_payableAccount != null) 'payable_account': _payableAccount,
+        if (_project != null) 'project': _project,
+        if (_modeOfPayment != null) 'mode_of_payment': _modeOfPayment,
+        'attachments': atts,
+      };
+      
+      // Try immediate submission first
+      try {
+        await ClaimsService.submitExpenseClaim(payload);
+        
+        // Success - show confirmation
+        if (mounted) {
+          await ProfessionalSuccessDialog.show(
+            context: context,
+            title: '✅ Expense Claim Submitted',
+            message: 'Your expense claim for ${_formatCurrency(_totalClaimedAmount!)} has been successfully submitted for approval.',
+          );
+          Navigator.of(context).pop();
+        }
+      } catch (e) {
+        // If immediate submission fails, add to queue as fallback
+        await OutboxQueue.addOperation('expense_claim', payload);
+        
+        if (mounted) {
+          await ProfessionalSuccessDialog.show(
+            context: context,
+            title: '📤 Expense Claim Queued',
+            message: 'Your expense claim has been queued for submission. It will be automatically submitted when connection is restored.',
+          );
+          Navigator.of(context).pop();
+        }
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+  
+  String _formatCurrency(double amount) {
+    return 'R${amount.toStringAsFixed(2)}';
+  }
+  
+  Widget _buildFormSection({
+    required String title,
+    required IconData icon,
+    required Widget child,
+  }) {
+    final theme = Theme.of(context);
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainer.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.colorScheme.outline.withOpacity(0.2),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                icon,
+                color: theme.colorScheme.primary,
+                size: 20,
+              ),
+              const SizedBox(width: 10),
+              Text(
+                title,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          child,
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('New Expense Claim'),
+        elevation: 0,
+        backgroundColor: theme.colorScheme.surface,
+      ),
+      body: _loadingMeta 
+        ? const ProfessionalLoading(message: 'Loading expense claim form...')
+        : Form(
+            key: _formKey,
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+              children: [
+                // Header Section
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        theme.colorScheme.primaryContainer.withOpacity(0.3),
+                        theme.colorScheme.primaryContainer.withOpacity(0.1),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: theme.colorScheme.primary.withOpacity(0.2),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primary,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              Icons.receipt_long_rounded,
+                              color: theme.colorScheme.onPrimary,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            'New Expense Claim',
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: theme.colorScheme.onSurface,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Please fill in your expense details below for reimbursement',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 32),
+
+                // Company & Basic Details Section
+                _buildFormSection(
+                  title: 'Company Details',
+                  icon: Icons.business_rounded,
+                  child: Column(
+                    children: [
+                      if (_companies.isNotEmpty)
+                        DropdownButtonFormField<String>(
+                          isExpanded: true,
+                          value: _company,
+                          items: _companies.map((e) => DropdownMenuItem(
+                            value: e,
+                            child: Text(e),
+                          )).toList(),
+                          onChanged: (v) async {
+                            setState(() => _company = v);
+                            if (v != null) await _loadCompanyDetails();
+                          },
+                          decoration: InputDecoration(
+                            labelText: 'Company',
+                            prefixIcon: const Icon(Icons.business_center_rounded),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            filled: true,
+                            fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                          ),
+                          validator: (v) => v == null ? 'Please select a company' : null,
+                        )
+                      else
+                        TextFormField(
+                          decoration: InputDecoration(
+                            labelText: 'Company',
+                            prefixIcon: const Icon(Icons.business_center_rounded),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            filled: true,
+                            fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                          ),
+                          onChanged: (v) => _company = v,
+                          validator: (v) => (v == null || v.isEmpty) ? 'Company is required' : null,
+                        ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        readOnly: true,
+                        controller: TextEditingController(text: _postingDate ?? ''),
+                        onTap: _pickDate,
+                        decoration: InputDecoration(
+                          labelText: 'Posting Date',
+                          labelStyle: const TextStyle(fontSize: 14),
+                          prefixIcon: const Icon(Icons.calendar_today_rounded),
+                          suffixIcon: const Icon(Icons.arrow_drop_down_rounded),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          filled: true,
+                          fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                        ),
+                        validator: (v) => (v == null || v.isEmpty) ? 'Date is required' : null,
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Expense Details Section
+                _buildFormSection(
+                  title: 'Expense Details',
+                  icon: Icons.payment_rounded,
+                  child: Column(
+                    children: [
+                      DropdownButtonFormField<String>(
+                        isExpanded: true,
+                        value: _expenseType,
+                        items: _expenseTypes.map((e) => DropdownMenuItem(
+                          value: e,
+                          child: Text(e),
+                        )).toList(),
+                        onChanged: (v) => setState(() => _expenseType = v),
+                        decoration: InputDecoration(
+                          labelText: 'Expense Type',
+                          prefixIcon: const Icon(Icons.category_rounded),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          filled: true,
+                          fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                        ),
+                        validator: (v) => v == null ? 'Please select an expense type' : null,
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        decoration: InputDecoration(
+                          labelText: 'Claim Amount (R)',
+                          prefixIcon: const Icon(Icons.payments_rounded),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          filled: true,
+                          fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                        ),
+                        onChanged: (v) => _totalClaimedAmount = double.tryParse(v),
+                        validator: (v) {
+                          if (v == null || v.isEmpty) return 'Amount is required';
+                          final amount = double.tryParse(v);
+                          if (amount == null || amount <= 0) return 'Enter a valid amount';
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        decoration: InputDecoration(
+                          labelText: 'Purpose',
+                          prefixIcon: const Icon(Icons.description_rounded),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          filled: true,
+                          fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                        ),
+                        onChanged: (v) => _purpose = v,
+                        validator: (v) => (v == null || v.isEmpty) ? 'Purpose is required' : null,
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Additional Information Section
+                _buildFormSection(
+                  title: 'Additional Information',
+                  icon: Icons.edit_note_rounded,
+                  child: Column(
+                    children: [
+                      if (_expenseApprovers.isNotEmpty)
+                        DropdownButtonFormField<String>(
+                          isExpanded: true,
+                          value: _expenseApprover,
+                          items: _expenseApprovers.map((e) => DropdownMenuItem(
+                            value: e,
+                            child: Text(e),
+                          )).toList(),
+                          onChanged: (v) => setState(() => _expenseApprover = v),
+                          decoration: InputDecoration(
+                            labelText: 'Expense Approver (Optional)',
+                            prefixIcon: const Icon(Icons.person_rounded),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            filled: true,
+                            fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                          ),
+                        ),
+                      if (_expenseApprovers.isNotEmpty) const SizedBox(height: 16),
+                      TextFormField(
+                        maxLines: 3,
+                        decoration: InputDecoration(
+                          labelText: 'Remarks (Optional)',
+                          hintText: 'Additional details about the expense...',
+                          prefixIcon: const Icon(Icons.notes_rounded),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          filled: true,
+                          fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                        ),
+                        onChanged: (v) => _remark = v,
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Attachments Section
+                _buildFormSection(
+                  title: 'Attachments',
+                  icon: Icons.attachment_rounded,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Attach receipts and supporting documents',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      if (_attachments.isNotEmpty) ...[
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: _attachments.asMap().entries.map((entry) {
+                            final index = entry.key;
+                            final file = entry.value;
+                            final filename = file.uri.pathSegments.isNotEmpty 
+                              ? file.uri.pathSegments.last 
+                              : 'file';
+                            return Chip(
+                              label: Text(
+                                filename.length > 20 ? '${filename.substring(0, 17)}...' : filename,
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                              deleteIcon: const Icon(Icons.close, size: 16),
+                              onDeleted: () => _removeAttachment(index),
+                              backgroundColor: theme.colorScheme.primaryContainer.withOpacity(0.3),
+                            );
+                          }).toList(),
+                        ),
+                        const SizedBox(height: 12),
+                      ],
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: _attachments.length < 10 ? _pickFiles : null,
+                          icon: const Icon(Icons.add_rounded),
+                          label: Text(_attachments.isEmpty 
+                            ? 'Add Attachments' 
+                            : 'Add More (${_attachments.length}/10)'),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            side: BorderSide(
+                              color: theme.colorScheme.primary.withOpacity(0.5),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 32),
+
+                // Loading indicator
+                if (_loading) ...[
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    child: const LinearProgressIndicator(),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
+                // Submit Button
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: FilledButton.icon(
+                    onPressed: _loading ? null : _submit,
+                    icon: _loading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          )
+                        : const Icon(Icons.send_rounded),
+                    label: Text(
+                      _loading ? 'Submitting...' : 'Submit Expense Claim',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: theme.colorScheme.primary,
+                      foregroundColor: theme.colorScheme.onPrimary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+    );
   }
 }
