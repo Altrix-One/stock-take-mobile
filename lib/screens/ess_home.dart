@@ -6,12 +6,12 @@ import 'package:stock_count/hr/services/profile_service.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:stock_count/hr/widgets/leave_balance_card.dart';
 import 'package:stock_count/utilis/outbox_queue.dart';
 import 'package:hive/hive.dart';
-import 'package:stock_count/ui/glass.dart';
 import 'package:stock_count/screens/queue_status.dart';
 import 'package:stock_count/screens/login.dart';
 import 'package:stock_count/widgets/section_header.dart';
@@ -29,15 +29,29 @@ class ESSHomeScreen extends StatefulWidget {
   State<ESSHomeScreen> createState() => _ESSHomeScreenState();
 }
 
-class _ESSHomeScreenState extends State<ESSHomeScreen> {
+class _ESSHomeScreenState extends State<ESSHomeScreen> with TickerProviderStateMixin {
   int _index = 0;
   bool _canApprove = true; // default true; will refine via roles
   int _approvalsNavCount = 0;
+  late AnimationController _animationController;
+  late PageController _pageController;
 
   @override
   void initState() {
     super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _pageController = PageController(initialPage: 0);
     _loadRoles();
+  }
+  
+  @override
+  void dispose() {
+    _animationController.dispose();
+    _pageController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadRoles() async {
@@ -81,14 +95,6 @@ class _ESSHomeScreenState extends State<ESSHomeScreen> {
       if (_canApprove) _ApprovalsPage(),
       _ProfilePage(),
     ];
-    final items = [
-      const BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Home'),
-      const BottomNavigationBarItem(icon: Icon(Icons.event_note_outlined), label: 'Leaves'),
-      const BottomNavigationBarItem(icon: Icon(Icons.access_time), label: 'Attendance'),
-      const BottomNavigationBarItem(icon: Icon(Icons.receipt_long_outlined), label: 'Claims'),
-      if (_canApprove) BottomNavigationBarItem(icon: const Icon(Icons.verified_outlined), label: _approvalsNavCount>0 ? 'Approvals (${_approvalsNavCount})' : 'Approvals'),
-      const BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Profile'),
-    ];
     // Clamp index if approvals hidden
     if (!_canApprove && _index == 4) _index = 3;
     return Scaffold(
@@ -101,26 +107,233 @@ class _ESSHomeScreenState extends State<ESSHomeScreen> {
             colors: [Theme.of(context).colorScheme.surface, Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.35)],
           ),
         ),
-        child: pages[_index],
+        child: PageView(
+          controller: _pageController,
+          onPageChanged: (index) {
+            setState(() {
+              _index = index;
+            });
+            _animationController.forward().then((_) {
+              _animationController.reset();
+            });
+          },
+          children: pages,
+        ),
       ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-        child: GlassContainer(
-          padding: EdgeInsets.zero,
-          opacity: 0.18,
-          borderRadius: const BorderRadius.all(Radius.circular(24)),
-          child: BottomNavigationBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            currentIndex: _index,
-            type: BottomNavigationBarType.fixed,
-            onTap: (i) => setState(() => _index = i),
-            items: items,
+      bottomNavigationBar: _buildAnimatedBottomNav(),
+    );
+  }
+  
+  Widget _buildAnimatedBottomNav() {
+    final theme = Theme.of(context);
+    final items = [
+      _NavItem(Icons.home_rounded, Icons.home_outlined, 'Home'),
+      _NavItem(Icons.event_note_rounded, Icons.event_note_outlined, 'Leaves'),
+      _NavItem(Icons.access_time_filled, Icons.access_time, 'Attendance'),
+      _NavItem(Icons.receipt_long_rounded, Icons.receipt_long_outlined, 'Claims'),
+      if (_canApprove) _NavItem(Icons.verified, Icons.verified_outlined, 'Approvals'),
+      _NavItem(Icons.person_rounded, Icons.person_outline, 'Profile'),
+    ];
+    
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            theme.colorScheme.surface.withOpacity(0.95),
+            theme.colorScheme.surfaceVariant.withOpacity(0.9),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(
+            color: theme.shadowColor.withOpacity(0.15),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+          BoxShadow(
+            color: theme.colorScheme.primary.withOpacity(0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(
+          color: theme.colorScheme.outline.withOpacity(0.12),
+        ),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(28),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(
+              height: 68,
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: items.asMap().entries.map((entry) {
+                final index = entry.key;
+                final item = entry.value;
+                final isSelected = _index == index;
+                
+                return Expanded(
+                  child: _buildNavItem(
+                    context,
+                    item.activeIcon,
+                    item.inactiveIcon,
+                    item.label,
+                    isSelected,
+                    index,
+                  ),
+                );
+              }).toList(),
+            ),
           ),
         ),
       ),
     );
   }
+  
+  Widget _buildNavItem(
+    BuildContext context,
+    IconData activeIcon,
+    IconData inactiveIcon,
+    String label,
+    bool isSelected,
+    int index,
+  ) {
+    final theme = Theme.of(context);
+    final showBadge = _canApprove && index == 4 && _approvalsNavCount > 0;
+    
+    return AnimatedBuilder(
+      animation: _animationController,
+      builder: (context, child) {
+        return GestureDetector(
+          onTap: () {
+            if (_index != index) {
+              setState(() {
+                _index = index;
+              });
+              _pageController.animateToPage(
+                index,
+                duration: const Duration(milliseconds: 350),
+                curve: Curves.easeInOutCubic,
+              );
+              _animationController.forward().then((_) {
+                _animationController.reset();
+              });
+            }
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeInOutCubic,
+            margin: const EdgeInsets.symmetric(horizontal: 1),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            decoration: BoxDecoration(
+              gradient: isSelected
+                  ? LinearGradient(
+                      colors: [
+                        theme.colorScheme.primary.withOpacity(0.15),
+                        theme.colorScheme.primary.withOpacity(0.08),
+                      ],
+                    )
+                  : null,
+              borderRadius: BorderRadius.circular(20),
+              border: isSelected
+                  ? Border.all(
+                      color: theme.colorScheme.primary.withOpacity(0.2),
+                    )
+                  : null,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Stack(
+                  children: [
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 200),
+                      transitionBuilder: (child, animation) {
+                        return ScaleTransition(
+                          scale: animation,
+                          child: child,
+                        );
+                      },
+                      child: Icon(
+                        isSelected ? activeIcon : inactiveIcon,
+                        key: ValueKey(isSelected),
+                        color: isSelected
+                            ? theme.colorScheme.primary
+                            : theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
+                        size: isSelected ? 22 : 20,
+                      ),
+                    ),
+                    if (showBadge)
+                      Positioned(
+                        right: -2,
+                        top: -2,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.red.shade500,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.red.withOpacity(0.3),
+                                blurRadius: 4,
+                                offset: const Offset(0, 1),
+                              ),
+                            ],
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 18,
+                            minHeight: 18,
+                          ),
+                          child: Text(
+                            _approvalsNavCount > 99 ? '99+' : _approvalsNavCount.toString(),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                AnimatedDefaultTextStyle(
+                  duration: const Duration(milliseconds: 200),
+                  style: TextStyle(
+                    fontSize: isSelected ? 10 : 9,
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                    color: isSelected
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
+                  ),
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _NavItem {
+  final IconData activeIcon;
+  final IconData inactiveIcon;
+  final String label;
+  
+  const _NavItem(this.activeIcon, this.inactiveIcon, this.label);
 }
 
 class _DashboardPage extends StatefulWidget {
@@ -346,52 +559,501 @@ class _DashboardPageState extends State<_DashboardPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      body: Column(
-        children: [
-          _buildCustomNavBar(context),
-          Expanded(
-            child: _loading
-                ? const Center(child: CircularProgressIndicator())
-                : RefreshIndicator(
-                    onRefresh: _load,
-                    child: ListView(
-                      padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
-                      children: [
-                  GlassContainer(child: LeaveBalanceCard(balances: _balance)),
-                  const SizedBox(height: 8),
-                  if (widget.canApprove)
-                    Card(
-                      child: ListTile(
-                        leading: const Icon(Icons.verified_outlined),
-                        title: const Text('Pending Approvals'),
-                        trailing: CircleAvatar(radius: 14, child: Text('$_pendingApprovals')),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              theme.colorScheme.surface,
+              theme.colorScheme.surfaceVariant.withOpacity(0.15),
+            ],
+          ),
+        ),
+        child: Column(
+          children: [
+            _buildCustomNavBar(context),
+            Expanded(
+              child: _loading
+                  ? const Center(child: CircularProgressIndicator())
+                  : RefreshIndicator(
+                      onRefresh: _load,
+                      child: ListView(
+                        padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
+                        children: [
+                          // Welcome message
+                          _buildWelcomeSection(context),
+                          const SizedBox(height: 20),
+                          
+                          // Leave balance card
+                          LeaveBalanceCard(balances: _balance),
+                          const SizedBox(height: 16),
+                          
+                          // Approvals card (if user can approve)
+                          if (widget.canApprove)
+                            _buildApprovalsCard(context),
+                          if (widget.canApprove) const SizedBox(height: 16),
+                          
+                          // Quick actions section
+                          _buildQuickActionsSection(context),
+                          const SizedBox(height: 20),
+                          
+                          // Upcoming shifts section
+                          _buildUpcomingShiftsSection(context),
+                        ],
                       ),
                     ),
-                  const SizedBox(height: 12),
-                  const Text('Quick Links', style: TextStyle(fontWeight: FontWeight.bold)),
-                  GridView.count(
-                    crossAxisCount: 3,
-                    childAspectRatio: 1.8,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    children: [
-                      _quickLink('Attendance', Icons.add_task_outlined, ()=>Navigator.of(context).push(MaterialPageRoute(builder: (_)=>_NewAttendanceRequestPage()))),
-                      _quickLink('Shift', Icons.repeat_outlined, ()=>Navigator.of(context).push(MaterialPageRoute(builder: (_)=>_NewShiftRequestPage()))),
-                      _quickLink('Leave', Icons.event_note_outlined, () async { await Navigator.of(context).push(MaterialPageRoute(builder: (_)=>_ApplyLeavePage())); if (mounted) _load(); }),
-                      _quickLink('Claim', Icons.add_outlined, ()=>Navigator.of(context).push(MaterialPageRoute(builder: (_)=>_NewClaimPage()))),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  const Text('Upcoming Shifts', style: TextStyle(fontWeight: FontWeight.bold)),
-                  if (_shifts.isEmpty) const ListTile(title: Text('None')),
-                  for (final s in _shifts) ListTile(title: Text(s.toString())),
-                      ],
-                    ),
-                  ),
             ),
           ],
         ),
+      ),
+    );
+  }
+  
+  Widget _buildWelcomeSection(BuildContext context) {
+    final theme = Theme.of(context);
+    final userName = _userInfo?['full_name']?.toString() ?? 'User';
+    final firstName = userName.split(' ').first;
+    
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            theme.colorScheme.primary.withOpacity(0.08),
+            theme.colorScheme.primary.withOpacity(0.02),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.colorScheme.primary.withOpacity(0.12),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      theme.colorScheme.primary,
+                      theme.colorScheme.primary.withOpacity(0.8),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.waving_hand_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Welcome back,',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    Text(
+                      firstName,
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.sunny,
+                color: Colors.amber.withOpacity(0.8),
+                size: 24,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildApprovalsCard(BuildContext context) {
+    final theme = Theme.of(context);
+    
+    return Card(
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.orange.withOpacity(0.06),
+              Colors.orange.withOpacity(0.02),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Colors.orange, Colors.deepOrange],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.orange.withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.verified_outlined,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Pending Approvals',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Items awaiting your approval',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: Colors.orange.withOpacity(0.3),
+                    width: 1.5,
+                  ),
+                ),
+                child: Text(
+                  '$_pendingApprovals',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.orange.shade700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildQuickActionsSection(BuildContext context) {
+    final theme = Theme.of(context);
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Row(
+            children: [
+              Icon(
+                Icons.flash_on_rounded,
+                color: theme.colorScheme.primary,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Quick Actions',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        GridView.count(
+          crossAxisCount: 2,
+          childAspectRatio: 2.2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
+          children: [
+            _buildModernQuickLink(
+              context,
+              'Apply Leave',
+              Icons.event_note_rounded,
+              Colors.blue,
+              () async {
+                await Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => _ApplyLeavePage()),
+                );
+                if (mounted) _load();
+              },
+            ),
+            _buildModernQuickLink(
+              context,
+              'New Claim',
+              Icons.receipt_long_rounded,
+              Colors.green,
+              () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => _NewClaimPage()),
+              ),
+            ),
+            _buildModernQuickLink(
+              context,
+              'Attendance',
+              Icons.access_time_rounded,
+              Colors.purple,
+              () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => _NewAttendanceRequestPage()),
+              ),
+            ),
+            _buildModernQuickLink(
+              context,
+              'Shift Request',
+              Icons.swap_horiz_rounded,
+              Colors.orange,
+              () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => _NewShiftRequestPage()),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+  
+  Widget _buildModernQuickLink(
+    BuildContext context,
+    String title,
+    IconData icon,
+    Color color,
+    VoidCallback onTap,
+  ) {
+    final theme = Theme.of(context);
+    
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                color.withOpacity(0.06),
+                color.withOpacity(0.02),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: color.withOpacity(0.12),
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [color, color.withOpacity(0.8)],
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: color.withOpacity(0.3),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  icon,
+                  color: Colors.white,
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  title,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 14,
+                color: color.withOpacity(0.7),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildUpcomingShiftsSection(BuildContext context) {
+    final theme = Theme.of(context);
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Row(
+            children: [
+              Icon(
+                Icons.schedule_rounded,
+                color: theme.colorScheme.primary,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Upcoming Shifts',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        Card(
+          elevation: 2,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                  theme.colorScheme.surface,
+                ],
+              ),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: _shifts.isEmpty
+                ? Column(
+                    children: [
+                      Icon(
+                        Icons.event_busy_rounded,
+                        size: 40,
+                        color: theme.colorScheme.onSurfaceVariant.withOpacity(0.6),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'No Upcoming Shifts',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Your scheduled shifts will appear here',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  )
+                : Column(
+                    children: _shifts.map((shift) => _buildShiftItem(context, shift)).toList(),
+                  ),
+          ),
+        ),
+      ],
+    );
+  }
+  
+  Widget _buildShiftItem(BuildContext context, dynamic shift) {
+    final theme = Theme.of(context);
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            theme.colorScheme.primaryContainer.withOpacity(0.3),
+            theme.colorScheme.primaryContainer.withOpacity(0.1),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: theme.colorScheme.primary.withOpacity(0.2),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.work_outline_rounded,
+            color: theme.colorScheme.primary,
+            size: 20,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              shift.toString(),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
