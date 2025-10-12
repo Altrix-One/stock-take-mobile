@@ -1539,21 +1539,17 @@ class _ProfilePage extends StatelessWidget {
         ),
         ListTile(
           leading: const Icon(Icons.sync),
-          title: const Text('Sync now'),
+          title: const Text('Sync HR data'),
           onTap: () async {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sync started...')));
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('HR sync started...')));
           try {
-            await SyncManager.fetchAndStoreWarehousesAndCompanies();
-            await SyncManager.fetchAndStoreAssignedItems();
-            await SyncManager.syncFromServer();
             await OutboxQueue.processQueue();
-            // optionally re-fetch approvals counters via dashboard on next load
-            // ignore
+            // Process HR-related queue items (leaves, claims, attendance)
           } catch (e) {
             // ignore
           }
           if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sync complete')));
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('HR sync complete')));
           }
         },
         ),

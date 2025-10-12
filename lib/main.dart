@@ -13,10 +13,10 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:async';
 
-// Initialize periodic sync tasks
+// Initialize periodic HR sync tasks
 Timer? _syncTimer;
 
-void startPeriodicSync() {
+void startPeriodicHRSync() {
   // Cancel any existing timer
   _syncTimer?.cancel();
 
@@ -24,28 +24,16 @@ void startPeriodicSync() {
   _syncTimer = Timer.periodic(const Duration(minutes: 15), (timer) async {
     print("Starting periodic sync at ${DateTime.now()}");
 
-    // Fetch data from server
+    // HR-focused sync - only process the Outbox queue for offline operations (leaves, claims, attendance)
     try {
-      await SyncManager.fetchAndStoreWarehousesAndCompanies();
-      await SyncManager.fetchAndStoreAssignedItems();
-      await SyncManager.syncFromServer();
-      print("Fetch sync completed at ${DateTime.now()}");
-    } catch (e) {
-      print("Error during fetch sync: $e");
-    }
-
-    // Post data to server
-    try {
-      await SyncManager.syncToServer();
-      // Process the Outbox queue for offline operations
       await OutboxQueue.processQueue();
-      print("Post sync completed at ${DateTime.now()}");
+      print("HR sync completed at ${DateTime.now()}");
     } catch (e) {
-      print("Error during post sync: $e");
+      print("Error during HR sync: $e");
     }
   });
 
-  print("Periodic sync scheduled every 15 minutes");
+  print("Periodic HR sync scheduled every 15 minutes");
 }
 
 
@@ -65,8 +53,8 @@ void main() async {
   // Start periodic sync tasks if not on web
   if (!kIsWeb) {
     try {
-      startPeriodicSync();
-      print("Periodic sync initialized successfully");
+      startPeriodicHRSync();
+      print("Periodic HR sync initialized successfully");
     } catch (e) {
       print("Failed to initialize periodic sync: $e");
     }

@@ -83,8 +83,7 @@ class ApiService {
             // Store user details in Hive
             await authBox.put('userDetails', jsonEncode(userInfo));
 
-            // Fetch user-specific data (warehouses, companies, assigned items)
-            await fetchUserSpecificData();
+            // HR app - no need to fetch stock-specific data
 
             // Navigate to HomeScreen
             Navigator.pushAndRemoveUntil(
@@ -109,11 +108,6 @@ class ApiService {
     }
   }
 
-  // Fetch user-specific data after successful login
-  static Future<void> fetchUserSpecificData() async {
-    await SyncManager.fetchAndStoreWarehousesAndCompanies();
-    await SyncManager.fetchAndStoreAssignedItems();
-  }
 
   static Future<void> _logout(BuildContext context) async {
     var authBox = Hive.box('authBox');
