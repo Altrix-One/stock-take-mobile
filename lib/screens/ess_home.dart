@@ -24,6 +24,9 @@ import 'package:stock_count/widgets/professional_loading.dart';
 import 'package:stock_count/widgets/professional_error_dialog.dart';
 import 'package:stock_count/utils/error_message_parser.dart';
 import 'package:stock_count/widgets/modern_leave_item.dart';
+import 'package:stock_count/widgets/modern_attendance_item.dart';
+import 'package:stock_count/widgets/modern_shift_item.dart';
+import 'package:stock_count/widgets/modern_claim_item.dart';
 
 class ESSHomeScreen extends StatefulWidget {
   const ESSHomeScreen({super.key});
@@ -1388,7 +1391,24 @@ Widget _leaveRow(BuildContext context, Map r){
 class _AttendancePage extends StatefulWidget { @override State<_AttendancePage> createState()=>_AttendancePageState(); }
 class _AttendancePageState extends State<_AttendancePage> {
   List<dynamic> _att = []; List<dynamic> _shift = []; bool _loading=true;
-  @override void initState(){ super.initState(); _load(); }
+  Timer? _autoTimer; int _ticks = 0;
+  
+  @override void initState(){ 
+    super.initState(); 
+    _load();
+    // Auto-refresh when queue updates
+    OutboxQueue.events.listen((_) { if (mounted) _load(); });
+    // Light periodic refresh for a short window so approvals appear without manual pull
+    _autoTimer = Timer.periodic(const Duration(seconds: 15), (t){
+      if (!mounted) return;
+      _ticks++;
+      _load();
+      if (_ticks >= 8) { // ~2 minutes then stop
+        t.cancel();
+      }
+    });
+  }
+  
   Future<void> _load() async { 
     try{ 
       _att = await AttendanceService.myAttendanceRequests(); 
@@ -1398,26 +1418,329 @@ class _AttendancePageState extends State<_AttendancePage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to load attendance data')));
       }
-    } finally { if(mounted) setState(()=>_loading=false);} }
+    } finally { if(mounted) setState(()=>_loading=false);} 
+  }
+  
+  List<Widget> _attendanceSection() {
+    final pending = _att.where((r){
+      if (r is Map) {
+        final s = (r['status']??'').toString().toLowerCase();
+        return s=='open' || s=='draft' || s=='pending' || s=='applied' || s.contains('queued');
+      }
+      return false;
+    }).toList();
+    
+    final approved = _att.where((r){
+      if (r is Map) {
+        final s = (r['status']??'').toString().toLowerCase();
+        return s=='approved' || s=='sanctioned';
+      }
+      return false;
+    }).toList();
+    
+    List<Widget> widgets = [];
+    
+    // Pending attendance requests
+    if (pending.isEmpty) {
+      widgets.add(Container(
+        margin: const EdgeInsets.only(top: 16),
+        padding: const EdgeInsets.all(32),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              Icons.access_time_outlined,
+              size: 48,
+              color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.6),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No Pending Requests',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Your pending attendance requests will appear here',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.7),
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ));
+    } else {
+      for(final r in pending) {
+        widgets.add(ModernAttendanceItem(
+          attendance: r as Map<String, dynamic>,
+          onCancel: () => _handleCancelAttendance(r),
+        ));
+      }
+    }
+    
+    // Approved attendance requests
+    if (approved.isNotEmpty) {
+      widgets.addAll([
+        const SizedBox(height: 32),
+        SectionHeader(
+          title: 'Approved Requests',
+          subtitle: 'Your approved attendance history',
+          icon: Icons.check_circle_rounded,
+          iconColor: Colors.green,
+        ),
+        const SizedBox(height: 12),
+      ]);
+      
+      for(final r in approved) {
+        widgets.add(ModernAttendanceItem(
+          attendance: r as Map<String, dynamic>,
+        ));
+      }
+    }
+    
+    return widgets;
+  }
+  
+  List<Widget> _shiftSection() {
+    final pending = _shift.where((r){
+      if (r is Map) {
+        final s = (r['status']??'').toString().toLowerCase();
+        return s=='open' || s=='draft' || s=='pending' || s=='applied' || s.contains('queued');
+      }
+      return false;
+    }).toList();
+    
+    final approved = _shift.where((r){
+      if (r is Map) {
+        final s = (r['status']??'').toString().toLowerCase();
+        return s=='approved' || s=='sanctioned';
+      }
+      return false;
+    }).toList();
+    
+    List<Widget> widgets = [];
+    
+    // Pending shift requests
+    if (pending.isEmpty) {
+      widgets.add(Container(
+        margin: const EdgeInsets.only(top: 16),
+        padding: const EdgeInsets.all(32),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.tertiaryContainer.withOpacity(0.3),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.tertiary.withOpacity(0.2),
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              Icons.work_outline_rounded,
+              size: 48,
+              color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.6),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No Pending Shift Requests',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Your pending shift requests will appear here',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.7),
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ));
+    } else {
+      for(final r in pending) {
+        widgets.add(ModernShiftItem(
+          shift: r as Map<String, dynamic>,
+          onCancel: () => _handleCancelShift(r),
+        ));
+      }
+    }
+    
+    // Approved shift requests
+    if (approved.isNotEmpty) {
+      widgets.addAll([
+        const SizedBox(height: 32),
+        SectionHeader(
+          title: 'Approved Shifts',
+          subtitle: 'Your approved shift history',
+          icon: Icons.check_circle_rounded,
+          iconColor: Colors.green,
+        ),
+        const SizedBox(height: 12),
+      ]);
+      
+      for(final r in approved) {
+        widgets.add(ModernShiftItem(
+          shift: r as Map<String, dynamic>,
+        ));
+      }
+    }
+    
+    return widgets;
+  }
+  
+  Future<void> _handleCancelAttendance(Map attendance) async {
+    final confirm = await showDialog<bool>(
+      context: context, 
+      builder: (ctx) => AlertDialog(
+        title: const Text('Cancel Attendance Request?'),
+        content: const Text('Do you want to cancel this attendance request?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false), 
+            child: const Text('No')
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(true), 
+            child: const Text('Yes')
+          ),
+        ],
+      )
+    );
+    
+    if (confirm == true) {
+      await OutboxQueue.addOperation('cancel_attendance', {'name': attendance['name']});
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Attendance request cancellation queued'))
+        );
+        _load();
+      }
+    }
+  }
+  
+  Future<void> _handleCancelShift(Map shift) async {
+    final confirm = await showDialog<bool>(
+      context: context, 
+      builder: (ctx) => AlertDialog(
+        title: const Text('Cancel Shift Request?'),
+        content: const Text('Do you want to cancel this shift request?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false), 
+            child: const Text('No')
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(true), 
+            child: const Text('Yes')
+          ),
+        ],
+      )
+    );
+    
+    if (confirm == true) {
+      await OutboxQueue.addOperation('cancel_shift', {'name': shift['name']});
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Shift request cancellation queued'))
+        );
+        _load();
+      }
+    }
+  }
+  
+  @override
+  void dispose() {
+    _autoTimer?.cancel();
+    super.dispose();
+  }
+  
   @override Widget build(BuildContext context){
-    if(_loading) return const Center(child:CircularProgressIndicator());
+    final theme = Theme.of(context);
+    
     return Scaffold(
-      appBar: AppBar(title: const Text('Attendance'), actions: [
-        IconButton(onPressed: ()=>Navigator.of(context).push(MaterialPageRoute(builder: (_)=>_NewAttendanceRequestPage())), icon: const Icon(Icons.add_task_outlined)),
-        IconButton(onPressed: ()=>Navigator.of(context).push(MaterialPageRoute(builder: (_)=>_NewShiftRequestPage())), icon: const Icon(Icons.repeat_outlined)),
-      ]),
-      body: RefreshIndicator(
-        onRefresh: _load,
-        child: ListView(padding: const EdgeInsets.fromLTRB(16, 24, 16, 16), children: [
-          const Text('Attendance Requests', style: TextStyle(fontWeight: FontWeight.bold)),
-          if (_att.isEmpty) const ListTile(title: Text('No attendance requests')),
-          for(final r in _att) _attendanceTile(r),
-          const SizedBox(height: 12),
-          const Text('Shift Requests', style: TextStyle(fontWeight: FontWeight.bold)),
-          if (_shift.isEmpty) const ListTile(title: Text('No shift requests')),
-          for(final r in _shift) _shiftTile(r),
-        ]),
+      appBar: AppBar(
+        title: const Text('Attendance & Shifts'),
+        elevation: 0,
+        actions: [
+          Container(
+            margin: const EdgeInsets.only(right: 8),
+            child: TextButton.icon(
+              onPressed: () async {
+                await Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => _NewAttendanceRequestPage()),
+                );
+                if (mounted) _load();
+              },
+              icon: const Icon(Icons.add_task_outlined, size: 18),
+              label: const Text('Request'),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              ),
+            ),
+          ),
+          Container(
+            margin: const EdgeInsets.only(right: 16),
+            child: TextButton.icon(
+              onPressed: () async {
+                await Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => _NewShiftRequestPage()),
+                );
+                if (mounted) _load();
+              },
+              icon: const Icon(Icons.repeat_outlined, size: 18),
+              label: const Text('Shift'),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              ),
+            ),
+          ),
+        ],
       ),
+      body: _loading 
+        ? const ProfessionalLoading(message: 'Loading your attendance requests...')
+        : RefreshIndicator(
+            onRefresh: _load,
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+              children: [
+                // Attendance Requests Section
+                SectionHeader(
+                  title: 'Attendance Requests',
+                  subtitle: 'Track your attendance requests',
+                  icon: Icons.access_time_rounded,
+                  iconColor: theme.colorScheme.secondary,
+                ),
+                const SizedBox(height: 12),
+                ..._attendanceSection(),
+                
+                const SizedBox(height: 32),
+                
+                // Shift Requests Section
+                SectionHeader(
+                  title: 'Shift Requests',
+                  subtitle: 'Manage your shift changes',
+                  icon: Icons.work_outline_rounded,
+                  iconColor: theme.colorScheme.tertiary,
+                ),
+                const SizedBox(height: 12),
+                ..._shiftSection(),
+                
+                // Bottom padding for navigation
+                const SizedBox(height: 100),
+              ],
+            ),
+          ),
     );
   }
 }
@@ -1425,7 +1748,24 @@ class _AttendancePageState extends State<_AttendancePage> {
 class _ClaimsPage extends StatefulWidget { @override State<_ClaimsPage> createState()=>_ClaimsPageState(); }
 class _ClaimsPageState extends State<_ClaimsPage> {
   List<dynamic> _claims = []; Map<String,dynamic>? _summary; bool _loading=true;
-  @override void initState(){ super.initState(); _load(); }
+  Timer? _autoTimer; int _ticks = 0;
+  
+  @override void initState(){ 
+    super.initState(); 
+    _load();
+    // Auto-refresh when queue updates
+    OutboxQueue.events.listen((_) { if (mounted) _load(); });
+    // Light periodic refresh for a short window so approvals appear without manual pull
+    _autoTimer = Timer.periodic(const Duration(seconds: 15), (t){
+      if (!mounted) return;
+      _ticks++;
+      _load();
+      if (_ticks >= 8) { // ~2 minutes then stop
+        t.cancel();
+      }
+    });
+  }
+  
   Future<void> _load() async { 
     try{ 
       _claims = await ClaimsService.myClaims(); 
@@ -1435,24 +1775,408 @@ class _ClaimsPageState extends State<_ClaimsPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to load claims')));
       }
-    } finally { if(mounted) setState(()=>_loading=false);} }
-  @override Widget build(BuildContext context){
-    if(_loading) return const Center(child:CircularProgressIndicator());
-    return Scaffold(
-      appBar: AppBar(title: const Text('Claims'), actions: [
-        IconButton(onPressed: ()=>Navigator.of(context).push(MaterialPageRoute(builder: (_)=>_NewClaimPage())), icon: const Icon(Icons.add_outlined)),
-      ]),
-      body: RefreshIndicator(
-        onRefresh: _load,
-        child: ListView(padding: const EdgeInsets.fromLTRB(16, 24, 16, 16), children: [
-          const Text('Claim Summary', style: TextStyle(fontWeight: FontWeight.bold)),
-          Text((_summary ?? {}).isEmpty ? '—' : _summary.toString()),
-          const SizedBox(height: 12),
-          const Text('My Claims', style: TextStyle(fontWeight: FontWeight.bold)),
-          if (_claims.isEmpty) const ListTile(title: Text('No claims found')),
-          for(final c in _claims) ListTile(title: Text(c.toString())),
-        ]),
+    } finally { if(mounted) setState(()=>_loading=false);} 
+  }
+  
+  Widget _buildSummaryCard() {
+    final theme = Theme.of(context);
+    if (_summary == null || _summary!.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+        colors: [
+          theme.colorScheme.primaryContainer.withOpacity(0.3),
+          theme.colorScheme.primaryContainer.withOpacity(0.1),
+        ],
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: theme.colorScheme.primary.withOpacity(0.2),
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.receipt_long_rounded,
+                color: Colors.white,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Claims Summary',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'No expense claims data available',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    
+    // Display actual summary data if available
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            theme.colorScheme.primaryContainer.withOpacity(0.3),
+            theme.colorScheme.primaryContainer.withOpacity(0.1),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.colorScheme.primary.withOpacity(0.2),
+        ),
       ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.analytics_rounded,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Text(
+                'Claims Summary',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _buildSummaryStats(theme),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildSummaryStats(ThemeData theme) {
+    if (_summary == null || _summary!.isEmpty) {
+      return Text(
+        'No claims data available',
+        style: theme.textTheme.bodyMedium?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
+          fontStyle: FontStyle.italic,
+        ),
+      );
+    }
+    
+    // Extract key statistics from summary
+    final totalClaims = _summary!['total_claims']?.toString() ?? '0';
+    final totalAmount = _summary!['total_amount']?.toString() ?? '0.00';
+    final pendingAmount = _summary!['pending_amount']?.toString() ?? '0.00';
+    final approvedAmount = _summary!['approved_amount']?.toString() ?? '0.00';
+    
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: _buildStatCard(
+                'Total Claims',
+                totalClaims,
+                Icons.receipt_long_rounded,
+                theme.colorScheme.primary,
+                theme,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildStatCard(
+                'Total Amount',
+                'R$totalAmount',
+                Icons.payments_rounded,
+                theme.colorScheme.primary,
+                theme,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _buildStatCard(
+                'Pending',
+                'R$pendingAmount',
+                Icons.pending_rounded,
+                Colors.orange,
+                theme,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildStatCard(
+                'Approved',
+                'R$approvedAmount',
+                Icons.check_circle_rounded,
+                Colors.green,
+                theme,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+  
+  Widget _buildStatCard(String label, String value, IconData icon, Color color, ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: color.withOpacity(0.3),
+        ),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            icon,
+            size: 20,
+            color: color,
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
+              fontWeight: FontWeight.w600,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+  
+  List<Widget> _claimsSection() {
+    final pending = _claims.where((r){
+      if (r is Map) {
+        final s = (r['status']??'').toString().toLowerCase();
+        return s=='open' || s=='draft' || s=='pending' || s=='applied' || s.contains('queued');
+      }
+      return false;
+    }).toList();
+    
+    final approved = _claims.where((r){
+      if (r is Map) {
+        final s = (r['status']??'').toString().toLowerCase();
+        return s=='approved' || s=='sanctioned' || s=='paid';
+      }
+      return false;
+    }).toList();
+    
+    List<Widget> widgets = [];
+    
+    // Pending claims
+    if (pending.isEmpty) {
+      widgets.add(Container(
+        margin: const EdgeInsets.only(top: 16),
+        padding: const EdgeInsets.all(32),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              Icons.receipt_outlined,
+              size: 48,
+              color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.6),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No Pending Claims',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Your pending expense claims will appear here',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.7),
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ));
+    } else {
+      for(final r in pending) {
+        widgets.add(ModernClaimItem(
+          claim: r as Map<String, dynamic>,
+          onCancel: () => _handleCancelClaim(r),
+        ));
+      }
+    }
+    
+    // Approved claims
+    if (approved.isNotEmpty) {
+      widgets.addAll([
+        const SizedBox(height: 32),
+        SectionHeader(
+          title: 'Processed Claims',
+          subtitle: 'Your approved and paid claims',
+          icon: Icons.check_circle_rounded,
+          iconColor: Colors.green,
+        ),
+        const SizedBox(height: 12),
+      ]);
+      
+      for(final r in approved) {
+        widgets.add(ModernClaimItem(
+          claim: r as Map<String, dynamic>,
+        ));
+      }
+    }
+    
+    return widgets;
+  }
+  
+  Future<void> _handleCancelClaim(Map claim) async {
+    final confirm = await showDialog<bool>(
+      context: context, 
+      builder: (ctx) => AlertDialog(
+        title: const Text('Cancel Expense Claim?'),
+        content: const Text('Do you want to cancel this expense claim?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false), 
+            child: const Text('No')
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(true), 
+            child: const Text('Yes')
+          ),
+        ],
+      )
+    );
+    
+    if (confirm == true) {
+      await OutboxQueue.addOperation('cancel_claim', {'name': claim['name']});
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Expense claim cancellation queued'))
+        );
+        _load();
+      }
+    }
+  }
+  
+  @override
+  void dispose() {
+    _autoTimer?.cancel();
+    super.dispose();
+  }
+  
+  @override Widget build(BuildContext context){
+    final theme = Theme.of(context);
+    
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Expense Claims'),
+        elevation: 0,
+        actions: [
+          Container(
+            margin: const EdgeInsets.only(right: 16),
+            child: FilledButton.icon(
+              onPressed: () async {
+                await Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => _NewClaimPage()),
+                );
+                if (mounted) _load();
+              },
+              icon: const Icon(Icons.add, size: 18),
+              label: const Text('New Claim'),
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              ),
+            ),
+          ),
+        ],
+      ),
+      body: _loading 
+        ? const ProfessionalLoading(message: 'Loading your expense claims...')
+        : RefreshIndicator(
+            onRefresh: _load,
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+              children: [
+                // Summary Card
+                _buildSummaryCard(),
+                const SizedBox(height: 24),
+                
+                // Pending Claims Section
+                SectionHeader(
+                  title: 'My Claims',
+                  subtitle: 'Track your expense claims',
+                  icon: Icons.receipt_long_rounded,
+                  iconColor: theme.colorScheme.primary,
+                ),
+                const SizedBox(height: 12),
+                ..._claimsSection(),
+                
+                // Bottom padding for navigation
+                const SizedBox(height: 100),
+              ],
+            ),
+          ),
     );
   }
 }
