@@ -21,6 +21,7 @@ class _ModernLeavesPageState extends State<ModernLeavesPage> with TickerProvider
   Map<String, dynamic>? _leaveBalance;
   List<dynamic> _myLeaves = [];
   List<dynamic> _teamLeaves = [];
+  List<dynamic> _leaveTypes = [];
   bool _canApprove = false;
   Timer? _refreshTimer;
 
@@ -53,12 +54,14 @@ class _ModernLeavesPageState extends State<ModernLeavesPage> with TickerProvider
       final results = await Future.wait([
         LeavesService.leaveBalanceWithPending(),
         LeavesService.myLeaves(),
+        LeavesService.leaveTypes(),
         _checkApprovalRights(),
       ]);
       
       setState(() {
         _leaveBalance = results[0] as Map<String, dynamic>?;
         _myLeaves = results[1] as List<dynamic>;
+        _leaveTypes = results[2] as List<dynamic>;
         _isLoading = false;
       });
       
@@ -409,32 +412,75 @@ class _ModernLeavesPageState extends State<ModernLeavesPage> with TickerProvider
   }
   
   Widget _buildLeavePolicyInfo() {
+    if (_leaveTypes.isEmpty) {
+      return ModernEmptyState(
+        icon: Icons.policy,
+        title: 'No Leave Types Available',
+        subtitle: 'Leave type information will appear here',
+      );
+    }
+    
     return ModernHeroCard(
-      title: 'Leave Policy',
+      title: 'Leave Types',
       icon: Icons.policy,
       child: Column(
-        children: [
-          _buildPolicyItem(
-            'Annual Leave',
-            'Accrued monthly based on service period',
-            Icons.calendar_today,
+        children: _leaveTypes.asMap().entries.map((entry) {
+          final index = entry.key;
+          final leaveType = entry.value.toString();
+          
+          // Dynamic icons based on leave type
+          IconData getIcon(String type) {
+            final lowerType = type.toLowerCase();
+            if (lowerType.contains('annual') || lowerType.contains('vacation')) {
+              return Icons.beach_access;
+            } else if (lowerType.contains('sick') || lowerType.contains('medical')) {
+              return Icons.local_hospital;
+            } else if (lowerType.contains('casual') || lowerType.contains('personal')) {
+              return Icons.person;
+            } else if (lowerType.contains('maternity') || lowerType.contains('paternity')) {
+              return Icons.family_restroom;
+            } else if (lowerType.contains('emergency')) {
+              return Icons.warning;
+            } else {
+              return Icons.event_available;
+            }
+          }
+          
+          // Dynamic colors
+          final colors = [
             ModernDesignSystem.primaryTeal,
-          ),
-          ModernDesignSystem.verticalSpaceSM,
-          _buildPolicyItem(
-            'Sick Leave',
-            'Available for medical emergencies',
-            Icons.local_hospital,
-            ModernDesignSystem.error,
-          ),
-          ModernDesignSystem.verticalSpaceSM,
-          _buildPolicyItem(
-            'Casual Leave',
-            'For personal and family occasions',
-            Icons.person,
             ModernDesignSystem.success,
-          ),
-        ],
+            ModernDesignSystem.warning,
+            ModernDesignSystem.info,
+            ModernDesignSystem.error,
+          ];
+          final color = colors[index % colors.length];
+          
+          // Dynamic descriptions based on balance data
+          String getDescription(String type) {
+            if (_leaveBalance != null && _leaveBalance!.containsKey(type)) {
+              final balance = _leaveBalance![type];
+              if (balance is Map) {
+                final allocated = balance['allocated_leaves']?.toString() ?? '0';
+                final remaining = balance['balance_leaves']?.toString() ?? '0';
+                return '$remaining of $allocated days remaining';
+              }
+            }
+            return 'Available for use as per policy';
+          }
+          
+          return Column(
+            children: [
+              if (index > 0) ModernDesignSystem.verticalSpaceSM,
+              _buildPolicyItem(
+                leaveType,
+                getDescription(leaveType),
+                getIcon(leaveType),
+                color,
+              ),
+            ],
+          );
+        }).toList(),
       ),
     );
   }

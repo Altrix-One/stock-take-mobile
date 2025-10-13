@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:stock_count/hr/services/attendance_service.dart';
+import 'package:stock_count/hr/services/profile_service.dart';
 import 'package:stock_count/constants/modern_design_system.dart';
 import 'package:stock_count/widgets/modern_ui_components.dart';
 import 'package:stock_count/widgets/modern_enhanced_cards.dart';
@@ -58,14 +59,22 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
   Future<void> _loadAttendanceData() async {
     try {
       final results = await Future.wait([
-        _checkAttendanceStatus(),
         AttendanceService.myAttendanceHistory(),
         AttendanceService.myShiftRequests(),
       ]);
       
+      // Only check attendance status if we haven't just performed a check-in/out action
+      final now = DateTime.now();
+      final shouldCheckStatus = _lastCheckInTime == null || 
+          (_lastCheckInTime != null && now.difference(_lastCheckInTime!).inSeconds > 5);
+      
+      if (shouldCheckStatus) {
+        await _checkAttendanceStatus();
+      }
+      
       setState(() {
-        _attendanceHistory = results[1] as List<dynamic>;
-        _shiftRequests = results[2] as List<dynamic>;
+        _attendanceHistory = results[0] as List<dynamic>;
+        _shiftRequests = results[1] as List<dynamic>;
         _isLoading = false;
       });
       
@@ -82,39 +91,33 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
   
   Future<bool> _checkAttendanceStatus() async {
     try {
-      final today = DateTime.now();
-      final todayAttendance = _attendanceHistory.where((attendance) {
-        if (attendance is Map && attendance['date'] != null) {
-          final attendanceDate = DateTime.parse(attendance['date'].toString());
-          return attendanceDate.year == today.year &&
-                 attendanceDate.month == today.month &&
-                 attendanceDate.day == today.day;
-        }
-        return false;
-      }).toList();
+      final emp = await ProfileService.currentEmployee();
+      if (emp == null) return false;
       
-      if (todayAttendance.isNotEmpty) {
-        final latest = todayAttendance.last as Map;
-        final checkInTime = latest['check_in']?.toString();
-        final checkOutTime = latest['check_out']?.toString();
-        
-        setState(() {
-          _lastCheckInTime = checkInTime != null ? DateTime.parse(checkInTime) : null;
-          _lastCheckOutTime = checkOutTime != null ? DateTime.parse(checkOutTime) : null;
-          _isCheckedIn = checkInTime != null && checkOutTime == null;
-        });
-        
-        return _isCheckedIn;
-      }
+      // Get today's attendance status using the updated service
+      final result = await AttendanceService.getTodayAttendanceStatus();
       
+      setState(() {
+        final newCheckedInState = result['checkedIn'] == true;
+        print('CheckAttendanceStatus: Setting _isCheckedIn to $newCheckedInState');
+        print('CheckAttendanceStatus result: $result');
+        _isCheckedIn = newCheckedInState;
+        _lastCheckInTime = result['lastCheckinTime'] != null 
+            ? DateTime.tryParse(result['lastCheckinTime'].toString())
+            : null;
+        _lastCheckOutTime = result['lastCheckoutTime'] != null 
+            ? DateTime.tryParse(result['lastCheckoutTime'].toString())
+            : null;
+      });
+      
+      return _isCheckedIn;
+    } catch (e) {
+      print('Error checking attendance status: $e');
       setState(() {
         _isCheckedIn = false;
         _lastCheckInTime = null;
         _lastCheckOutTime = null;
       });
-      
-      return false;
-    } catch (e) {
       return false;
     }
   }
@@ -317,102 +320,189 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
   }
   
   Widget _buildCheckInOutCard() {
-    return ModernHeroCard(
-      title: _isCheckedIn ? 'Working Now' : 'Ready to Work',
-      icon: _isCheckedIn ? Icons.work : Icons.play_circle,
-      gradient: _isCheckedIn 
-          ? LinearGradient(
-              colors: [ModernDesignSystem.success, ModernDesignSystem.success.withOpacity(0.7)],
-            )
-          : LinearGradient(
-              colors: [ModernDesignSystem.primaryNavy, ModernDesignSystem.primaryTeal],
-            ),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: ModernDesignSystem.spaceXS),
+      decoration: BoxDecoration(
+        color: ModernDesignSystem.getSurfaceColor(Theme.of(context).brightness),
+        borderRadius: BorderRadius.circular(ModernDesignSystem.radiusLG),
+        border: Border.all(
+          color: ModernDesignSystem.getBorderColor(Theme.of(context).brightness),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Column(
         children: [
-          if (_isCheckedIn) ...[
-            // Working time display
-            Text(
-              _formatDuration(_workingTime),
-              style: ModernDesignSystem.displayMedium.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
+          // Header section with status indicator
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(ModernDesignSystem.spaceLG),
+            decoration: BoxDecoration(
+              color: _isCheckedIn 
+                  ? ModernDesignSystem.success.withOpacity(0.08)
+                  : ModernDesignSystem.neutralLight.withOpacity(0.3),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(ModernDesignSystem.radiusLG),
+                topRight: Radius.circular(ModernDesignSystem.radiusLG),
               ),
             ),
-            ModernDesignSystem.verticalSpaceXS,
-            Text(
-              'Working Time',
-              style: ModernDesignSystem.bodyMedium.copyWith(
-                color: Colors.white.withOpacity(0.8),
-              ),
-            ),
-            ModernDesignSystem.verticalSpaceLG,
-            
-            // Check-in time
-            if (_lastCheckInTime != null)
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: ModernDesignSystem.spaceMD,
-                  vertical: ModernDesignSystem.spaceXS,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(ModernDesignSystem.radiusSM),
-                ),
-                child: Text(
-                  'Checked in at ${_formatTime(_lastCheckInTime!)}',
-                  style: ModernDesignSystem.bodySmall.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w500,
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(ModernDesignSystem.spaceSM),
+                  decoration: BoxDecoration(
+                    color: _isCheckedIn 
+                        ? ModernDesignSystem.success.withOpacity(0.15)
+                        : ModernDesignSystem.neutralMedium.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
+                  ),
+                  child: Icon(
+                    _isCheckedIn ? Icons.work_outline : Icons.schedule,
+                    size: 24,
+                    color: _isCheckedIn 
+                        ? ModernDesignSystem.success
+                        : ModernDesignSystem.neutralMedium,
                   ),
                 ),
-              ),
-            
-            ModernDesignSystem.verticalSpaceMD,
-          ] else ...[
-            Icon(
-              Icons.access_time,
-              size: 48,
-              color: Colors.white.withOpacity(0.9),
+                ModernDesignSystem.horizontalSpaceSM,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _isCheckedIn ? 'Currently Working' : 'Ready to Start',
+                        style: ModernDesignSystem.labelLarge.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: _isCheckedIn 
+                              ? ModernDesignSystem.success
+                              : ModernDesignSystem.getTextSecondary(Theme.of(context).brightness),
+                        ),
+                      ),
+                      if (_isCheckedIn && _lastCheckInTime != null)
+                        Text(
+                          'Since ${_formatTime(_lastCheckInTime!)}',
+                          style: ModernDesignSystem.bodySmall.copyWith(
+                            color: ModernDesignSystem.getTextTertiary(Theme.of(context).brightness),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                if (_isCheckedIn)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: ModernDesignSystem.spaceSM,
+                      vertical: ModernDesignSystem.spaceXS,
+                    ),
+                    decoration: BoxDecoration(
+                      color: ModernDesignSystem.success,
+                      borderRadius: BorderRadius.circular(ModernDesignSystem.radiusXS),
+                    ),
+                    child: Text(
+                      'ACTIVE',
+                      style: ModernDesignSystem.captionLarge.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+              ],
             ),
-            ModernDesignSystem.verticalSpaceMD,
-            Text(
-              'Start Your Day',
-              style: ModernDesignSystem.headlineMedium.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            ModernDesignSystem.verticalSpaceXS,
-            Text(
-              'Tap the button below to check in',
-              style: ModernDesignSystem.bodyMedium.copyWith(
-                color: Colors.white.withOpacity(0.8),
-              ),
-            ),
-            ModernDesignSystem.verticalSpaceLG,
-          ],
+          ),
           
-          // Check-in/Check-out button
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: _isCheckedIn ? _checkOut : _checkIn,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: _isCheckedIn ? ModernDesignSystem.error : ModernDesignSystem.success,
-                padding: const EdgeInsets.symmetric(vertical: ModernDesignSystem.spaceMD),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
+          // Content section
+          Padding(
+            padding: const EdgeInsets.all(ModernDesignSystem.spaceLG),
+            child: Column(
+              children: [
+                if (_isCheckedIn) ...[
+                  // Working time display
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.timer_outlined,
+                        color: ModernDesignSystem.getTextSecondary(Theme.of(context).brightness),
+                        size: 20,
+                      ),
+                      ModernDesignSystem.horizontalSpaceXS,
+                      Text(
+                        'Working Time: ',
+                        style: ModernDesignSystem.bodyMedium.copyWith(
+                          color: ModernDesignSystem.getTextSecondary(Theme.of(context).brightness),
+                        ),
+                      ),
+                      Text(
+                        _formatDuration(_workingTime),
+                        style: ModernDesignSystem.headlineSmall.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: ModernDesignSystem.getTextPrimary(Theme.of(context).brightness),
+                        ),
+                      ),
+                    ],
+                  ),
+                  ModernDesignSystem.verticalSpaceLG,
+                ] else ...[
+                  // Welcome message for check-in
+                  Column(
+                    children: [
+                      Text(
+                        'Start Your Day',
+                        style: ModernDesignSystem.headlineMedium.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: ModernDesignSystem.getTextPrimary(Theme.of(context).brightness),
+                        ),
+                      ),
+                      ModernDesignSystem.verticalSpaceXS,
+                      Text(
+                        'Tap the button below to check in and begin tracking your work hours',
+                        style: ModernDesignSystem.bodyMedium.copyWith(
+                          color: ModernDesignSystem.getTextSecondary(Theme.of(context).brightness),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                  ModernDesignSystem.verticalSpaceLG,
+                ],
+                
+                // Check-in/Check-out button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: _isCheckedIn ? _checkOut : _checkIn,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _isCheckedIn 
+                          ? ModernDesignSystem.error.withOpacity(0.1)
+                          : ModernDesignSystem.primaryTeal,
+                      foregroundColor: _isCheckedIn 
+                          ? ModernDesignSystem.error
+                          : Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: ModernDesignSystem.spaceLG),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
+                        side: _isCheckedIn ? BorderSide(
+                          color: ModernDesignSystem.error.withOpacity(0.3),
+                        ) : BorderSide.none,
+                      ),
+                      elevation: _isCheckedIn ? 0 : 2,
+                    ),
+                    icon: Icon(_isCheckedIn ? Icons.logout_outlined : Icons.login_outlined),
+                    label: Text(
+                      _isCheckedIn ? 'Check Out' : 'Check In',
+                      style: ModernDesignSystem.labelLarge.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
                 ),
-                elevation: 2,
-              ),
-              icon: Icon(_isCheckedIn ? Icons.logout : Icons.login),
-              label: Text(
-                _isCheckedIn ? 'Check Out' : 'Check In',
-                style: ModernDesignSystem.labelLarge.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              ],
             ),
           ),
         ],
@@ -759,7 +849,17 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
         );
         
         if (success) {
-          _loadAttendanceData();
+          // Immediately update UI state
+          print('Check-in successful: Setting _isCheckedIn to true immediately');
+          setState(() {
+            _isCheckedIn = true;
+            _lastCheckInTime = DateTime.now();
+            _lastCheckOutTime = null;
+          });
+          // Wait a moment before refreshing from server to allow the check-in to be processed
+          Future.delayed(const Duration(seconds: 2), () {
+            if (mounted) _loadAttendanceData();
+          });
         }
       }
     } catch (e) {
@@ -789,7 +889,18 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
         );
         
         if (success) {
-          _loadAttendanceData();
+          // Immediately update UI state
+          print('Check-out successful: Setting _isCheckedIn to false immediately');
+          setState(() {
+            _isCheckedIn = false;
+            _lastCheckOutTime = DateTime.now();
+            // Reset working time
+            _workingTime = Duration.zero;
+          });
+          // Wait a moment before refreshing from server to allow the check-out to be processed
+          Future.delayed(const Duration(seconds: 2), () {
+            if (mounted) _loadAttendanceData();
+          });
         }
       }
     } catch (e) {

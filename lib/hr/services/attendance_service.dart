@@ -135,28 +135,74 @@ class AttendanceService {
       final fromDate = DateTime.now().subtract(const Duration(days: 30)).toIso8601String().split('T')[0];
       final toDate = DateTime.now().toIso8601String().split('T')[0];
       
-      final result = await HrmsApiClient.postMethod('hrms.api.get_attendance_calendar_events', params: {
-        'employee': emp,
-        'from_date': fromDate,
-        'to_date': toDate,
+      // Get Employee Checkin records for actual check-in/check-out history
+      final result = await HrmsApiClient.getJson('/api/resource/Employee Checkin', query: {
+        'fields': '["name","employee","time","log_type","creation"]',
+        'filters': '[["Employee Checkin","employee","=","$emp"],["Employee Checkin","time",">=","$fromDate"],["Employee Checkin","time","<=","$toDate 23:59:59"]]',
+        'order_by': 'time desc',
+        'limit': '100',
       });
       
-      // Convert calendar events to attendance history format
-      final events = result['message'] as Map<String, dynamic>? ?? {};
-      final attendanceList = <Map<String, dynamic>>[];
+      final checkins = result['data'] as List<dynamic>? ?? [];
       
-      events.forEach((date, status) {
-        attendanceList.add({
-          'attendance_date': date,
-          'status': status,
+      // Group checkins by date for better display
+      final groupedCheckins = <String, List<Map<String, dynamic>>>{};
+      for (final checkin in checkins) {
+        if (checkin is Map<String, dynamic>) {
+          final time = checkin['time']?.toString();
+          if (time != null) {
+            final date = DateTime.parse(time).toIso8601String().split('T')[0];
+            groupedCheckins[date] ??= [];
+            groupedCheckins[date]!.add(checkin);
+          }
+        }
+      }
+      
+      // Convert to attendance records with check-in/check-out pairs
+      final attendanceRecords = <Map<String, dynamic>>[];
+      groupedCheckins.forEach((date, dailyCheckins) {
+        Map<String, dynamic>? checkIn;
+        Map<String, dynamic>? checkOut;
+        
+        // Find the latest check-in and check-out for each day
+        for (final checkin in dailyCheckins) {
+          final logType = checkin['log_type']?.toString();
+          if (logType == 'IN') {
+            checkIn = checkin;
+          } else if (logType == 'OUT') {
+            checkOut = checkin;
+          }
+        }
+        
+        attendanceRecords.add({
+          'date': date,
           'employee': emp,
+          'check_in': checkIn?['time'],
+          'check_out': checkOut?['time'],
+          'status': checkIn != null ? 'Present' : 'No attendance data',
+          'working_hours': _calculateWorkingHours(checkIn?['time'], checkOut?['time']),
+          'checkin_records': dailyCheckins,
         });
       });
       
-      return attendanceList;
+      return attendanceRecords;
     } catch (e) {
       print('Error getting attendance history: $e');
       return [];
+    }
+  }
+  
+  // Helper method to calculate working hours
+  static double _calculateWorkingHours(String? checkInTime, String? checkOutTime) {
+    if (checkInTime == null || checkOutTime == null) return 0.0;
+    
+    try {
+      final checkIn = DateTime.parse(checkInTime);
+      final checkOut = DateTime.parse(checkOutTime);
+      final duration = checkOut.difference(checkIn);
+      return duration.inMinutes / 60.0;
+    } catch (e) {
+      return 0.0;
     }
   }
 
@@ -235,20 +281,35 @@ class AttendanceService {
       final today = DateTime.now().toIso8601String().split('T')[0];
       
       // Get today's Employee Checkin records
-      final checkins = await HrmsApiClient.getJson('/api/resource/Employee%20Checkin', query: {
+      final checkins = await HrmsApiClient.getJson('/api/resource/Employee Checkin', query: {
         'fields': '["name","employee","time","log_type"]',
-        'filters': '[["Employee Checkin","employee","=","$emp"],["Employee Checkin","time","like","$today%"]]',
+        'filters': '[["Employee Checkin","employee","=","$emp"],["Employee Checkin","time",">=","$today 00:00:00"],["Employee Checkin","time","<=","$today 23:59:59"]]',
         'order_by': 'time desc',
         'limit': '10',
       });
       
       final checkinData = checkins['data'] as List<dynamic>? ?? [];
       
-      bool checkedIn = false;
+      if (checkinData.isEmpty) {
+        return {
+          'checkedIn': false,
+          'lastCheckinTime': null,
+          'lastCheckoutTime': null,
+          'todayCheckins': 0,
+        };
+      }
+      
+      // Sort records by time (most recent first)
+      checkinData.sort((a, b) {
+        final timeA = (a as Map)['time']?.toString() ?? '';
+        final timeB = (b as Map)['time']?.toString() ?? '';
+        return timeB.compareTo(timeA); // Descending order (most recent first)
+      });
+      
       String? lastCheckinTime;
       String? lastCheckoutTime;
       
-      // Process checkin records to determine current status
+      // Find the most recent check-in and check-out
       for (final record in checkinData) {
         if (record is Map) {
           final logType = record['log_type']?.toString();
@@ -256,19 +317,24 @@ class AttendanceService {
           
           if (logType == 'IN' && lastCheckinTime == null) {
             lastCheckinTime = time;
-            checkedIn = true;
           } else if (logType == 'OUT' && lastCheckoutTime == null) {
             lastCheckoutTime = time;
-            if (lastCheckinTime == null) {
-              checkedIn = false;
-            } else {
-              // Compare times to see which was most recent
-              final checkinDateTime = DateTime.tryParse(lastCheckinTime);
-              final checkoutDateTime = DateTime.tryParse(time ?? '');
-              if (checkinDateTime != null && checkoutDateTime != null) {
-                checkedIn = checkinDateTime.isAfter(checkoutDateTime);
-              }
-            }
+          }
+        }
+      }
+      
+      // Determine if currently checked in
+      bool checkedIn = false;
+      if (lastCheckinTime != null) {
+        if (lastCheckoutTime == null) {
+          // Have check-in but no check-out
+          checkedIn = true;
+        } else {
+          // Compare which happened more recently
+          final checkinDateTime = DateTime.tryParse(lastCheckinTime);
+          final checkoutDateTime = DateTime.tryParse(lastCheckoutTime);
+          if (checkinDateTime != null && checkoutDateTime != null) {
+            checkedIn = checkinDateTime.isAfter(checkoutDateTime);
           }
         }
       }

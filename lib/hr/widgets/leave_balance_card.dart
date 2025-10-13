@@ -296,9 +296,9 @@ class LeaveBalanceCard extends StatelessWidget {
                 )
               else
                 SizedBox(
-                  height: 120,
+                  height: 140,
                   child: PageView.builder(
-                    controller: PageController(viewportFraction: 0.98),
+                    controller: PageController(viewportFraction: 0.95),
                     itemCount: entries.length,
                     padEnds: false,
                     itemBuilder: (context, i) {
