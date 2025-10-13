@@ -9,7 +9,8 @@ const Color primaryColor = Color.fromRGBO(26, 35, 52, 1);  // Deep navy
 const Color primaryLightColor = Color.fromRGBO(43, 57, 85, 1);  // Lighter navy
 const Color accentColor = Color(0xFF00BFA6);  // Professional teal
 const Color accentLightColor = Color(0xFF4DD0E1);  // Light teal
-const Color accentDarkColor = Color(0xFF00796B);  // Dark teal
+const Color accentDarkColor = Color(0xFF00A693);  // Dark teal
+const Color accentPale = Color(0xFFE0F7F4);  // Very light teal
 
 // Semantic Colors
 const Color successColor = Color(0xFF4CAF50);  // Green for approved/success

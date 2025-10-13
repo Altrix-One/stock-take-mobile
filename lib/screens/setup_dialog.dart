@@ -113,7 +113,7 @@ class _SetupDialogState extends State<SetupDialog> {
                       ),
                       const SizedBox(height: 16),
                       const Text(
-                        'Please configure the app to connect to your Frappe server:',
+                        'Please configure the app to connect to your Cohenix server:',
                         style: TextStyle(fontSize: 16),
                       ),
                       const SizedBox(height: 24),
@@ -123,7 +123,7 @@ class _SetupDialogState extends State<SetupDialog> {
                         controller: _baseUrlController,
                         decoration: InputDecoration(
                           labelText: 'Base URL',
-                          hintText: 'https://your-frappe-server.com',
+                          hintText: 'https://your-cohenix-server.com',
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
@@ -163,7 +163,7 @@ class _SetupDialogState extends State<SetupDialog> {
 
                       // OAuth Setup Instructions
                       ExpansionTile(
-                        title: const Text('How to set up OAuth in Frappe'),
+                        title: const Text('How to set up OAuth in Cohenix'),
                         children: [
                           Padding(
                             padding: const EdgeInsets.all(16.0),
@@ -171,7 +171,7 @@ class _SetupDialogState extends State<SetupDialog> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const Text(
-                                  '1. Go to your Frappe server and create a new OAuth Client:',
+                                  '1. Go to your Cohenix server and create a new OAuth Client:',
                                   style: TextStyle(fontWeight: FontWeight.bold),
                                 ),
                                 const SizedBox(height: 8),
@@ -202,7 +202,7 @@ class _SetupDialogState extends State<SetupDialog> {
                                   onPressed: _openFrappeOAuthDocs,
                                   icon: const Icon(Icons.open_in_new),
                                   label: const Text(
-                                      'Open Frappe OAuth Documentation'),
+                                      'Open Cohenix OAuth Documentation'),
                                 ),
                               ],
                             ),
@@ -216,23 +216,27 @@ class _SetupDialogState extends State<SetupDialog> {
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
                           if (!widget.isFirstLaunch)
-                            TextButton(
-                              onPressed: () => Navigator.of(context).pop(false),
-                              child: const Text('Cancel'),
-                            ),
-                          const SizedBox(width: 16),
-                          ElevatedButton(
-                            onPressed: _saveConfig,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: primaryColor,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 24,
-                                vertical: 12,
+                            Flexible(
+                              child: TextButton(
+                                onPressed: () => Navigator.of(context).pop(false),
+                                child: const Text('Cancel'),
                               ),
                             ),
-                            child: const Text(
-                              'Save Configuration',
-                              style: TextStyle(color: Colors.white),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: ElevatedButton(
+                              onPressed: _saveConfig,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: primaryColor,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
+                                ),
+                              ),
+                              child: const Text(
+                                'Save Config',
+                                style: TextStyle(color: Colors.white),
+                              ),
                             ),
                           ),
                         ],

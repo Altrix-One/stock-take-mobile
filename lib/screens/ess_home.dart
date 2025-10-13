@@ -21,6 +21,8 @@ import 'package:stock_count/widgets/modern_leave_item.dart';
 import 'package:stock_count/widgets/modern_attendance_item.dart';
 import 'package:stock_count/widgets/modern_shift_item.dart';
 import 'package:stock_count/widgets/modern_claim_item.dart';
+import 'package:stock_count/screens/modern_profile_page.dart';
+import 'package:stock_count/constants/modern_design_system.dart';
 
 class ESSHomeScreen extends StatefulWidget {
   const ESSHomeScreen({super.key});
@@ -92,7 +94,7 @@ class _ESSHomeScreenState extends State<ESSHomeScreen> with TickerProviderStateM
       _AttendancePage(),
       _ClaimsPage(),
       if (_canApprove) _ApprovalsPage(),
-      _ProfilePage(),
+      ModernProfilePage(),
     ];
     // Clamp index if approvals hidden
     if (!_canApprove && _index == 4) _index = 3;
@@ -212,15 +214,15 @@ class _ESSHomeScreenState extends State<ESSHomeScreen> with TickerProviderStateM
             decoration: BoxDecoration(
               color: isSelected
                   ? (theme.brightness == Brightness.dark
-                      ? theme.colorScheme.primary.withOpacity(0.2)
-                      : theme.colorScheme.primary.withOpacity(0.15))
+                      ? ModernDesignSystem.primaryTeal.withOpacity(0.2)
+                      : ModernDesignSystem.primaryTeal.withOpacity(0.15))
                   : null,
               borderRadius: BorderRadius.circular(16),
               border: isSelected
                   ? Border.all(
                       color: theme.brightness == Brightness.dark
-                          ? theme.colorScheme.primary.withOpacity(0.8)
-                          : theme.colorScheme.primary,
+                          ? ModernDesignSystem.primaryTeal.withOpacity(0.8)
+                          : ModernDesignSystem.primaryTeal,
                       width: 1.5,
                     )
                   : null,
@@ -243,7 +245,7 @@ class _ESSHomeScreenState extends State<ESSHomeScreen> with TickerProviderStateM
                         isSelected ? activeIcon : inactiveIcon,
                         key: ValueKey(isSelected),
                         color: isSelected
-                            ? theme.colorScheme.primary
+                            ? ModernDesignSystem.primaryTeal
                             : theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
                         size: isSelected ? 22 : 20,
                       ),
@@ -292,7 +294,7 @@ class _ESSHomeScreenState extends State<ESSHomeScreen> with TickerProviderStateM
                         fontSize: isSelected ? 8 : 7,
                         fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                         color: isSelected
-                            ? theme.colorScheme.primary
+                            ? ModernDesignSystem.primaryTeal
                             : theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
                       ),
                       child: Text(
@@ -585,20 +587,20 @@ class _DashboardPageState extends State<_DashboardPage> {
                   : RefreshIndicator(
                       onRefresh: _load,
                       child: ListView(
-                        padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
                         children: [
                           // Welcome message
                           _buildWelcomeSection(context),
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 12),
                           
                           // Leave balance card
                           LeaveBalanceCard(balances: _balance),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 12),
                           
                           // Approvals card (if user can approve - HR Manager role only)
                           if (widget.canApprove)
                             _buildApprovalsCard(context),
-                          if (widget.canApprove) const SizedBox(height: 16),
+                          if (widget.canApprove) const SizedBox(height: 12),
                           
                           // Quick actions section
                           _buildQuickActionsSection(context),
@@ -811,14 +813,14 @@ class _DashboardPageState extends State<_DashboardPage> {
             ],
           ),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 2),
         GridView.count(
           crossAxisCount: 2,
-          childAspectRatio: 2.6,  // Better proportions for readability
+          childAspectRatio: 2.2,  // More compact proportions
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 10,
-          crossAxisSpacing: 10,
+          mainAxisSpacing: 8,
+          crossAxisSpacing: 8,
           children: [
             _buildModernQuickLink(
               context,
@@ -881,7 +883,7 @@ class _DashboardPageState extends State<_DashboardPage> {
         borderRadius: BorderRadius.circular(12),
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
             color: theme.brightness == Brightness.dark
                 ? color.withOpacity(0.12)
@@ -898,37 +900,37 @@ class _DashboardPageState extends State<_DashboardPage> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
                   color: theme.brightness == Brightness.dark
                       ? color.withOpacity(0.9)  // Slightly transparent in dark mode
                       : color,                   // Full opacity in light mode
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(6),
                 ),
                 child: Icon(
                   icon,
                   color: Colors.white,
-                  size: 18,
+                  size: 16,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   title,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                     color: theme.colorScheme.onSurface,
-                    fontSize: 13,  // Good readable size
+                    fontSize: 12,  // Slightly smaller for more compact look
                     height: 1.2,   // Better line height
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 6),
               Icon(
                 Icons.arrow_forward_ios_rounded,
-                size: 14,
+                size: 12,
                 color: theme.colorScheme.onSurfaceVariant.withOpacity(0.6),
               ),
             ],
@@ -1320,7 +1322,7 @@ class _LeavesPageState extends State<_LeavesPage> {
                 ..._approvedSection(),
                 
                 // Bottom padding for navigation
-                const SizedBox(height: 100),
+                const SizedBox(height: 120),
               ],
             ),
           ),
@@ -2904,7 +2906,7 @@ class _ClaimsPageState extends State<_ClaimsPage> {
                 ..._claimsSection(),
                 
                 // Bottom padding for navigation
-                const SizedBox(height: 100),
+                const SizedBox(height: 120),
               ],
             ),
           ),
@@ -3246,7 +3248,6 @@ class _ApprovalsPageState extends State<_ApprovalsPage> {
       appBar: AppBar(
         title: const Text('Team Approvals'),
         elevation: 0,
-        backgroundColor: theme.colorScheme.surface,
       ),
       body: _loading
           ? const ProfessionalLoading(message: 'Loading approval requests...')
@@ -3259,7 +3260,7 @@ class _ApprovalsPageState extends State<_ApprovalsPage> {
                   const SizedBox(height: 24),
                   ..._buildApprovalsSection(),
                   // Bottom padding for navigation
-                  const SizedBox(height: 100),
+                  const SizedBox(height: 120),
                 ],
               ),
             ),
@@ -4315,7 +4316,7 @@ class _ProfilePageState extends State<_ProfilePage> {
   Widget _buildFormSection({required String title, required IconData icon, required Widget child}) {
     final theme = Theme.of(context);
     return Container(
-      margin: const EdgeInsets.only(bottom: 24),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
@@ -4424,7 +4425,7 @@ class _ProfilePageState extends State<_ProfilePage> {
             child: RefreshIndicator(
               onRefresh: _loadEmployeeData,
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
                 children: [
                   // Profile Header
                   Container(
@@ -4533,7 +4534,7 @@ class _ProfilePageState extends State<_ProfilePage> {
                     ),
                   ),
                   
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
                   
                   // Personal Information (Read-only)
                   if (!_editing)
@@ -4854,7 +4855,7 @@ class _ProfilePageState extends State<_ProfilePage> {
                   ),
                   
                   // Bottom padding for navigation
-                  const SizedBox(height: 100),
+                  const SizedBox(height: 120),
                 ],
               ),
             ),

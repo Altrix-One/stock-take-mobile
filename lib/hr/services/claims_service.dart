@@ -54,4 +54,57 @@ class ClaimsService {
     final res = await HrmsApiClient.postMethod('hrms.api.submit_expense_claim', params: payload);
     return res['message'] as Map<String, dynamic>? ?? {};
   }
+
+  // Get claim categories for the modern claims page
+  static Future<List<dynamic>> claimCategories() async {
+    try {
+      final res = await HrmsApiClient.postMethod('hrms.api.get_expense_claim_categories');
+      return res['message'] as List<dynamic>? ?? [];
+    } catch (_) {
+      return [];
+    }
+  }
+
+  // Get claims statistics
+  static Future<Map<String, dynamic>> claimsStats() async {
+    try {
+      final emp = await ProfileService.currentEmployee();
+      final res = await HrmsApiClient.postMethod('hrms.api.get_claims_stats', params: {
+        if (emp != null) 'employee': emp,
+      });
+      return res['message'] as Map<String, dynamic>? ?? {};
+    } catch (_) {
+      return {};
+    }
+  }
+
+  // Update claim
+  static Future<Map<String, dynamic>> updateClaim(Map<String, dynamic> payload) async {
+    try {
+      final res = await HrmsApiClient.postMethod('hrms.api.update_expense_claim', params: payload);
+      return res['message'] as Map<String, dynamic>? ?? {};
+    } catch (_) {
+      return {};
+    }
+  }
+
+  // Submit claim
+  static Future<Map<String, dynamic>> submitClaim(Map<String, dynamic> payload) async {
+    try {
+      final res = await HrmsApiClient.postMethod('hrms.api.submit_expense_claim', params: payload);
+      return res['message'] as Map<String, dynamic>? ?? {};
+    } catch (_) {
+      return {};
+    }
+  }
+
+  // Save draft claim
+  static Future<Map<String, dynamic>> saveDraft(Map<String, dynamic> payload) async {
+    try {
+      final res = await HrmsApiClient.postMethod('hrms.api.save_expense_claim_draft', params: payload);
+      return res['message'] as Map<String, dynamic>? ?? {};
+    } catch (_) {
+      return {};
+    }
+  }
 }

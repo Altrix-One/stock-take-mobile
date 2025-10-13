@@ -1,281 +1,444 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'cohenix_colors.dart';
+import 'cohenix_typography.dart';
+import 'modern_design_system.dart';
 
+/// Cohenix App Theme
+/// Professional theme implementation based on Cohenix Style Guide
 class AppTheme {
   // =============================================================================
-  // PROFESSIONAL HR ESS COLOR SYSTEM
+  // LEGACY COLOR SUPPORT - For backward compatibility
   // =============================================================================
   
-  // Primary Brand Colors - Deep, Authoritative Corporate Colors
-  static const Color primaryColor = Color(0xFF0A3F75);        // Deep Navy Blue
-  static const Color primaryLightColor = Color(0xFF34495E);   // Steel Blue
-  static const Color primaryDarkColor = Color(0xFF041E3A);    // Darker Navy
+  // Map legacy colors to Cohenix colors
+  static const Color primaryColor = CohenixColors.royalBlue;
+  static const Color primaryLightColor = CohenixColors.oceanBlue;
+  static const Color primaryDarkColor = CohenixColors.midnightBlue;
+  static const Color tealPrimary = CohenixColors.royalBlue;
+  static const Color tealSecondary = CohenixColors.oceanBlue;
+  static const Color tealDark = CohenixColors.midnightBlue;
+  static const Color secondaryColor = CohenixColors.oceanBlue;
   
-  // Deprecated teal colors (for backwards compatibility)
-  static const Color tealPrimary = Color(0xFF0A3F75);         // Redirected to new primary
-  static const Color tealSecondary = Color(0xFF34495E);       // Redirected to primary light
-  static const Color tealDark = Color(0xFF041E3A);            // Redirected to primary dark
+  // Status colors
+  static const Color successColor = CohenixColors.success;
+  static const Color warningColor = CohenixColors.warning;
+  static const Color errorColor = CohenixColors.error;
+  static const Color infoColor = CohenixColors.info;
+  static const Color greenColor = CohenixColors.success;
+  static const Color redColor = CohenixColors.error;
   
-  // Legacy colors (for backwards compatibility)
-  static const Color secondaryColor = Color(0xFF34495E);      // Steel Blue
+  // Light theme colors
+  static const Color lightBackground = CohenixColors.lightBackground;
+  static const Color lightSurface = CohenixColors.lightSurface;
+  static const Color lightSurfaceVariant = CohenixColors.lightSurfaceVariant;
+  static const Color lightCardBackground = CohenixColors.lightSurface;
+  static const Color lightCardTinted = CohenixColors.lightSurfaceVariant;
+  static const Color lightTextPrimary = CohenixColors.lightOnSurface;
+  static const Color lightTextSecondary = CohenixColors.lightOnSurfaceVariant;
+  static const Color lightTextTertiary = CohenixColors.lightOnSurfaceSecondary;
+  static const Color lightDivider = CohenixColors.lightOutline;
+  static const Color lightBorder = CohenixColors.lightOutline;
+  static const Color lightBorderLight = CohenixColors.lightOutlineVariant;
   
-  // Semantic Status Colors - Controlled Accent Colors
-  static const Color successColor = Color(0xFF27AE60);        // Professional Green
-  static const Color warningColor = Color(0xFFF39C12);        // Warm Amber/Orange
-  static const Color errorColor = Color(0xFFE74C3C);          // Professional Red
-  static const Color infoColor = Color(0xFF3498DB);           // Professional Blue
-  
-  // Deprecated status colors (for backwards compatibility)
-  static const Color greenColor = Color(0xFF27AE60);          // Redirected to success
-  static const Color redColor = Color(0xFFE74C3C);            // Redirected to error
-  static const Color warningColorOld = Color(0xFFF39C12);     // Redirected to warning
-  
-  // =============================================================================
-  // NEUTRAL COLORS - Clean, Professional Backgrounds
-  // =============================================================================
-  
-  // Light Theme Colors - Clean Off-White & Subtle Tints
-  static const Color lightBackground = Color(0xFFF7F9FA);      // Clean Off-White Background
-  static const Color lightSurface = Color(0xFFFFFFFF);         // Pure White Surface
-  static const Color lightSurfaceVariant = Color(0xFFF0F2F5);  // Light Gray Variant
-  static const Color lightCardBackground = Color(0xFFFFFFFF);   // Pure White Cards
-  static const Color lightCardTinted = Color(0xFFF8FAFC);      // Subtle Primary Tint (5% opacity equivalent)
-  
-  // Text Colors - High Contrast for Legibility
-  static const Color lightTextPrimary = Color(0xFF1A1A1A);     // Near Black
-  static const Color lightTextSecondary = Color(0xFF6B7280);   // Professional Gray
-  static const Color lightTextTertiary = Color(0xFF9CA3AF);    // Light Gray
-  
-  // Border & Divider Colors
-  static const Color lightDivider = Color(0xFFE5E7EB);
-  static const Color lightBorder = Color(0xFFD1D5DB);
-  static const Color lightBorderLight = Color(0xFFF3F4F6);
-  
-  // Dark Theme Colors - Rich, Deep Surfaces
-  static const Color darkBackground = Color(0xFF0F172A);        // Deep Navy Background
-  static const Color darkSurface = Color(0xFF1E293B);          // Rich Charcoal Surface
-  static const Color darkSurfaceVariant = Color(0xFF334155);    // Lighter Charcoal
-  static const Color darkCardBackground = Color(0xFF1E293B);    // Rich Charcoal Cards
-  static const Color darkCardTinted = Color(0xFF1A2332);       // Subtle Primary Tint
-  
-  // Dark Text Colors - Optimized for Dark Backgrounds
-  static const Color darkTextPrimary = Color(0xFFF8FAFC);      // Off-White
-  static const Color darkTextSecondary = Color(0xFFCBD5E1);    // Light Gray
-  static const Color darkTextTertiary = Color(0xFF94A3B8);     // Medium Gray
-  
-  // Dark Border & Divider Colors
-  static const Color darkDivider = Color(0xFF475569);
-  static const Color darkBorder = Color(0xFF64748B);
-  static const Color darkBorderLight = Color(0xFF334155);
+  // Dark theme colors
+  static const Color darkBackground = CohenixColors.darkBackground;
+  static const Color darkSurface = CohenixColors.darkSurface;
+  static const Color darkSurfaceVariant = CohenixColors.darkSurfaceVariant;
+  static const Color darkCardBackground = CohenixColors.darkSurface;
+  static const Color darkCardTinted = CohenixColors.darkSurfaceVariant;
+  static const Color darkTextPrimary = CohenixColors.darkOnSurface;
+  static const Color darkTextSecondary = CohenixColors.darkOnSurfaceVariant;
+  static const Color darkTextTertiary = CohenixColors.darkOnSurfaceSecondary;
+  static const Color darkDivider = CohenixColors.darkOutline;
+  static const Color darkBorder = CohenixColors.darkOutline;
+  static const Color darkBorderLight = CohenixColors.darkOutlineVariant;
 
-  // Light Theme
+  // =============================================================================
+  // COHENIX LIGHT THEME
+  // =============================================================================
+  
   static ThemeData lightTheme = ThemeData(
     useMaterial3: true,
     brightness: Brightness.light,
-    fontFamily: 'Montserrat',
+    textTheme: CohenixTypography.lightTextTheme,
     
     colorScheme: ColorScheme.light(
       brightness: Brightness.light,
-      primary: primaryColor,                    // Deep Navy Blue
+      primary: CohenixColors.royalBlue,
       onPrimary: Colors.white,
-      primaryContainer: primaryColor.withOpacity(0.15),
-      onPrimaryContainer: primaryDarkColor,
-      secondary: primaryLightColor,             // Steel Blue
+      primaryContainer: CohenixColors.skyBlue,
+      onPrimaryContainer: CohenixColors.royalBlue,
+      secondary: CohenixColors.oceanBlue,
       onSecondary: Colors.white,
-      secondaryContainer: primaryLightColor.withOpacity(0.15),
-      onSecondaryContainer: primaryDarkColor,
-      surface: lightSurface,                    // Pure White
-      onSurface: lightTextPrimary,              // Near Black
-      surfaceContainer: lightCardTinted,        // Subtle Primary Tint
-      surfaceContainerHigh: lightSurfaceVariant, // Light Gray
-      background: lightBackground,              // Clean Off-White
-      onBackground: lightTextPrimary,
-      error: errorColor,                        // Professional Red
+      secondaryContainer: CohenixColors.oceanBlue.withOpacity(0.1),
+      onSecondaryContainer: CohenixColors.oceanBlue,
+      surface: CohenixColors.lightSurface,
+      onSurface: CohenixColors.lightOnSurface,
+      surfaceContainer: CohenixColors.lightSurfaceVariant,
+      surfaceContainerHigh: CohenixColors.lightSurfaceVariant,
+      background: CohenixColors.lightBackground,
+      onBackground: CohenixColors.lightOnSurface,
+      error: CohenixColors.error,
       onError: Colors.white,
-      outline: lightBorder,                     // Professional Gray Border
-      outlineVariant: lightBorderLight,
-      surfaceVariant: lightSurfaceVariant,      // Light Gray Variant
-      onSurfaceVariant: lightTextSecondary,     // Professional Gray Text
-      inverseSurface: darkSurface,
-      onInverseSurface: darkTextPrimary,
+      outline: CohenixColors.lightOutline,
+      outlineVariant: CohenixColors.lightOutlineVariant,
+      surfaceVariant: CohenixColors.lightSurfaceVariant,
+      onSurfaceVariant: CohenixColors.lightOnSurfaceVariant,
+      inverseSurface: CohenixColors.darkSurface,
+      onInverseSurface: CohenixColors.darkOnSurface,
+      tertiary: CohenixColors.skyBlue,
+      onTertiary: CohenixColors.royalBlue,
     ),
     
-    // App Bar Theme
+    // App Bar Theme - Modern Teal with proper contrast
     appBarTheme: AppBarTheme(
-      backgroundColor: lightSurface,
-      foregroundColor: lightTextPrimary,
+      backgroundColor: Colors.transparent,
+      foregroundColor: CohenixColors.lightOnSurface,
       elevation: 0,
       centerTitle: false,
-      titleTextStyle: TextStyle(
-        color: lightTextPrimary,
-        fontSize: 20,
+      titleTextStyle: CohenixTypography.headlineSmall.copyWith(
+        color: CohenixColors.lightOnSurface,
         fontWeight: FontWeight.w600,
-        fontFamily: 'Montserrat',
       ),
-      iconTheme: IconThemeData(color: lightTextPrimary),
+      iconTheme: IconThemeData(color: CohenixColors.lightOnSurface),
+      actionsIconTheme: IconThemeData(color: ModernDesignSystem.primaryTeal),
+      systemOverlayStyle: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+      ),
     ),
     
-    // Card Theme
+    // Card Theme - Clean and minimal
     cardTheme: CardThemeData(
-      color: lightCardBackground,
+      color: CohenixColors.lightSurface,
       elevation: 2,
+      shadowColor: Colors.black.withOpacity(0.08),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
       ),
-      shadowColor: Colors.black.withOpacity(0.1),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
     ),
     
-    // Bottom Navigation Theme - Frosted Glass Effect
+    // Bottom Navigation Theme
     bottomNavigationBarTheme: BottomNavigationBarThemeData(
-      backgroundColor: lightSurface,
-      selectedItemColor: primaryColor,              // Deep Navy for selected items
-      unselectedItemColor: lightTextSecondary,      // Professional gray for unselected
+      backgroundColor: CohenixColors.lightSurface,
+      selectedItemColor: CohenixColors.royalBlue,
+      unselectedItemColor: CohenixColors.lightOnSurfaceVariant,
       type: BottomNavigationBarType.fixed,
       elevation: 8,
+      selectedLabelStyle: CohenixTypography.labelSmall,
+      unselectedLabelStyle: CohenixTypography.labelSmall,
     ),
     
     // Input Decoration Theme
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: lightSurfaceVariant,               // Light gray fill
+      fillColor: CohenixColors.lightSurfaceVariant,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: lightBorder),
+        borderSide: BorderSide(color: CohenixColors.lightOutline),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: lightBorder),
+        borderSide: BorderSide(color: CohenixColors.lightOutline),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: primaryColor, width: 2),  // Deep navy focus
+        borderSide: BorderSide(color: CohenixColors.royalBlue, width: 2),
       ),
-      labelStyle: TextStyle(color: lightTextSecondary),
-      hintStyle: TextStyle(color: lightTextTertiary),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: CohenixColors.error, width: 1),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: CohenixColors.error, width: 2),
+      ),
+      labelStyle: CohenixTypography.withSecondaryColor(CohenixTypography.bodyMedium, Brightness.light),
+      hintStyle: CohenixTypography.withSecondaryColor(CohenixTypography.bodySmall, Brightness.light),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
     ),
     
     // Elevated Button Theme
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: primaryColor,                // Deep Navy buttons
+        backgroundColor: CohenixColors.royalBlue,
         foregroundColor: Colors.white,
-        elevation: 0,
+        elevation: 2,
+        shadowColor: CohenixColors.royalBlue.withOpacity(0.3),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
-        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        textStyle: CohenixTypography.buttonMedium,
+      ),
+    ),
+    
+    // Text Button Theme
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        foregroundColor: CohenixColors.royalBlue,
+        textStyle: CohenixTypography.buttonMedium,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      ),
+    ),
+    
+    // Outlined Button Theme
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: CohenixColors.royalBlue,
+        side: BorderSide(color: CohenixColors.royalBlue),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        textStyle: CohenixTypography.buttonMedium,
       ),
     ),
     
     // Floating Action Button Theme
     floatingActionButtonTheme: FloatingActionButtonThemeData(
-      backgroundColor: primaryColor,                // Deep Navy FAB
+      backgroundColor: CohenixColors.royalBlue,
       foregroundColor: Colors.white,
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+    ),
+    
+    // Chip Theme
+    chipTheme: ChipThemeData(
+      backgroundColor: CohenixColors.lightSurfaceVariant,
+      selectedColor: CohenixColors.skyBlue,
+      disabledColor: CohenixColors.lightOutlineVariant,
+      labelStyle: CohenixTypography.labelMedium,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+      ),
+    ),
+    
+    // List Tile Theme
+    listTileTheme: ListTileThemeData(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      titleTextStyle: CohenixTypography.titleMedium,
+      subtitleTextStyle: CohenixTypography.bodySmall,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+      ),
+    ),
+    
+    // Divider Theme
+    dividerTheme: DividerThemeData(
+      color: CohenixColors.lightOutline,
+      thickness: 1,
+      space: 1,
+    ),
+    
+    // Snack Bar Theme
+    snackBarTheme: SnackBarThemeData(
+      backgroundColor: CohenixColors.darkSurface,
+      contentTextStyle: CohenixTypography.withColor(CohenixTypography.bodyMedium, Colors.white),
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+      ),
     ),
   );
 
-  // Dark Theme
+  // =============================================================================
+  // COHENIX DARK THEME
+  // =============================================================================
+  
   static ThemeData darkTheme = ThemeData(
     useMaterial3: true,
     brightness: Brightness.dark,
-    fontFamily: 'Montserrat',
+    textTheme: CohenixTypography.darkTextTheme,
     
     colorScheme: ColorScheme.dark(
       brightness: Brightness.dark,
-      primary: primaryColor,                        // Deep Navy Blue (works in dark too)
+      primary: CohenixColors.oceanBlue,  // Brighter Ocean Blue for dark theme
       onPrimary: Colors.white,
-      primaryContainer: primaryColor.withOpacity(0.3),
-      onPrimaryContainer: Colors.white,
-      secondary: primaryLightColor,                 // Steel Blue
-      onSecondary: Colors.white,
-      secondaryContainer: primaryLightColor.withOpacity(0.3),
-      onSecondaryContainer: Colors.white,
-      surface: darkSurface,                         // Rich Charcoal
-      onSurface: darkTextPrimary,                   // Off-White
-      surfaceContainer: darkCardTinted,             // Subtle Primary Tint
-      surfaceContainerHigh: darkSurfaceVariant,     // Lighter Charcoal
-      background: darkBackground,                   // Deep Navy Background
-      onBackground: darkTextPrimary,
-      error: errorColor,                            // Professional Red
+      primaryContainer: CohenixColors.midnightBlue,
+      onPrimaryContainer: CohenixColors.skyBlue,
+      secondary: CohenixColors.skyBlue,
+      onSecondary: CohenixColors.midnightBlue,
+      secondaryContainer: CohenixColors.skyBlue.withOpacity(0.2),
+      onSecondaryContainer: CohenixColors.skyBlue,
+      surface: CohenixColors.darkSurface,
+      onSurface: CohenixColors.darkOnSurface,
+      surfaceContainer: CohenixColors.darkSurfaceVariant,
+      surfaceContainerHigh: CohenixColors.darkSurfaceVariant,
+      background: CohenixColors.darkBackground,
+      onBackground: CohenixColors.darkOnSurface,
+      error: CohenixColors.error,
       onError: Colors.white,
-      outline: darkBorder,                          // Professional Border
-      outlineVariant: darkBorderLight,
-      surfaceVariant: darkSurfaceVariant,           // Lighter Charcoal
-      onSurfaceVariant: darkTextSecondary,          // Light Gray Text
-      inverseSurface: lightSurface,
-      onInverseSurface: lightTextPrimary,
+      outline: CohenixColors.darkOutline,
+      outlineVariant: CohenixColors.darkOutlineVariant,
+      surfaceVariant: CohenixColors.darkSurfaceVariant,
+      onSurfaceVariant: CohenixColors.darkOnSurfaceVariant,
+      inverseSurface: CohenixColors.lightSurface,
+      onInverseSurface: CohenixColors.lightOnSurface,
+      tertiary: CohenixColors.skyBlue,
+      onTertiary: CohenixColors.midnightBlue,
     ),
     
-    // App Bar Theme
+    // App Bar Theme - Dark with modern contrast
     appBarTheme: AppBarTheme(
-      backgroundColor: darkSurface,
-      foregroundColor: darkTextPrimary,
+      backgroundColor: Colors.transparent,
+      foregroundColor: CohenixColors.darkOnSurface,
       elevation: 0,
       centerTitle: false,
-      titleTextStyle: TextStyle(
-        color: darkTextPrimary,
-        fontSize: 20,
+      titleTextStyle: CohenixTypography.headlineSmall.copyWith(
+        color: CohenixColors.darkOnSurface,
         fontWeight: FontWeight.w600,
-        fontFamily: 'Montserrat',
       ),
-      iconTheme: IconThemeData(color: darkTextPrimary),
+      iconTheme: IconThemeData(color: CohenixColors.darkOnSurface),
+      actionsIconTheme: IconThemeData(color: ModernDesignSystem.primaryTeal),
+      systemOverlayStyle: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+      ),
     ),
     
-    // Card Theme
+    // Card Theme - Dark surfaces
     cardTheme: CardThemeData(
-      color: darkCardBackground,
+      color: CohenixColors.darkSurface,
       elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
       shadowColor: Colors.black.withOpacity(0.3),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
     ),
     
-    // Bottom Navigation Theme - Elevated Dark Surface
+    // Bottom Navigation Theme
     bottomNavigationBarTheme: BottomNavigationBarThemeData(
-      backgroundColor: darkSurface,
-      selectedItemColor: primaryColor,              // Deep Navy for selected items
-      unselectedItemColor: darkTextSecondary,       // Light gray for unselected
+      backgroundColor: CohenixColors.darkSurface,
+      selectedItemColor: CohenixColors.oceanBlue,
+      unselectedItemColor: CohenixColors.darkOnSurfaceVariant,
       type: BottomNavigationBarType.fixed,
       elevation: 8,
+      selectedLabelStyle: CohenixTypography.labelSmall,
+      unselectedLabelStyle: CohenixTypography.labelSmall,
     ),
     
     // Input Decoration Theme
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: darkSurfaceVariant,                // Lighter charcoal fill
+      fillColor: CohenixColors.darkSurfaceVariant,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: darkBorder),
+        borderSide: BorderSide(color: CohenixColors.darkOutline),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: darkBorder),
+        borderSide: BorderSide(color: CohenixColors.darkOutline),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: primaryColor, width: 2),  // Deep navy focus
+        borderSide: BorderSide(color: CohenixColors.oceanBlue, width: 2),
       ),
-      labelStyle: TextStyle(color: darkTextSecondary),
-      hintStyle: TextStyle(color: darkTextTertiary),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: CohenixColors.error, width: 1),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: CohenixColors.error, width: 2),
+      ),
+      labelStyle: CohenixTypography.withSecondaryColor(CohenixTypography.bodyMedium, Brightness.dark),
+      hintStyle: CohenixTypography.withSecondaryColor(CohenixTypography.bodySmall, Brightness.dark),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
     ),
     
     // Elevated Button Theme
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: primaryColor,                // Deep Navy buttons
-        foregroundColor: Colors.white,                // White text on dark buttons
-        elevation: 0,
+        backgroundColor: CohenixColors.oceanBlue,
+        foregroundColor: Colors.white,
+        elevation: 4,
+        shadowColor: CohenixColors.oceanBlue.withOpacity(0.3),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
-        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        textStyle: CohenixTypography.buttonMedium,
+      ),
+    ),
+    
+    // Text Button Theme
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        foregroundColor: CohenixColors.oceanBlue,
+        textStyle: CohenixTypography.buttonMedium,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      ),
+    ),
+    
+    // Outlined Button Theme
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: CohenixColors.oceanBlue,
+        side: BorderSide(color: CohenixColors.oceanBlue),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        textStyle: CohenixTypography.buttonMedium,
       ),
     ),
     
     // Floating Action Button Theme
     floatingActionButtonTheme: FloatingActionButtonThemeData(
-      backgroundColor: primaryColor,                // Deep Navy FAB
-      foregroundColor: Colors.white,                // White icon on dark FAB
+      backgroundColor: CohenixColors.oceanBlue,
+      foregroundColor: Colors.white,
+      elevation: 6,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+    ),
+    
+    // Chip Theme
+    chipTheme: ChipThemeData(
+      backgroundColor: CohenixColors.darkSurfaceVariant,
+      selectedColor: CohenixColors.skyBlue.withOpacity(0.3),
+      disabledColor: CohenixColors.darkOutlineVariant,
+      labelStyle: CohenixTypography.labelMedium,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+      ),
+    ),
+    
+    // List Tile Theme
+    listTileTheme: ListTileThemeData(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      titleTextStyle: CohenixTypography.withPrimaryColor(CohenixTypography.titleMedium, Brightness.dark),
+      subtitleTextStyle: CohenixTypography.withSecondaryColor(CohenixTypography.bodySmall, Brightness.dark),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+      ),
+    ),
+    
+    // Divider Theme
+    dividerTheme: DividerThemeData(
+      color: CohenixColors.darkOutline,
+      thickness: 1,
+      space: 1,
+    ),
+    
+    // Snack Bar Theme
+    snackBarTheme: SnackBarThemeData(
+      backgroundColor: CohenixColors.darkSurfaceVariant,
+      contentTextStyle: CohenixTypography.withColor(CohenixTypography.bodyMedium, Colors.white),
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+      ),
     ),
   );
 

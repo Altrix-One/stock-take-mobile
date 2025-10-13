@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import 'package:provider/provider.dart';
 import 'package:stock_count/config.dart';
-import 'package:stock_count/constants/theme.dart';
 import 'package:stock_count/constants/app_theme.dart';
 import 'package:stock_count/screens/login.dart';
 import 'package:stock_count/screens/setup_dialog.dart';
-import 'package:stock_count/utilis/change_notifier.dart';
-import 'package:stock_count/utilis/sync_manager.dart'; // Import sync manager
 import 'package:stock_count/utilis/outbox_queue.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
@@ -62,12 +58,7 @@ void main() async {
     print("Periodic sync not supported on web platform");
   }
 
-  runApp(
-    ChangeNotifierProvider(
-      create: (context) => StockTakeNotifier(),
-      child: const MyApp(),
-    ),
-  );
+  runApp(const MyApp());
 }
 
 class MyApp extends StatefulWidget {
@@ -106,10 +97,10 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Stock Taking',
+      title: 'Cohenix ESS',
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system, // Automatically follow system theme
+      themeMode: ThemeMode.system,
       debugShowCheckedModeBanner: false,
       home: _isLoading
           ? const Scaffold(

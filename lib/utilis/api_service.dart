@@ -2,12 +2,10 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:stock_count/config.dart';
-import 'package:stock_count/screens/ess_home.dart';
+import 'package:stock_count/screens/modern_hr_dashboard.dart';
 import 'package:stock_count/utilis/dialog_messages.dart';
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
-import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:hive/hive.dart';
-import 'package:stock_count/utilis/sync_manager.dart'; // Import SyncManager to fetch user data
 
 class ApiService {
   // We'll use methods instead of constants since we need to fetch values asynchronously
@@ -83,12 +81,10 @@ class ApiService {
             // Store user details in Hive
             await authBox.put('userDetails', jsonEncode(userInfo));
 
-            // HR app - no need to fetch stock-specific data
-
-            // Navigate to HomeScreen
+            // HR app - navigate to modern dashboard
             Navigator.pushAndRemoveUntil(
               context,
-              MaterialPageRoute(builder: (context) => const ESSHomeScreen()),
+              MaterialPageRoute(builder: (context) => const ModernHRDashboard()),
               (Route<dynamic> route) => false,
             );
           } else {

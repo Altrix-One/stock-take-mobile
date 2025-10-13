@@ -4,7 +4,12 @@ This file provides guidance to WARP (warp.dev) when working with code in this re
 
 ## Overview
 
-Flutter mobile app for warehouse stock-taking that integrates with Frappe/ERPNext via the Nex Bridge backend. The app supports offline-first workflows (local SQLite via sqflite) with periodic background sync and uses OAuth (authorization code flow) for authentication.
+Flutter mobile app for warehouse stock-taking and HR operations that integrates with Frappe/ERPNext via the Nex Bridge backend. The app supports offline-first workflows (local SQLite via sqflite) with periodic background sync and uses OAuth (authorization code flow) for authentication.
+
+Key functionality:
+- **Stock-taking operations**: Warehouse inventory counting with offline support
+- **HR operations**: Employee self-service functions (leaves, claims, attendance) with offline queue processing
+- **Dual sync system**: Stock-taking sync (15-minute intervals) + HR outbox queue processing
 
 Key points from README:
 - Requires Nex Bridge on the Frappe/ERPNext server for API endpoints used by this app.
@@ -34,14 +39,24 @@ Key points from README:
   - Filter by test name: flutter test -n "partial or regex of test name"
 
 - Build
+  - Android APK (debug): flutter build apk
   - Android APK (release): flutter build apk --release
+  - iOS (debug): flutter build ios
   - iOS (release): flutter build ios --release
     - Note: Codesigning and Xcode setup required on macOS to produce an installable IPA.
+  - Generate launcher icons: flutter pub run flutter_launcher_icons:main
+
+- Development utilities
+  - Clean build cache: flutter clean
+  - Update dependencies: flutter pub upgrade
+  - Check for outdated packages: flutter pub outdated
+  - Generate code (if using build_runner): flutter packages pub run build_runner build
 
 ## Architecture
 
 - Entry point and app flow
-  - lib/main.dart initializes Hive, schedules a periodic sync (Timer every 15 minutes, non-web), and bootstraps Provider state via ChangeNotifierProvider(StockTakeNotifier).
+  - lib/main.dart initializes Hive, schedules periodic HR sync (Timer every 15 minutes, non-web), and bootstraps Provider state via ChangeNotifierProvider(StockTakeNotifier).
+  - startPeriodicHRSync() handles HR-focused sync operations including OutboxQueue.processQueue() for offline operations (leaves, claims, attendance).
   - AppConfig.isConfigured (lib/config.dart) controls first-run flow:
     - If not configured, a blocking SetupDialog (lib/screens/setup_dialog.dart) collects Base URL and Client ID and persists them.
     - Otherwise proceeds to LoginScreen (lib/screens/login.dart).
@@ -75,11 +90,14 @@ Key points from README:
     - syncFromServer(): fetches entries from server and upserts to local DB using server_id as linkage; updates related items accordingly.
     - fetchAndStoreWarehousesAndCompanies(): caches warehouses_by_company and companies in Hive.
     - fetchAndStoreAssignedItems(): caches assigned_items in Hive.
-  - Periodic scheduling: main.dart startPeriodicSync() sets a Timer.periodic for fetch-from-server and push-to-server cycles.
+  - OutboxQueue (lib/utilis/outbox_queue.dart)
+    - Handles offline HR operations queue processing (leaves, claims, attendance).
+    - Processes queued operations when connectivity is restored.
+  - Periodic scheduling: main.dart startPeriodicHRSync() sets a Timer.periodic for HR outbox queue processing every 15 minutes.
 
 - State management and UI
   - State management: Provider (lib/utilis/change_notifier.dart) via StockTakeNotifier for lightweight app state (countType, scannedData).
-  - Theming: lib/constants/theme.dart centralizes colors and text styles.
+  - Theming: Multiple theme systems including lib/constants/theme.dart, lib/constants/app_theme.dart, and lib/constants/modern_design_system.dart with Cohenix branding elements.
   - Screens:
     - LoginScreen (lib/screens/login.dart): Triggers OAuth login via ApiService, includes access to SetupDialog for editing config.
     - SetupDialog (lib/screens/setup_dialog.dart): Edits Base URL/Client ID and provides embedded instructions to configure OAuth in Frappe.

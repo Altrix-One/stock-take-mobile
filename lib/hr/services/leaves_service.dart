@@ -190,4 +190,20 @@ class LeavesService {
     } catch (_) {}
     return base;
   }
+
+  // Apply leave method for the modern leaves page
+  static Future<Map<String, dynamic>> applyLeave(Map<String, dynamic> payload) async {
+    // Queue leave application for offline processing first
+    try {
+      await OutboxQueue.addOperation('leave_application', payload);
+    } catch (_) {}
+    
+    // Try to submit immediately if online
+    try {
+      return await submitLeaveApplication(payload);
+    } catch (_) {
+      // Return success if queued for offline processing
+      return {'success': true, 'message': 'Leave application queued for submission'};
+    }
+  }
 }

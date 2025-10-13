@@ -94,4 +94,55 @@ class AttendanceService {
     });
     return res['message'] as Map<String, dynamic>? ?? {};
   }
+
+  // Get attendance history for the modern attendance page
+  static Future<List<dynamic>> myAttendanceHistory() async {
+    try {
+      final emp = await ProfileService.currentEmployee();
+      final res = await HrmsApiClient.postMethod('hrms.api.get_attendance_history', params: {
+        if (emp != null) 'employee': emp,
+      });
+      return res['message'] as List<dynamic>? ?? [];
+    } catch (_) {
+      return [];
+    }
+  }
+
+  // Check in method for attendance
+  static Future<Map<String, dynamic>> checkIn() async {
+    try {
+      final emp = await ProfileService.currentEmployee();
+      final res = await HrmsApiClient.postMethod('hrms.api.checkin', params: {
+        if (emp != null) 'employee': emp,
+        'time': DateTime.now().toIso8601String(),
+      });
+      return res['message'] as Map<String, dynamic>? ?? {};
+    } catch (_) {
+      return {};
+    }
+  }
+
+  // Check out method for attendance
+  static Future<Map<String, dynamic>> checkOut() async {
+    try {
+      final emp = await ProfileService.currentEmployee();
+      final res = await HrmsApiClient.postMethod('hrms.api.checkout', params: {
+        if (emp != null) 'employee': emp,
+        'time': DateTime.now().toIso8601String(),
+      });
+      return res['message'] as Map<String, dynamic>? ?? {};
+    } catch (_) {
+      return {};
+    }
+  }
+
+  // Request shift change
+  static Future<Map<String, dynamic>> requestShiftChange(Map<String, dynamic> payload) async {
+    try {
+      final res = await HrmsApiClient.postMethod('hrms.api.request_shift_change', params: payload);
+      return res['message'] as Map<String, dynamic>? ?? {};
+    } catch (_) {
+      return {};
+    }
+  }
 }

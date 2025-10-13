@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../constants/theme.dart';
+import '../constants/modern_design_system.dart';
 
 enum SectionHeaderStyle {
   standard,
@@ -86,7 +87,7 @@ class SectionHeader extends StatelessWidget {
           color: textPrimaryColor,
         );
         subtitleStyle = bodySmall.copyWith(color: textSecondaryColor);
-        paddingValue = padding ?? const EdgeInsets.symmetric(vertical: paddingMD);
+        paddingValue = padding ?? const EdgeInsets.symmetric(vertical: ModernDesignSystem.spaceXS);
         marginValue = margin ?? EdgeInsets.zero;
         break;
 
@@ -96,8 +97,8 @@ class SectionHeader extends StatelessWidget {
           color: textPrimaryColor,
         );
         subtitleStyle = bodyMedium.copyWith(color: textSecondaryColor);
-        paddingValue = padding ?? const EdgeInsets.symmetric(vertical: paddingLG);
-        marginValue = margin ?? const EdgeInsets.only(bottom: paddingMD);
+        paddingValue = padding ?? const EdgeInsets.symmetric(vertical: ModernDesignSystem.spaceSM);
+        marginValue = margin ?? const EdgeInsets.only(bottom: ModernDesignSystem.spaceXS);
         break;
 
       case SectionHeaderStyle.subtle:
@@ -106,7 +107,7 @@ class SectionHeader extends StatelessWidget {
           color: textSecondaryColor,
         );
         subtitleStyle = bodySmall.copyWith(color: textTertiaryColor);
-        paddingValue = padding ?? const EdgeInsets.symmetric(vertical: paddingSM);
+        paddingValue = padding ?? const EdgeInsets.symmetric(vertical: ModernDesignSystem.spaceXS);
         marginValue = margin ?? EdgeInsets.zero;
         break;
 
@@ -116,8 +117,8 @@ class SectionHeader extends StatelessWidget {
           color: textPrimaryColor,
         );
         subtitleStyle = bodySmall.copyWith(color: textSecondaryColor);
-        paddingValue = padding ?? const EdgeInsets.symmetric(vertical: paddingMD);
-        marginValue = margin ?? const EdgeInsets.symmetric(vertical: paddingSM);
+        paddingValue = padding ?? const EdgeInsets.symmetric(vertical: ModernDesignSystem.spaceXS);
+        marginValue = margin ?? const EdgeInsets.symmetric(vertical: ModernDesignSystem.spaceXS);
         break;
     }
 
