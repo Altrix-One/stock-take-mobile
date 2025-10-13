@@ -656,7 +656,9 @@ class _ModernApprovalsPageState extends State<ModernApprovalsPage> with TickerPr
     if (confirmed != true) return;
     
     try {
-      await ApprovalsService.approveRequest(approval['id'].toString());
+      // Determine doctype based on approval type or use a generic approach
+      final doctype = _getDocTypeFromApproval(approval);
+      await ApprovalsService.approveRequest(doctype, approval['id'].toString());
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -680,7 +682,9 @@ class _ModernApprovalsPageState extends State<ModernApprovalsPage> with TickerPr
     if (reason == null) return;
     
     try {
-      await ApprovalsService.rejectRequest(approval['id'].toString(), reason);
+      // Determine doctype based on approval type or use a generic approach
+      final doctype = _getDocTypeFromApproval(approval);
+      await ApprovalsService.rejectRequest(doctype, approval['id'].toString(), reason: reason);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -804,6 +808,28 @@ class _ModernApprovalsPageState extends State<ModernApprovalsPage> with TickerPr
         builder: (context) => ApprovalsHistoryPage(approvals: _myApprovals),
       ),
     );
+  }
+  
+  String _getDocTypeFromApproval(Map<String, dynamic> approval) {
+    final type = approval['type']?.toString().toLowerCase() ?? '';
+    
+    switch (type) {
+      case 'leave':
+        return 'Leave Application';
+      case 'expense':
+      case 'claim':
+        return 'Expense Claim';
+      case 'attendance':
+        return 'Attendance Request';
+      case 'overtime':
+        return 'Overtime Request';
+      default:
+        // Try to infer from other fields or use a default
+        if (approval['leave_type'] != null) return 'Leave Application';
+        if (approval['total_claimed_amount'] != null) return 'Expense Claim';
+        if (approval['from_date'] != null && approval['reason'] != null) return 'Attendance Request';
+        return 'Leave Application'; // Default fallback
+    }
   }
 }
 

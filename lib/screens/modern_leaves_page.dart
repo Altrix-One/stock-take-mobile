@@ -573,20 +573,42 @@ class _ApplyLeaveFormPageState extends State<ApplyLeaveFormPage> {
   DateTime? _fromDate;
   DateTime? _toDate;
   bool _isSubmitting = false;
+  bool _isLoadingLeaveTypes = true;
   
-  final List<String> _leaveTypes = [
-    'Annual Leave',
-    'Sick Leave',
-    'Casual Leave',
-    'Maternity Leave',
-    'Paternity Leave',
-    'Emergency Leave',
-  ];
+  List<String> _leaveTypes = [];
+  
+  @override
+  void initState() {
+    super.initState();
+    _loadLeaveTypes();
+  }
   
   @override
   void dispose() {
     _reasonController.dispose();
     super.dispose();
+  }
+  
+  Future<void> _loadLeaveTypes() async {
+    try {
+      final types = await LeavesService.leaveTypes();
+      setState(() {
+        _leaveTypes = types.map((type) => type.toString()).toList();
+        _isLoadingLeaveTypes = false;
+      });
+    } catch (e) {
+      setState(() {
+        _leaveTypes = [
+          'Annual Leave',
+          'Sick Leave', 
+          'Casual Leave',
+          'Maternity Leave',
+          'Paternity Leave',
+          'Emergency Leave',
+        ];
+        _isLoadingLeaveTypes = false;
+      });
+    }
   }
   
   @override
@@ -644,23 +666,32 @@ class _ApplyLeaveFormPageState extends State<ApplyLeaveFormPage> {
     return ModernHeroCard(
       title: 'Leave Type',
       icon: Icons.category,
-      child: DropdownButtonFormField<String>(
-        value: _selectedLeaveType,
-        decoration: InputDecoration(
-          hintText: 'Select leave type',
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(ModernDesignSystem.radiusSM),
-            borderSide: BorderSide(color: ModernDesignSystem.getBorderColor(Theme.of(context).brightness)),
-          ),
-          contentPadding: const EdgeInsets.all(ModernDesignSystem.spaceMD),
-        ),
-        items: _leaveTypes.map((type) => DropdownMenuItem(
-          value: type,
-          child: Text(type),
-        )).toList(),
-        onChanged: (value) => setState(() => _selectedLeaveType = value),
-        validator: (value) => value == null ? 'Please select a leave type' : null,
-      ),
+      child: _isLoadingLeaveTypes
+          ? Container(
+              padding: const EdgeInsets.all(ModernDesignSystem.spaceLG),
+              child: const Center(
+                child: CircularProgressIndicator(
+                  color: ModernDesignSystem.primaryTeal,
+                ),
+              ),
+            )
+          : DropdownButtonFormField<String>(
+              value: _selectedLeaveType,
+              decoration: InputDecoration(
+                hintText: 'Select leave type',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(ModernDesignSystem.radiusSM),
+                  borderSide: BorderSide(color: ModernDesignSystem.getBorderColor(Theme.of(context).brightness)),
+                ),
+                contentPadding: const EdgeInsets.all(ModernDesignSystem.spaceMD),
+              ),
+              items: _leaveTypes.map((type) => DropdownMenuItem(
+                value: type,
+                child: Text(type),
+              )).toList(),
+              onChanged: (value) => setState(() => _selectedLeaveType = value),
+              validator: (value) => value == null ? 'Please select a leave type' : null,
+            ),
     );
   }
   

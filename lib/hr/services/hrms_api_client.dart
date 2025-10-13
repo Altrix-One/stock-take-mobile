@@ -74,4 +74,57 @@ class HrmsApiClient {
     }
     throw Exception('GET $path failed ${res.statusCode}: ${res.body}');
   }
+
+  /// Fetch field options for a specific doctype field
+  /// This can be used to get dropdown options from Frappe backend dynamically
+  static Future<List<String>> getFieldOptions(String doctype, String fieldname) async {
+    try {
+      // Try to get from doctype meta first (which includes select options)
+      final meta = await postMethod('frappe.client.get_meta', params: {
+        'doctype': doctype,
+      });
+      
+      if (meta['message'] is Map) {
+        final fields = meta['message']['fields'] as List<dynamic>? ?? [];
+        for (final field in fields) {
+          if (field is Map && field['fieldname'] == fieldname) {
+            final options = field['options']?.toString();
+            if (options != null && options.isNotEmpty) {
+              return options.split('\n')
+                  .where((option) => option.trim().isNotEmpty)
+                  .map((option) => option.trim())
+                  .toList();
+            }
+            break;
+          }
+        }
+      }
+    } catch (e) {
+      print('Error fetching field options for $doctype.$fieldname: $e');
+    }
+    
+    // Return empty list if no options found
+    return [];
+  }
+
+  /// Get list of values from a doctype (like getting all Leave Types, Shift Types, etc.)
+  static Future<List<String>> getDocTypeValues(String doctype, {String nameField = 'name', String? filters, int limit = 100}) async {
+    try {
+      final result = await getJson('/api/resource/$doctype', query: {
+        'fields': '["$nameField"]',
+        if (filters != null) 'filters': filters,
+        'limit': limit.toString(),
+        'order_by': '$nameField asc',
+      });
+      
+      final data = result['data'] as List<dynamic>? ?? [];
+      return data
+          .map((item) => item is Map ? (item[nameField]?.toString() ?? '') : '')
+          .where((name) => name.isNotEmpty)
+          .toList();
+    } catch (e) {
+      print('Error fetching $doctype values: $e');
+      return [];
+    }
+  }
 }

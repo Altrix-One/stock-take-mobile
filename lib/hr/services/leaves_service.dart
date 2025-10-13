@@ -6,30 +6,51 @@ class LeavesService {
   static Future<List<dynamic>> myLeaves() async {
     try {
       final emp = await ProfileService.currentEmployee();
+      if (emp == null) {
+        print('No current employee found');
+        return [];
+      }
+      
       final res = await HrmsApiClient.postMethod('hrms.api.get_leave_applications', params: {
-        if (emp != null) 'employee': emp,
+        'employee': emp,
+        'limit': 100,
       });
+      
       final list = (res['message'] as List<dynamic>? ?? []).toList();
+      
       // Optimistically append queued local leaves
       try {
         final queued = await OutboxQueue.pendingLeaveRows();
         if (queued.isNotEmpty) list.insertAll(0, queued);
-      } catch (_) {}
+      } catch (e) {
+        print('Error getting queued leaves: $e');
+      }
+      
       return list;
-    } catch (_) {
-      // Fall back to only queued items if server call fails
-      try { return await OutboxQueue.pendingLeaveRows(); } catch (_) {}
-      return [];
+    } catch (e) {
+      print('Error getting leave applications: $e');
+      // Final fallback: only queued items
+      try {
+        return await OutboxQueue.pendingLeaveRows();
+      } catch (_) {
+        return [];
+      }
     }
   }
 
   static Future<List<dynamic>> teamLeaves() async {
     try {
       final emp = await ProfileService.currentEmployee();
-      final res = await HrmsApiClient.postMethod('hrms.api.get_leave_applications',
-          params: { 'for_approval': 1, if (emp != null) 'employee': emp });
+      if (emp == null) return [];
+      
+      final res = await HrmsApiClient.postMethod('hrms.api.get_leave_applications', params: {
+        'employee': emp,
+        'for_approval': true,
+        'limit': 100,
+      });
       return res['message'] as List<dynamic>? ?? [];
-    } catch (_) {
+    } catch (e) {
+      print('Error getting team leaves: $e');
       return [];
     }
   }
@@ -37,36 +58,40 @@ class LeavesService {
   static Future<Map<String, dynamic>> leaveBalance() async {
     try {
       final emp = await ProfileService.currentEmployee();
+      if (emp == null) {
+        print('No current employee found for leave balance');
+        return {};
+      }
+      
       final res = await HrmsApiClient.postMethod('hrms.api.get_leave_balance_map', params: {
-        if (emp != null) 'employee': emp,
+        'employee': emp,
       });
+      
       return (res['message'] as Map<String, dynamic>? ?? {});
-    } catch (_) {
+    } catch (e) {
+      print('Error getting leave balance: $e');
       return {};
     }
   }
 
   static Future<List<dynamic>> leaveTypes() async {
-    // Some servers may scope leave types per employee; include if available
     try {
       final emp = await ProfileService.currentEmployee();
+      if (emp == null) {
+        print('No current employee found for leave types');
+        return [];
+      }
+      
       final res = await HrmsApiClient.postMethod('hrms.api.get_leave_types', params: {
-        if (emp != null) 'employee': emp,
+        'employee': emp,
+        'date': DateTime.now().toIso8601String().split('T')[0],
       });
-      final msg = res['message'];
-      if (msg is List && msg.isNotEmpty) return msg;
-    } catch (_) {}
-    // Fallback to resource API
-    try {
-      final r = await HrmsApiClient.getJson('/api/resource/Leave%20Type', query: {
-        'fields': '["name"]',
-        'limit': '100',
-        'order_by': 'name asc',
-      });
-      final data = r['data'];
-      if (data is List) return data.map((e) => e is Map ? e['name'] ?? e.toString() : e.toString()).toList();
-    } catch (_) {}
-    return [];
+      
+      return (res['message'] as List<dynamic>? ?? []);
+    } catch (e) {
+      print('Error getting leave types: $e');
+      return [];
+    }
   }
   static Future<Map<String, dynamic>> getLeaveApprovalDetails(String employee) async {
     final res = await HrmsApiClient.postMethod('hrms.api.get_leave_approval_details', params: {
@@ -102,40 +127,48 @@ class LeavesService {
     return 0;
   }
 
-  // Submit leave application (create + optional submit) via a bridged method or direct resource API
+  // Submit leave application via standard Frappe API
   static Future<Map<String, dynamic>> submitLeaveApplication(Map<String, dynamic> payload) async {
-    // Try dedicated HRMS endpoint (if present on the server)
     try {
-      final res = await HrmsApiClient.postMethod('hrms.api.submit_leave_application', params: payload);
-      return res['message'] as Map<String, dynamic>? ?? {};
-    } catch (_) {
-      // Fallback: create via resource API then submit the document
-      // Map app payload to Frappe doc fields
-      final doc = <String, dynamic>{
-        'doctype': 'Leave Application',
-        if (payload['employee'] != null) 'employee': payload['employee'],
-        if (payload['leave_type'] != null) 'leave_type': payload['leave_type'],
-        if (payload['from_date'] != null) 'from_date': payload['from_date'],
-        if (payload['to_date'] != null) 'to_date': payload['to_date'],
-        if (payload['half_day'] == 1 || payload['half_day'] == true) 'half_day': 1,
-        if (payload['half_day_date'] != null) 'half_day_date': payload['half_day_date'],
-        if (payload['reason'] != null) 'description': payload['reason'],
-      };
-      // Insert draft
-      final inserted = await HrmsApiClient.postMethod('frappe.client.insert', params: {
-        'doc': doc,
-      });
-      final message = inserted['message'];
-      final name = (message is Map && message['name'] != null) ? message['name'].toString() : null;
-      if (name == null) return message as Map<String, dynamic>? ?? {};
-      // Submit (frappe.client.submit requires a 'doc' payload)
-      final submitted = await HrmsApiClient.postMethod('frappe.client.submit', params: {
+      print('Attempting to submit leave application with payload: $payload');
+      
+      // Create the leave application document
+      final createRes = await HrmsApiClient.postMethod('frappe.client.save', params: {
         'doc': {
           'doctype': 'Leave Application',
-          'name': name,
+          'employee': payload['employee'],
+          'leave_type': payload['leave_type'],
+          'from_date': payload['from_date'],
+          'to_date': payload['to_date'],
+          'total_leave_days': payload['total_leave_days'],
+          'description': payload['description'] ?? '',
+          if (payload['half_day'] == true) 'half_day': 1,
+          if (payload['half_day_date'] != null) 'half_day_date': payload['half_day_date'],
         }
       });
-      return submitted['message'] as Map<String, dynamic>? ?? {};
+      
+      final docName = createRes['message']?['name'];
+      if (docName == null) {
+        return {'success': false, 'message': 'Failed to create leave application'};
+      }
+      
+      // Submit the document
+      await HrmsApiClient.postMethod('frappe.client.submit', params: {
+        'doc': {
+          'doctype': 'Leave Application',
+          'name': docName,
+        }
+      });
+      
+      print('Successfully submitted leave application: $docName');
+      return {
+        'success': true,
+        'name': docName,
+        'message': 'Leave application submitted successfully',
+      };
+    } catch (e) {
+      print('Error submitting leave application: $e');
+      return {'success': false, 'message': e.toString()};
     }
   }
 
@@ -191,19 +224,51 @@ class LeavesService {
     return base;
   }
 
-  // Apply leave method for the modern leaves page
+  // Apply leave method for the modern leaves page - submit directly when online
   static Future<Map<String, dynamic>> applyLeave(Map<String, dynamic> payload) async {
-    // Queue leave application for offline processing first
-    try {
-      await OutboxQueue.addOperation('leave_application', payload);
-    } catch (_) {}
+    print('ApplyLeave called with payload: $payload');
     
     // Try to submit immediately if online
     try {
-      return await submitLeaveApplication(payload);
-    } catch (_) {
-      // Return success if queued for offline processing
-      return {'success': true, 'message': 'Leave application queued for submission'};
+      final result = await submitLeaveApplication(payload);
+      print('SubmitLeaveApplication result: $result');
+      
+      // If successful, return the result immediately
+      if (result['success'] == true) {
+        return {
+          'success': true, 
+          'message': 'Leave application submitted successfully',
+          'data': result,
+        };
+      }
+      
+      // If not successful, queue for offline processing
+      print('Direct submission failed, queuing for later submission...');
+      await OutboxQueue.addOperation('leave_application', payload);
+      return {
+        'success': true, 
+        'message': 'Leave application queued for submission',
+        'queued': true,
+      };
+    } catch (e) {
+      print('Leave submission failed: $e');
+      
+      // Queue for offline processing as fallback
+      try {
+        print('Queuing leave application for offline submission...');
+        await OutboxQueue.addOperation('leave_application', payload);
+        return {
+          'success': true, 
+          'message': 'Leave application queued for submission (offline)',
+          'queued': true,
+        };
+      } catch (queueError) {
+        print('Failed to queue leave application: $queueError');
+        return {
+          'success': false, 
+          'message': 'Failed to submit leave application: $e',
+        };
+      }
     }
   }
 }

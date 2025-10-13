@@ -4,6 +4,7 @@ import 'package:stock_count/hr/services/profile_service.dart';
 import 'package:stock_count/utilis/outbox_queue.dart';
 import 'package:stock_count/screens/queue_status.dart';
 import 'package:stock_count/screens/login.dart';
+import 'package:stock_count/widgets/modern_ui_components.dart';
 import 'package:hive/hive.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
@@ -179,65 +180,160 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    final brightness = Theme.of(context).brightness;
-
-    if (_loading) {
-      return Scaffold(
-        backgroundColor: ModernDesignSystem.getSurfaceVariant(brightness),
-        appBar: _buildModernAppBar(),
-        body: const Center(
-          child: CircularProgressIndicator(
-            color: ModernDesignSystem.primaryTeal,
+    return Scaffold(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              ModernDesignSystem.getSurfaceColor(Theme.of(context).brightness),
+              ModernDesignSystem.getSurfaceVariant(Theme.of(context).brightness),
+            ],
           ),
         ),
-      );
-    }
+        child: SafeArea(
+          child: Column(
+            children: [
+              _buildHeader(),
+              Expanded(
+                child: _loading 
+                    ? const ModernLoadingIndicator(message: 'Loading profile data...')
+                    : _employeeData == null
+                        ? const Center(
+                            child: Text(
+                              'No profile data found',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          )
+                        : Form(
+                            key: _formKey,
+                            child: RefreshIndicator(
+                              onRefresh: _loadEmployeeData,
+                              color: ModernDesignSystem.primaryTeal,
+                              child: ListView(
+                                padding: const EdgeInsets.all(ModernDesignSystem.spaceMD).copyWith(
+                                  bottom: ModernDesignSystem.spaceXL * 4,
+                                ),
+                                children: [
+                                  // Profile Header Card
+                                  _buildProfileHeader(),
+                                  ModernDesignSystem.verticalSpaceLG,
 
-    return Scaffold(
-      backgroundColor: ModernDesignSystem.getSurfaceVariant(brightness),
-      appBar: _buildModernAppBar(),
-      body: _employeeData == null
-          ? const Center(child: Text('No profile data found'))
-          : Form(
-              key: _formKey,
-              child: RefreshIndicator(
-                onRefresh: _loadEmployeeData,
-                color: ModernDesignSystem.primaryTeal,
-                child: ListView(
-                  padding: ModernDesignSystem.pagePadding.copyWith(
-                    top: ModernDesignSystem.spaceMD,
-                    bottom: ModernDesignSystem.spaceXL * 4,
+                                  // Quick Stats Row
+                                  _buildQuickStats(),
+                                  ModernDesignSystem.verticalSpaceLG,
+
+                                  // Profile Sections
+                                  if (!_editing) ...[
+                                    _buildPersonalInfoCard(),
+                                    ModernDesignSystem.verticalSpaceMD,
+                                    _buildCompanyInfoCard(),
+                                    ModernDesignSystem.verticalSpaceMD,
+                                  ],
+
+                                  _buildContactInfoCard(),
+                                  ModernDesignSystem.verticalSpaceMD,
+                                  _buildAddressInfoCard(),
+                                  ModernDesignSystem.verticalSpaceMD,
+                                  _buildEmergencyContactCard(),
+                                  ModernDesignSystem.verticalSpaceMD,
+                                  _buildFinancialInfoCard(),
+                                  ModernDesignSystem.verticalSpaceMD,
+                                  _buildSettingsCard(),
+                                ],
+                              ),
+                            ),
+                          ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.all(ModernDesignSystem.spaceMD),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'My Profile',
+                  style: ModernDesignSystem.displaySmall.copyWith(
+                    color: ModernDesignSystem.getTextPrimary(Theme.of(context).brightness),
+                    fontWeight: FontWeight.w700,
                   ),
-                  children: [
-                    // Profile Header Card
-                    _buildProfileHeader(brightness),
-                    ModernDesignSystem.verticalSpaceLG,
-
-                    // Quick Stats Row
-                    _buildQuickStats(brightness),
-                    ModernDesignSystem.verticalSpaceLG,
-
-                    // Profile Sections
-                    if (!_editing) ...[
-                      _buildPersonalInfoCard(brightness),
-                      ModernDesignSystem.verticalSpaceMD,
-                      _buildCompanyInfoCard(brightness),
-                      ModernDesignSystem.verticalSpaceMD,
-                    ],
-
-                    _buildContactInfoCard(brightness),
-                    ModernDesignSystem.verticalSpaceMD,
-                    _buildAddressInfoCard(brightness),
-                    ModernDesignSystem.verticalSpaceMD,
-                    _buildEmergencyContactCard(brightness),
-                    ModernDesignSystem.verticalSpaceMD,
-                    _buildFinancialInfoCard(brightness),
-                    ModernDesignSystem.verticalSpaceMD,
-                    _buildSettingsCard(brightness),
-                  ],
+                ),
+                ModernDesignSystem.verticalSpaceMicro,
+                Text(
+                  'Manage your personal information',
+                  style: ModernDesignSystem.bodyMedium.copyWith(
+                    color: ModernDesignSystem.getTextSecondary(Theme.of(context).brightness),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (!_editing && _employeeData != null)
+            Container(
+              margin: const EdgeInsets.only(left: ModernDesignSystem.spaceSM),
+              decoration: BoxDecoration(
+                color: ModernDesignSystem.primaryTeal.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(ModernDesignSystem.radiusSM),
+              ),
+              child: IconButton(
+                icon: const Icon(Icons.edit_outlined),
+                color: ModernDesignSystem.primaryTeal,
+                onPressed: () => setState(() => _editing = true),
+                tooltip: 'Edit Profile',
+              ),
+            ),
+          if (_editing) ...[
+            TextButton(
+              onPressed: _saving
+                  ? null
+                  : () {
+                      setState(() => _editing = false);
+                      _populateControllers();
+                    },
+              child: Text(
+                'Cancel',
+                style: ModernDesignSystem.labelLarge.copyWith(
+                  color: ModernDesignSystem.neutralMedium,
                 ),
               ),
             ),
+            ModernDesignSystem.horizontalSpaceXS,
+            TextButton(
+              onPressed: _saving ? null : _saveChanges,
+              child: _saving
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: ModernDesignSystem.primaryTeal,
+                      ),
+                    )
+                  : Text(
+                      'Save',
+                      style: ModernDesignSystem.labelLarge.copyWith(
+                        color: ModernDesignSystem.primaryTeal,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 
@@ -308,7 +404,8 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
     );
   }
 
-  Widget _buildProfileHeader(Brightness brightness) {
+  Widget _buildProfileHeader() {
+    final brightness = Theme.of(context).brightness;
     return Container(
       decoration: ModernDesignSystem.modernCardDecoration(brightness),
       child: Container(
@@ -452,7 +549,8 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
     );
   }
 
-  Widget _buildQuickStats(Brightness brightness) {
+  Widget _buildQuickStats() {
+    final brightness = Theme.of(context).brightness;
     return Row(
       children: [
         Expanded(child: _buildStatCard('Department', _employeeData!['department']?.toString(), Icons.business_outlined, brightness)),
@@ -499,7 +597,8 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
     );
   }
 
-  Widget _buildPersonalInfoCard(Brightness brightness) {
+  Widget _buildPersonalInfoCard() {
+    final brightness = Theme.of(context).brightness;
     return _buildModernCard(
       brightness: brightness,
       title: 'Personal Information',
@@ -516,7 +615,8 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
     );
   }
 
-  Widget _buildCompanyInfoCard(Brightness brightness) {
+  Widget _buildCompanyInfoCard() {
+    final brightness = Theme.of(context).brightness;
     return _buildModernCard(
       brightness: brightness,
       title: 'Company Information',
@@ -533,7 +633,8 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
     );
   }
 
-  Widget _buildContactInfoCard(Brightness brightness) {
+  Widget _buildContactInfoCard() {
+    final brightness = Theme.of(context).brightness;
     return _buildModernCard(
       brightness: brightness,
       title: 'Contact Information',
@@ -578,7 +679,8 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
     );
   }
 
-  Widget _buildAddressInfoCard(Brightness brightness) {
+  Widget _buildAddressInfoCard() {
+    final brightness = Theme.of(context).brightness;
     return _buildModernCard(
       brightness: brightness,
       title: 'Address Information',
@@ -610,7 +712,8 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
     );
   }
 
-  Widget _buildEmergencyContactCard(Brightness brightness) {
+  Widget _buildEmergencyContactCard() {
+    final brightness = Theme.of(context).brightness;
     return _buildModernCard(
       brightness: brightness,
       title: 'Emergency Contact',
@@ -641,7 +744,8 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
     );
   }
 
-  Widget _buildFinancialInfoCard(Brightness brightness) {
+  Widget _buildFinancialInfoCard() {
+    final brightness = Theme.of(context).brightness;
     return _buildModernCard(
       brightness: brightness,
       title: 'Financial Information',
@@ -685,7 +789,8 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
     );
   }
 
-  Widget _buildSettingsCard(Brightness brightness) {
+  Widget _buildSettingsCard() {
+    final brightness = Theme.of(context).brightness;
     return _buildModernCard(
       brightness: brightness,
       title: 'Settings',

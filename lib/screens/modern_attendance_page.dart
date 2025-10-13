@@ -746,20 +746,29 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
   
   Future<void> _checkIn() async {
     try {
-      await AttendanceService.checkIn();
+      final result = await AttendanceService.checkIn();
       if (mounted) {
+        final success = result['success'] == true;
+        final message = result['message']?.toString() ?? (success ? 'Checked in successfully' : 'Failed to check in');
+        
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Checked in successfully'),
-            backgroundColor: Colors.green,
+          SnackBar(
+            content: Text(success ? '✅ $message' : '❌ $message'),
+            backgroundColor: success ? Colors.green : Colors.red,
           ),
         );
-        _loadAttendanceData();
+        
+        if (success) {
+          _loadAttendanceData();
+        }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error checking in: $e')),
+          SnackBar(
+            content: Text('❌ Error checking in: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
@@ -767,20 +776,29 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
   
   Future<void> _checkOut() async {
     try {
-      await AttendanceService.checkOut();
+      final result = await AttendanceService.checkOut();
       if (mounted) {
+        final success = result['success'] == true;
+        final message = result['message']?.toString() ?? (success ? 'Checked out successfully' : 'Failed to check out');
+        
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Checked out successfully'),
-            backgroundColor: Colors.green,
+          SnackBar(
+            content: Text(success ? '✅ $message' : '❌ $message'),
+            backgroundColor: success ? Colors.green : Colors.red,
           ),
         );
-        _loadAttendanceData();
+        
+        if (success) {
+          _loadAttendanceData();
+        }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error checking out: $e')),
+          SnackBar(
+            content: Text('❌ Error checking out: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
@@ -896,18 +914,40 @@ class _ShiftRequestFormPageState extends State<ShiftRequestFormPage> {
   String? _currentShift;
   String? _requestedShift;
   bool _isSubmitting = false;
+  bool _isLoadingShifts = true;
   
-  final List<String> _shifts = [
-    'Morning Shift (9:00 AM - 5:00 PM)',
-    'Afternoon Shift (1:00 PM - 9:00 PM)',
-    'Night Shift (9:00 PM - 5:00 AM)',
-    'Flexible Hours',
-  ];
+  List<String> _shifts = [];
+  
+  @override
+  void initState() {
+    super.initState();
+    _loadShiftTypes();
+  }
   
   @override
   void dispose() {
     _reasonController.dispose();
     super.dispose();
+  }
+  
+  Future<void> _loadShiftTypes() async {
+    try {
+      final types = await AttendanceService.shiftTypes();
+      setState(() {
+        _shifts = types.map((type) => type.toString()).toList();
+        _isLoadingShifts = false;
+      });
+    } catch (e) {
+      setState(() {
+        _shifts = [
+          'Morning Shift (9:00 AM - 5:00 PM)',
+          'Afternoon Shift (1:00 PM - 9:00 PM)',
+          'Night Shift (9:00 PM - 5:00 AM)',
+          'Flexible Hours',
+        ];
+        _isLoadingShifts = false;
+      });
+    }
   }
   
   @override
@@ -999,6 +1039,21 @@ class _ShiftRequestFormPageState extends State<ShiftRequestFormPage> {
   }
   
   Widget _buildShiftSelectors() {
+    if (_isLoadingShifts) {
+      return ModernHeroCard(
+        title: 'Shift Information',
+        icon: Icons.schedule,
+        child: Container(
+          padding: const EdgeInsets.all(ModernDesignSystem.spaceLG),
+          child: const Center(
+            child: CircularProgressIndicator(
+              color: ModernDesignSystem.primaryTeal,
+            ),
+          ),
+        ),
+      );
+    }
+    
     return Column(
       children: [
         ModernHeroCard(
