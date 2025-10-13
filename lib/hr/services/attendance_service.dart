@@ -49,6 +49,32 @@ class AttendanceService {
       return res['message'] as List<dynamic>? ?? [];
     } catch (_) { return []; }
   }
+
+  static Future<List<dynamic>> shiftTypes() async {
+    try {
+      final res = await HrmsApiClient.postMethod('hrms.api.get_shift_types');
+      final msg = res['message'];
+      if (msg is List && msg.isNotEmpty) return msg;
+    } catch (_) {}
+    // Fallback to resource API
+    try {
+      final r = await HrmsApiClient.getJson('/api/resource/Shift%20Type', query: {
+        'fields': '["name"]',
+        'limit': '100',
+        'order_by': 'name asc',
+      });
+      final data = r['data'];
+      if (data is List) return data.map((e) => e is Map ? e['name'] ?? e.toString() : e.toString()).toList();
+    } catch (_) {}
+    // Final fallback to common shift types
+    return [
+      'Day Shift (9:00 AM - 5:00 PM)',
+      'Evening Shift (2:00 PM - 10:00 PM)',
+      'Night Shift (10:00 PM - 6:00 AM)',
+      'Flexible Shift',
+      'Other',
+    ];
+  }
   static Future<Map<String, dynamic>> submitAttendanceRequest(Map<String, dynamic> payload) async {
     final res = await HrmsApiClient.postMethod('hrms.api.submit_attendance_request', params: payload);
     return res['message'] as Map<String, dynamic>? ?? {};

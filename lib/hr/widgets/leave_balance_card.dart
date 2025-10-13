@@ -14,14 +14,14 @@ class LeaveBalanceCard extends StatelessWidget {
     return 0;
   }
 
-  // A small, modern accent palette
+  // Professional, cohesive color palette for leave types - using theme colors
   static const List<Color> _palette = [
-    Color(0xFF6C63FF), // indigo
-    Color(0xFF00BFA6), // teal
-    Color(0xFFFF6584), // pink/red
-    Color(0xFFFFB74D), // orange
-    Color(0xFF29B6F6), // light blue
-    Color(0xFFAB47BC), // purple
+    Color(0xFF0A3F75), // Deep Navy (Primary)
+    Color(0xFF34495E), // Steel Blue (Primary Light)
+    Color(0xFF27AE60), // Professional Green (Success)
+    Color(0xFFF39C12), // Warm Amber (Warning)
+    Color(0xFF3498DB), // Professional Blue (Info)
+    Color(0xFF041E3A), // Dark Navy (Primary Dark)
   ];
 
   // Build a stable color map based on order so each leave type gets a distinct color.
@@ -51,15 +51,15 @@ class LeaveBalanceCard extends StatelessWidget {
       return Icons.event_available_outlined;
     }
 
-    // Calculate remaining balance percentage for color coding
+    // Calculate remaining balance percentage for semantic color coding
     final remaining = allocated > 0 ? (balance / allocated).clamp(0.0, 1.0) : 1.0;
     Color progressColor;
     if (remaining >= 0.5) {
-      progressColor = Colors.green;
+      progressColor = const Color(0xFF27AE60);   // Professional Green - Good balance
     } else if (remaining >= 0.25) {
-      progressColor = Colors.orange;
+      progressColor = const Color(0xFFF39C12);   // Warm Amber - Warning low balance
     } else {
-      progressColor = Colors.redAccent;
+      progressColor = const Color(0xFFE74C3C);   // Professional Red - Critical low balance
     }
 
     return Container(

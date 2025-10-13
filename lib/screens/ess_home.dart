@@ -255,11 +255,11 @@ class _ESSHomeScreenState extends State<ESSHomeScreen> with TickerProviderStateM
                         child: Container(
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
-                            color: Colors.red.shade500,
+                            color: const Color(0xFFE74C3C),  // Professional red
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.red.withOpacity(0.3),
+                                color: const Color(0xFFE74C3C).withOpacity(0.3),
                                 blurRadius: 4,
                                 offset: const Offset(0, 1),
                               ),
@@ -423,17 +423,20 @@ class _DashboardPageState extends State<_DashboardPage> {
               child: Row(
                 children: [
                       Container(
-                        padding: const EdgeInsets.all(3),
+                        width: 18,
+                        height: 18,
                         decoration: BoxDecoration(
-                          color: theme.brightness == Brightness.dark
-                              ? Colors.blue.shade400
-                              : Colors.blue.shade600,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: const Icon(
-                          Icons.business_center_rounded,
+                          borderRadius: BorderRadius.circular(4),
                           color: Colors.white,
-                          size: 12,
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: Image.asset(
+                            'assets/images/cohenixess.png',
+                            width: 18,
+                            height: 18,
+                            fit: BoxFit.contain,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 6),
@@ -459,9 +462,21 @@ class _DashboardPageState extends State<_DashboardPage> {
                   if (parentState != null) {
                     // Profile tab index depends on whether approvals are visible
                     final profileIndex = widget.canApprove ? 5 : 4;
-                    parentState.setState(() {
-                      parentState._index = profileIndex;
-                    });
+                    if (parentState._index != profileIndex) {
+                      parentState.setState(() {
+                        parentState._index = profileIndex;
+                      });
+                      // Actually navigate to the page
+                      parentState._pageController.animateToPage(
+                        profileIndex,
+                        duration: const Duration(milliseconds: 350),
+                        curve: Curves.easeInOutCubic,
+                      );
+                      // Trigger animation
+                      parentState._animationController.forward().then((_) {
+                        parentState._animationController.reset();
+                      });
+                    }
                   }
                 },
                 child: Container(
@@ -607,13 +622,13 @@ class _DashboardPageState extends State<_DashboardPage> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: theme.brightness == Brightness.dark
-            ? theme.colorScheme.surfaceVariant.withOpacity(0.3)
-            : Colors.indigo.shade50,
+            ? theme.colorScheme.surfaceContainer.withOpacity(0.5)
+            : const Color(0xFFE8F0F3), // Subtle, light blue/gray background
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: theme.brightness == Brightness.dark
               ? theme.colorScheme.outline.withOpacity(0.4)
-              : Colors.indigo.shade200,
+              : const Color(0xFFC4D5DD), // Lighter, soft border
           width: 1.5,
         ),
       ),
@@ -625,9 +640,7 @@ class _DashboardPageState extends State<_DashboardPage> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: theme.brightness == Brightness.dark
-                      ? Colors.orange.shade400
-                      : Colors.orange.shade500,
+                  color: theme.colorScheme.primary, // Deep Navy Blue
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(
@@ -687,13 +700,13 @@ class _DashboardPageState extends State<_DashboardPage> {
       child: Container(
         decoration: BoxDecoration(
           color: theme.brightness == Brightness.dark
-              ? Colors.orange.shade900.withOpacity(0.2)
-              : Colors.orange.shade50,
+              ? const Color(0xFFFFC107).withOpacity(0.2)     // Professional amber background
+              : const Color(0xFFFFF8E1),                     // Light amber background
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: theme.brightness == Brightness.dark
-                ? Colors.orange.shade700.withOpacity(0.5)
-                : Colors.orange.shade200,
+                ? const Color(0xFFE69900).withOpacity(0.5)   // Deeper amber border dark
+                : const Color(0xFFFFC107).withOpacity(0.5),   // Standard amber border light
             width: 1.5,
           ),
         ),
@@ -704,9 +717,7 @@ class _DashboardPageState extends State<_DashboardPage> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: theme.brightness == Brightness.dark
-                      ? Colors.orange.shade500
-                      : Colors.orange.shade600,
+                  color: const Color(0xFFE69900),  // Deeper amber for icon background
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(
@@ -748,9 +759,7 @@ class _DashboardPageState extends State<_DashboardPage> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: theme.brightness == Brightness.dark
-                      ? Colors.orange.shade500
-                      : Colors.orange.shade600,
+                  color: const Color(0xFFE69900),  // Deeper amber for count badge
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: FittedBox(
@@ -805,7 +814,7 @@ class _DashboardPageState extends State<_DashboardPage> {
         const SizedBox(height: 6),
         GridView.count(
           crossAxisCount: 2,
-          childAspectRatio: 2.8,
+          childAspectRatio: 2.6,  // Better proportions for readability
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           mainAxisSpacing: 10,
@@ -815,7 +824,7 @@ class _DashboardPageState extends State<_DashboardPage> {
               context,
               'Apply Leave',
               Icons.event_note_rounded,
-              Colors.blue,
+              theme.colorScheme.primary,  // Deep Navy Blue - Primary action
               () async {
                 await Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => _ApplyLeavePage()),
@@ -827,7 +836,7 @@ class _DashboardPageState extends State<_DashboardPage> {
               context,
               'New Claim',
               Icons.receipt_long_rounded,
-              Colors.green,
+              const Color(0xFF4CAF50),  // Standard professional Green - Success/New
               () => Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => _NewClaimPage()),
               ),
@@ -836,7 +845,7 @@ class _DashboardPageState extends State<_DashboardPage> {
               context,
               'Attendance',
               Icons.access_time_rounded,
-              Colors.purple,
+              theme.colorScheme.primary,  // Deep Navy Blue - Primary action
               () => Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => _NewAttendanceRequestPage()),
               ),
@@ -845,7 +854,7 @@ class _DashboardPageState extends State<_DashboardPage> {
               context,
               'Shift Request',
               Icons.swap_horiz_rounded,
-              Colors.orange,
+              theme.colorScheme.primary,  // Deep Navy Blue - Primary action
               () => Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => _NewShiftRequestPage()),
               ),
@@ -872,27 +881,28 @@ class _DashboardPageState extends State<_DashboardPage> {
         borderRadius: BorderRadius.circular(12),
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
             color: theme.brightness == Brightness.dark
-                ? color.withOpacity(0.15)
-                : color.withOpacity(0.1),
+                ? color.withOpacity(0.12)
+                : color.withOpacity(0.08),  // More subtle background
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: theme.brightness == Brightness.dark
-                  ? color.withOpacity(0.4)
-                  : color.withOpacity(0.3),
+                  ? color.withOpacity(0.35)
+                  : color.withOpacity(0.25),  // More subtle border
               width: 1.5,
             ),
           ),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: theme.brightness == Brightness.dark
-                      ? Color.lerp(color, Colors.white, 0.2)!
-                      : color,
+                      ? color.withOpacity(0.9)  // Slightly transparent in dark mode
+                      : color,                   // Full opacity in light mode
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
@@ -903,23 +913,23 @@ class _DashboardPageState extends State<_DashboardPage> {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    title,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: theme.colorScheme.onSurface,
-                      fontSize: 11,
-                    ),
+                child: Text(
+                  title,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: theme.colorScheme.onSurface,
+                    fontSize: 13,  // Good readable size
+                    height: 1.2,   // Better line height
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
+              const SizedBox(width: 8),
               Icon(
                 Icons.arrow_forward_ios_rounded,
                 size: 14,
-                color: color.withOpacity(0.7),
+                color: theme.colorScheme.onSurfaceVariant.withOpacity(0.6),
               ),
             ],
           ),
@@ -3887,56 +3897,689 @@ class _ProfilePageState extends State<_ProfilePage> {
   }
 }
 
-class _NewAttendanceRequestPage extends StatefulWidget { @override State<_NewAttendanceRequestPage> createState()=>_NewAttendanceRequestPageState(); }
+class _NewAttendanceRequestPage extends StatefulWidget {
+  const _NewAttendanceRequestPage({super.key});
+  @override 
+  State<_NewAttendanceRequestPage> createState() => _NewAttendanceRequestPageState();
+}
+
 class _NewAttendanceRequestPageState extends State<_NewAttendanceRequestPage> {
   final _formKey = GlobalKey<FormState>();
-  String? _fromDate; String? _toDate; String? _reason;
-  Future<void> _pick(bool from) async {
+  String? _fromDate;
+  String? _toDate;
+  String? _reason;
+  bool _loading = false;
+
+  Future<void> _pickDate(bool isFromDate) async {
     final now = DateTime.now();
-    final p = await showDatePicker(context: context, firstDate: DateTime(now.year-2), lastDate: DateTime(now.year+2), initialDate: now);
-    if(p!=null) setState(()=> from? _fromDate=p.toIso8601String().substring(0,10) : _toDate=p.toIso8601String().substring(0,10));
+    final picked = await showDatePicker(
+      context: context,
+      firstDate: DateTime(now.year - 2),
+      lastDate: DateTime(now.year + 2),
+      initialDate: now,
+    );
+    if (picked != null) {
+      final dateString = picked.toIso8601String().substring(0, 10);
+      setState(() {
+        if (isFromDate) {
+          _fromDate = dateString;
+        } else {
+          _toDate = dateString;
+        }
+      });
+    }
   }
+
   Future<void> _submit() async {
-    if(!_formKey.currentState!.validate()) return;
-    await OutboxQueue.addOperation('attendance_request', {'from_date': _fromDate, 'to_date': _toDate, 'reason': _reason});
-    if(!mounted) return; ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Attendance request queued'))); Navigator.of(context).pop();
+    if (!_formKey.currentState!.validate()) return;
+    
+    setState(() => _loading = true);
+    
+    try {
+      await OutboxQueue.addOperation('attendance_request', {
+        'from_date': _fromDate,
+        'to_date': _toDate,
+        'reason': _reason,
+      });
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Attendance request submitted successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error submitting request: ${e.toString()}')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
-  @override Widget build(BuildContext context){
-    return Scaffold(appBar: AppBar(title: const Text('New Attendance Request')),
-      body: Form(key:_formKey, child: ListView(padding: const EdgeInsets.all(16), children: [
-        TextFormField(readOnly:true, controller: TextEditingController(text:_fromDate??''), decoration: const InputDecoration(labelText:'From Date'), onTap: ()=>_pick(true), validator: (v)=> (v==null||v.isEmpty)?'Required':null),
-        TextFormField(readOnly:true, controller: TextEditingController(text:_toDate??''), decoration: const InputDecoration(labelText:'To Date'), onTap: ()=>_pick(false), validator: (v)=> (v==null||v.isEmpty)?'Required':null),
-        TextFormField(decoration: const InputDecoration(labelText:'Reason'), onChanged: (v)=>_reason=v),
-        const SizedBox(height:16),
-        ElevatedButton(onPressed:_submit, child: const Text('Submit'))
-      ])));
+
+  Widget _buildFormSection({
+    required String title,
+    required IconData icon,
+    required Widget child,
+  }) {
+    final theme = Theme.of(context);
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainer?.withOpacity(0.5) ?? theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.colorScheme.outline.withOpacity(0.2),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                icon,
+                color: theme.colorScheme.primary,
+                size: 20,
+              ),
+              const SizedBox(width: 10),
+              Text(
+                title,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          child,
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Attendance Request'),
+        elevation: 0,
+        backgroundColor: theme.colorScheme.surface,
+      ),
+      body: Form(
+        key: _formKey,
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+          children: [
+            // Header Section
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    theme.colorScheme.primaryContainer.withOpacity(0.3),
+                    theme.colorScheme.primaryContainer.withOpacity(0.1),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: theme.colorScheme.primary.withOpacity(0.2),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          Icons.access_time_rounded,
+                          color: theme.colorScheme.onPrimary,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'New Attendance Request',
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: theme.colorScheme.onSurface,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Request attendance correction for specific dates',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 32),
+
+            // Date Selection Section
+            _buildFormSection(
+              title: 'Duration',
+              icon: Icons.date_range_rounded,
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          readOnly: true,
+                          controller: TextEditingController(text: _fromDate ?? ''),
+                          onTap: () => _pickDate(true),
+                          decoration: InputDecoration(
+                            labelText: 'From Date',
+                            labelStyle: const TextStyle(fontSize: 14),
+                            prefixIcon: const Icon(Icons.calendar_today_rounded),
+                            suffixIcon: const Icon(Icons.arrow_drop_down_rounded),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            filled: true,
+                            fillColor: theme.colorScheme.surfaceVariant?.withOpacity(0.3),
+                          ),
+                          validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: TextFormField(
+                          readOnly: true,
+                          controller: TextEditingController(text: _toDate ?? ''),
+                          onTap: () => _pickDate(false),
+                          decoration: InputDecoration(
+                            labelText: 'To Date',
+                            labelStyle: const TextStyle(fontSize: 14),
+                            prefixIcon: const Icon(Icons.event_rounded),
+                            suffixIcon: const Icon(Icons.arrow_drop_down_rounded),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            filled: true,
+                            fillColor: theme.colorScheme.surfaceVariant?.withOpacity(0.3),
+                          ),
+                          validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Reason Section
+            _buildFormSection(
+              title: 'Details',
+              icon: Icons.edit_note_rounded,
+              child: TextFormField(
+                maxLines: 3,
+                onChanged: (v) => _reason = v,
+                decoration: InputDecoration(
+                  labelText: 'Reason (Optional)',
+                  hintText: 'Please provide details about your attendance request...',
+                  prefixIcon: const Icon(Icons.notes_rounded),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  filled: true,
+                  fillColor: theme.colorScheme.surfaceVariant?.withOpacity(0.3),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 32),
+
+            // Loading indicator
+            if (_loading) ...[
+              Container(
+                padding: const EdgeInsets.all(16),
+                child: const LinearProgressIndicator(),
+              ),
+              const SizedBox(height: 16),
+            ],
+
+            // Submit Button
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: FilledButton.icon(
+                onPressed: _loading ? null : _submit,
+                icon: _loading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : const Icon(Icons.send_rounded),
+                label: Text(
+                  _loading ? 'Submitting...' : 'Submit Attendance Request',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                style: FilledButton.styleFrom(
+                  backgroundColor: theme.colorScheme.primary,
+                  foregroundColor: theme.colorScheme.onPrimary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
-class _NewShiftRequestPage extends StatefulWidget { @override State<_NewShiftRequestPage> createState()=>_NewShiftRequestPageState(); }
+class _NewShiftRequestPage extends StatefulWidget {
+  const _NewShiftRequestPage({super.key});
+  @override 
+  State<_NewShiftRequestPage> createState() => _NewShiftRequestPageState();
+}
+
 class _NewShiftRequestPageState extends State<_NewShiftRequestPage> {
   final _formKey = GlobalKey<FormState>();
-  String? _shift; String? _fromDate; String? _toDate; String? _reason;
-  Future<void> _pick(bool from) async {
+  String? _shift;
+  String? _fromDate;
+  String? _toDate;
+  String? _reason;
+  bool _loading = false;
+  bool _loadingMeta = true;
+  List<String> _shiftOptions = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMeta();
+  }
+
+  Future<void> _loadMeta() async {
+    try {
+      final types = await AttendanceService.shiftTypes();
+      final t = <String>[];
+      for (final x in types) {
+        if (x is Map && x['name'] != null) t.add(x['name'].toString());
+        else if (x is String) t.add(x);
+      }
+      if (!mounted) return;
+      setState(() {
+        _shiftOptions = t;
+        _loadingMeta = false;
+      });
+    } catch (_) { 
+      if(mounted) setState(()=>_loadingMeta=false); 
+    }
+  }
+
+  Future<void> _pickDate(bool isFromDate) async {
     final now = DateTime.now();
-    final p = await showDatePicker(context: context, firstDate: DateTime(now.year-2), lastDate: DateTime(now.year+2), initialDate: now);
-    if(p!=null) setState(()=> from? _fromDate=p.toIso8601String().substring(0,10) : _toDate=p.toIso8601String().substring(0,10));
+    final picked = await showDatePicker(
+      context: context,
+      firstDate: DateTime(now.year - 2),
+      lastDate: DateTime(now.year + 2),
+      initialDate: now,
+    );
+    if (picked != null) {
+      final dateString = picked.toIso8601String().substring(0, 10);
+      setState(() {
+        if (isFromDate) {
+          _fromDate = dateString;
+        } else {
+          _toDate = dateString;
+        }
+      });
+    }
   }
+
   Future<void> _submit() async {
-    if(!_formKey.currentState!.validate()) return;
-    await OutboxQueue.addOperation('shift_request', {'shift': _shift, 'from_date': _fromDate, 'to_date': _toDate, 'reason': _reason});
-    if(!mounted) return; ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Shift request queued'))); Navigator.of(context).pop();
+    if (!_formKey.currentState!.validate()) return;
+    
+    setState(() => _loading = true);
+    
+    try {
+      final payload = {
+        'shift': _shift,
+        'from_date': _fromDate,
+        'to_date': _toDate,
+        'reason': _reason,
+      };
+      
+      // Try immediate submission first
+      try {
+        await AttendanceService.submitShiftRequest(payload);
+        
+        // Success - show confirmation
+        if (mounted) {
+          await ProfessionalSuccessDialog.show(
+            context: context,
+            title: '✅ Shift Request Submitted',
+            message: 'Your shift request for "${_shift!}" from ${_fromDate!} to ${_toDate!} has been successfully submitted for approval.',
+          );
+          Navigator.of(context).pop();
+        }
+      } catch (e) {
+        // If immediate submission fails, add to queue as fallback
+        await OutboxQueue.addOperation('shift_request', payload);
+        
+        if (mounted) {
+          await ProfessionalSuccessDialog.show(
+            context: context,
+            title: '📤 Shift Request Queued',
+            message: 'Your shift request has been queued for submission. It will be automatically submitted when connection is restored.',
+          );
+          Navigator.of(context).pop();
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        await ProfessionalErrorDialog.show(
+          context: context,
+          title: '❌ Submission Failed',
+          errorMessage: 'Failed to submit shift request: ${e.toString()}',
+          canRetry: true,
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
-  @override Widget build(BuildContext context){
-    return Scaffold(appBar: AppBar(title: const Text('New Shift Request')),
-      body: Form(key:_formKey, child: ListView(padding: const EdgeInsets.all(16), children: [
-        TextFormField(decoration: const InputDecoration(labelText:'Shift'), onChanged: (v)=>_shift=v, validator: (v)=> (v==null||v.isEmpty)?'Required':null),
-        TextFormField(readOnly:true, controller: TextEditingController(text:_fromDate??''), decoration: const InputDecoration(labelText:'From Date'), onTap: ()=>_pick(true), validator: (v)=> (v==null||v.isEmpty)?'Required':null),
-        TextFormField(readOnly:true, controller: TextEditingController(text:_toDate??''), decoration: const InputDecoration(labelText:'To Date'), onTap: ()=>_pick(false), validator: (v)=> (v==null||v.isEmpty)?'Required':null),
-        TextFormField(decoration: const InputDecoration(labelText:'Reason'), onChanged: (v)=>_reason=v),
-        const SizedBox(height:16),
-        ElevatedButton(onPressed:_submit, child: const Text('Submit'))
-      ])));
+
+  Widget _buildFormSection({
+    required String title,
+    required IconData icon,
+    required Widget child,
+  }) {
+    final theme = Theme.of(context);
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainer?.withOpacity(0.5) ?? theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.colorScheme.outline.withOpacity(0.2),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                icon,
+                color: theme.colorScheme.primary,
+                size: 20,
+              ),
+              const SizedBox(width: 10),
+              Text(
+                title,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          child,
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Shift Request'),
+        elevation: 0,
+        backgroundColor: theme.colorScheme.surface,
+      ),
+      body: _loadingMeta 
+        ? const ProfessionalLoading(message: 'Loading shift types...')
+        : Form(
+        key: _formKey,
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+          children: [
+            // Header Section
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    theme.colorScheme.primaryContainer.withOpacity(0.3),
+                    theme.colorScheme.primaryContainer.withOpacity(0.1),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: theme.colorScheme.primary.withOpacity(0.2),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          Icons.swap_horiz_rounded,
+                          color: theme.colorScheme.onPrimary,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'New Shift Request',
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Request a change to your work shift schedule',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 32),
+
+            // Shift Details Section
+            _buildFormSection(
+              title: 'Shift Details',
+              icon: Icons.schedule_rounded,
+              child: DropdownButtonFormField<String>(
+                isExpanded: true,
+                value: _shift,
+                items: _shiftOptions.map((e) => DropdownMenuItem(
+                  value: e,
+                  child: Text(e),
+                )).toList(),
+                onChanged: (v) => setState(() => _shift = v),
+                decoration: InputDecoration(
+                  labelText: 'Requested Shift',
+                  prefixIcon: const Icon(Icons.work_outline_rounded),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  filled: true,
+                  fillColor: theme.colorScheme.surfaceVariant?.withOpacity(0.3),
+                ),
+                validator: (v) => v == null ? 'Please select a shift' : null,
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Date Selection Section
+            _buildFormSection(
+              title: 'Duration',
+              icon: Icons.date_range_rounded,
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          readOnly: true,
+                          controller: TextEditingController(text: _fromDate ?? ''),
+                          onTap: () => _pickDate(true),
+                          decoration: InputDecoration(
+                            labelText: 'From Date',
+                            labelStyle: const TextStyle(fontSize: 14),
+                            prefixIcon: const Icon(Icons.calendar_today_rounded),
+                            suffixIcon: const Icon(Icons.arrow_drop_down_rounded),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            filled: true,
+                            fillColor: theme.colorScheme.surfaceVariant?.withOpacity(0.3),
+                          ),
+                          validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: TextFormField(
+                          readOnly: true,
+                          controller: TextEditingController(text: _toDate ?? ''),
+                          onTap: () => _pickDate(false),
+                          decoration: InputDecoration(
+                            labelText: 'To Date',
+                            labelStyle: const TextStyle(fontSize: 14),
+                            prefixIcon: const Icon(Icons.event_rounded),
+                            suffixIcon: const Icon(Icons.arrow_drop_down_rounded),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            filled: true,
+                            fillColor: theme.colorScheme.surfaceVariant?.withOpacity(0.3),
+                          ),
+                          validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Reason Section
+            _buildFormSection(
+              title: 'Details',
+              icon: Icons.edit_note_rounded,
+              child: TextFormField(
+                maxLines: 3,
+                onChanged: (v) => _reason = v,
+                decoration: InputDecoration(
+                  labelText: 'Reason (Optional)',
+                  hintText: 'Please provide details about your shift change request...',
+                  prefixIcon: const Icon(Icons.notes_rounded),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  filled: true,
+                  fillColor: theme.colorScheme.surfaceVariant?.withOpacity(0.3),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 32),
+
+            // Loading indicator
+            if (_loading) ...[
+              Container(
+                padding: const EdgeInsets.all(16),
+                child: const LinearProgressIndicator(),
+              ),
+              const SizedBox(height: 16),
+            ],
+
+            // Submit Button
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: FilledButton.icon(
+                onPressed: _loading ? null : _submit,
+                icon: _loading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : const Icon(Icons.send_rounded),
+                label: Text(
+                  _loading ? 'Submitting...' : 'Submit Shift Request',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                style: FilledButton.styleFrom(
+                  backgroundColor: theme.colorScheme.primary,
+                  foregroundColor: theme.colorScheme.onPrimary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
