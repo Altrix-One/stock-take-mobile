@@ -2912,61 +2912,1061 @@ class _ClaimsPageState extends State<_ClaimsPage> {
   }
 }
 
-class _ApprovalsPage extends StatefulWidget { @override State<_ApprovalsPage> createState()=>_ApprovalsPageState(); }
+class _ApprovalsPage extends StatefulWidget {
+  @override
+  State<_ApprovalsPage> createState() => _ApprovalsPageState();
+}
+
 class _ApprovalsPageState extends State<_ApprovalsPage> {
-  List<dynamic> _leave=[], _att=[], _shift=[], _claims=[]; bool _loading=true;
-  @override void initState(){ super.initState(); _load(); }
-  Future<void> _load() async { try{
-    _leave = await LeavesService.teamLeaves();
-    _att = await AttendanceService.teamAttendanceRequests();
-    _shift = await AttendanceService.teamShiftRequests();
-    _claims = await ClaimsService.teamClaims();
-  } catch(_) {
-    _leave = []; _att = []; _shift = []; _claims = [];
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to load approvals')));
+  List<dynamic> _leaves = [];
+  List<dynamic> _attendance = [];
+  List<dynamic> _shifts = [];
+  List<dynamic> _claims = [];
+  bool _loading = true;
+  Timer? _autoTimer;
+  int _ticks = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+    // Auto-refresh for fresh approvals
+    _autoTimer = Timer.periodic(const Duration(seconds: 30), (t) {
+      if (!mounted) return;
+      _ticks++;
+      _load();
+      if (_ticks >= 10) {
+        t.cancel(); // Stop after 5 minutes
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _autoTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _load() async {
+    try {
+      final results = await Future.wait([
+        LeavesService.teamLeaves(),
+        AttendanceService.teamAttendanceRequests(),
+        AttendanceService.teamShiftRequests(),
+        ClaimsService.teamClaims(),
+      ]);
+      
+      if (!mounted) return;
+      setState(() {
+        _leaves = results[0];
+        _attendance = results[1];
+        _shifts = results[2];
+        _claims = results[3];
+        _loading = false;
+      });
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _leaves = [];
+          _attendance = [];
+          _shifts = [];
+          _claims = [];
+          _loading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to load approval requests'))
+        );
+      }
     }
-  } finally { if(mounted) setState(()=>_loading=false);} }
-  @override Widget build(BuildContext context){
-    return Scaffold(
-      appBar: AppBar(title: const Text('Approvals')),
-      body: _loading ? const Center(child:CircularProgressIndicator()) : RefreshIndicator(
-        onRefresh:_load,
-        child: ListView(padding: const EdgeInsets.fromLTRB(16, 24, 16, 16), children: [
-          const Text('Leaves for Approval', style: TextStyle(fontWeight: FontWeight.bold)),
-          if (_leave.isEmpty) const ListTile(title: Text('No leave approvals')),
-          for(final r in _leave) _approvalTile('Leave Application', r),
-          const SizedBox(height: 12),
-          const Text('Attendance for Approval', style: TextStyle(fontWeight: FontWeight.bold)),
-          if (_att.isEmpty) const ListTile(title: Text('No attendance approvals')),
-          for(final r in _att) _approvalTile('Attendance Request', r),
-          const SizedBox(height: 12),
-          const Text('Shift Requests for Approval', style: TextStyle(fontWeight: FontWeight.bold)),
-          if (_shift.isEmpty) const ListTile(title: Text('No shift approvals')),
-          for(final r in _shift) _approvalTile('Shift Request', r),
-          const SizedBox(height: 12),
-          const Text('Claims for Approval', style: TextStyle(fontWeight: FontWeight.bold)),
-          if (_claims.isEmpty) const ListTile(title: Text('No claim approvals')),
-          for(final r in _claims) _approvalTile('Expense Claim', r),
-        ]),
+  }
+
+  Widget _buildSummaryCard() {
+    final theme = Theme.of(context);
+    final totalPending = _leaves.length + _attendance.length + _shifts.length + _claims.length;
+    
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            theme.colorScheme.primaryContainer.withOpacity(0.3),
+            theme.colorScheme.primaryContainer.withOpacity(0.1),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.colorScheme.primary.withOpacity(0.2),
+        ),
       ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.verified_rounded,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Approval Dashboard',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Review and approve team requests',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatCard(
+                  'Total Pending',
+                  totalPending.toString(),
+                  Icons.pending_actions_rounded,
+                  theme.colorScheme.error,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildStatCard(
+                  'Categories',
+                  '4',
+                  Icons.category_rounded,
+                  theme.colorScheme.tertiary,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatCard(String label, String value, IconData icon, Color color) {
+    final theme = Theme.of(context);
+    
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: color.withOpacity(0.2),
+        ),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            icon,
+            color: color,
+            size: 20,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+          Text(
+            label,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontSize: 11,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildApprovalsSection() {
+    final widgets = <Widget>[];
+    
+    // Leave Applications
+    if (_leaves.isNotEmpty) {
+      widgets.addAll([
+        SectionHeader(
+          title: 'Leave Applications',
+          subtitle: '${_leaves.length} pending approval',
+          icon: Icons.event_note_rounded,
+          iconColor: Colors.blue,
+        ),
+        const SizedBox(height: 12),
+      ]);
+      
+      for (final request in _leaves) {
+        widgets.add(_buildApprovalCard(
+          'Leave Application',
+          request,
+          Icons.event_note_rounded,
+          Colors.blue,
+        ));
+      }
+      widgets.add(const SizedBox(height: 24));
+    }
+    
+    // Attendance Requests
+    if (_attendance.isNotEmpty) {
+      widgets.addAll([
+        SectionHeader(
+          title: 'Attendance Requests',
+          subtitle: '${_attendance.length} pending approval',
+          icon: Icons.access_time_rounded,
+          iconColor: Colors.orange,
+        ),
+        const SizedBox(height: 12),
+      ]);
+      
+      for (final request in _attendance) {
+        widgets.add(_buildApprovalCard(
+          'Attendance Request',
+          request,
+          Icons.access_time_rounded,
+          Colors.orange,
+        ));
+      }
+      widgets.add(const SizedBox(height: 24));
+    }
+    
+    // Shift Requests
+    if (_shifts.isNotEmpty) {
+      widgets.addAll([
+        SectionHeader(
+          title: 'Shift Requests',
+          subtitle: '${_shifts.length} pending approval',
+          icon: Icons.swap_horiz_rounded,
+          iconColor: Colors.purple,
+        ),
+        const SizedBox(height: 12),
+      ]);
+      
+      for (final request in _shifts) {
+        widgets.add(_buildApprovalCard(
+          'Shift Request',
+          request,
+          Icons.swap_horiz_rounded,
+          Colors.purple,
+        ));
+      }
+      widgets.add(const SizedBox(height: 24));
+    }
+    
+    // Expense Claims
+    if (_claims.isNotEmpty) {
+      widgets.addAll([
+        SectionHeader(
+          title: 'Expense Claims',
+          subtitle: '${_claims.length} pending approval',
+          icon: Icons.receipt_long_rounded,
+          iconColor: Colors.green,
+        ),
+        const SizedBox(height: 12),
+      ]);
+      
+      for (final request in _claims) {
+        widgets.add(_buildApprovalCard(
+          'Expense Claim',
+          request,
+          Icons.receipt_long_rounded,
+          Colors.green,
+        ));
+      }
+      widgets.add(const SizedBox(height: 24));
+    }
+    
+    // Empty state
+    if (widgets.isEmpty) {
+      widgets.add(
+        Container(
+          padding: const EdgeInsets.all(40),
+          child: Column(
+            children: [
+              Icon(
+                Icons.check_circle_outline_rounded,
+                size: 64,
+                color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'No Pending Approvals',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'All requests have been processed',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.7),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    
+    return widgets;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Team Approvals'),
+        elevation: 0,
+        backgroundColor: theme.colorScheme.surface,
+      ),
+      body: _loading
+          ? const ProfessionalLoading(message: 'Loading approval requests...')
+          : RefreshIndicator(
+              onRefresh: _load,
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                children: [
+                  _buildSummaryCard(),
+                  const SizedBox(height: 24),
+                  ..._buildApprovalsSection(),
+                  // Bottom padding for navigation
+                  const SizedBox(height: 100),
+                ],
+              ),
+            ),
+    );
+  }
+
+  Widget _buildApprovalCard(String type, dynamic request, IconData icon, Color color) {
+    final theme = Theme.of(context);
+    final requestMap = request as Map<String, dynamic>;
+    
+    // Extract common fields
+    final name = requestMap['name']?.toString() ?? 'Unknown';
+    final employee = requestMap['employee']?.toString() ?? 
+                    requestMap['employee_name']?.toString() ?? 'Unknown Employee';
+    final status = requestMap['status']?.toString() ?? 'Pending';
+    final dateRequested = requestMap['creation']?.toString() ?? 
+                         requestMap['date_requested']?.toString() ?? '';
+    
+    // Type-specific details
+    String subtitle = '';
+    String details = '';
+    
+    switch (type) {
+      case 'Leave Application':
+        final leaveType = requestMap['leave_type']?.toString() ?? '';
+        final fromDate = requestMap['from_date']?.toString() ?? '';
+        final toDate = requestMap['to_date']?.toString() ?? '';
+        final days = requestMap['total_leave_days']?.toString() ?? '';
+        subtitle = '$leaveType • $days day(s)';
+        details = '$fromDate to $toDate';
+        break;
+      case 'Attendance Request':
+        final reason = requestMap['reason']?.toString() ?? '';
+        final fromDate = requestMap['from_date']?.toString() ?? 
+                        requestMap['from_time']?.toString() ?? '';
+        final toDate = requestMap['to_date']?.toString() ?? 
+                      requestMap['to_time']?.toString() ?? '';
+        subtitle = reason.isNotEmpty ? reason : 'Attendance correction';
+        details = '$fromDate to $toDate';
+        break;
+      case 'Shift Request':
+        final shift = requestMap['shift']?.toString() ?? '';
+        final fromDate = requestMap['from_date']?.toString() ?? '';
+        final toDate = requestMap['to_date']?.toString() ?? '';
+        subtitle = shift.isNotEmpty ? shift : 'Shift change';
+        details = '$fromDate to $toDate';
+        break;
+      case 'Expense Claim':
+        final amount = requestMap['total_claimed_amount']?.toString() ?? 
+                      requestMap['grand_total']?.toString() ?? '0';
+        final purpose = requestMap['purpose']?.toString() ?? '';
+        subtitle = 'R $amount claimed';
+        details = purpose.isNotEmpty ? purpose : 'Expense reimbursement';
+        break;
+    }
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.colorScheme.outline.withOpacity(0.2),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: theme.colorScheme.shadow.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () => _showApprovalDialog(type, requestMap),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: color.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        icon,
+                        color: color,
+                        size: 16,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            employee,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: theme.colorScheme.onSurface,
+                            ),
+                          ),
+                          if (subtitle.isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              subtitle,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: color,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        status,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: Colors.orange,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                if (details.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    details,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => _handleApproval(type, name, false),
+                        icon: const Icon(Icons.close_rounded, size: 16),
+                        label: const Text('Reject'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.red,
+                          side: BorderSide(color: Colors.red.withOpacity(0.5)),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton.icon(
+                        onPressed: () => _handleApproval(type, name, true),
+                        icon: const Icon(Icons.check_rounded, size: 16),
+                        label: const Text('Approve'),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showApprovalDialog(String type, Map<String, dynamic> request) async {
+    final result = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (context) => ApprovalReviewDialog(
+        type: type,
+        request: request,
+      ),
+    );
+    
+    if (result != null) {
+      final name = result['name'] as String;
+      final approve = result['approve'] as bool;
+      final comment = result['comment'] as String?;
+      
+      await _processApproval(type, name, approve, comment);
+    }
+  }
+
+  Future<void> _handleApproval(String type, String name, bool approve) async {
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => ApprovalCommentDialog(
+        type: type,
+        name: name,
+        approve: approve,
+      ),
+    );
+    
+    if (result != null) {
+      await _processApproval(type, name, approve, result.isEmpty ? null : result);
+    }
+  }
+
+  Future<void> _processApproval(String type, String name, bool approve, String? comment) async {
+    try {
+      // Show loading
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(approve ? 'Approving request...' : 'Rejecting request...'),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+      
+      // Try immediate approval
+      try {
+        await AttendanceService.approvalAction(
+          doctype: type,
+          name: name,
+          approve: approve,
+          comment: comment,
+        );
+        
+        if (mounted) {
+          await ProfessionalSuccessDialog.show(
+            context: context,
+            title: approve ? '✅ Request Approved' : '❌ Request Rejected',
+            message: approve 
+                ? 'The $type has been approved successfully.'
+                : 'The $type has been rejected.',
+          );
+          _load(); // Refresh the list
+        }
+      } catch (e) {
+        // Fallback to queue
+        await OutboxQueue.addOperation('approval_action', {
+          'doctype': type,
+          'name': name,
+          'approve': approve,
+          if (comment != null) 'comment': comment,
+        });
+        
+        if (mounted) {
+          await ProfessionalSuccessDialog.show(
+            context: context,
+            title: '📤 Approval Queued',
+            message: 'Your approval decision has been queued for processing when connection is restored.',
+          );
+          _load(); // Refresh to remove from pending list
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        await ProfessionalErrorDialog.show(
+          context: context,
+          title: '❌ Approval Failed',
+          errorMessage: 'Failed to process approval: ${e.toString()}',
+          canRetry: true,
+        );
+      }
+    }
+  }
+}
+
+/// Dialog for quick approval with optional comment
+class ApprovalCommentDialog extends StatefulWidget {
+  final String type;
+  final String name;
+  final bool approve;
+  
+  const ApprovalCommentDialog({
+    super.key,
+    required this.type,
+    required this.name,
+    required this.approve,
+  });
+  
+  @override
+  State<ApprovalCommentDialog> createState() => _ApprovalCommentDialogState();
+}
+
+class _ApprovalCommentDialogState extends State<ApprovalCommentDialog> {
+  final _commentController = TextEditingController();
+  
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
+  }
+  
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isApprove = widget.approve;
+    
+    return AlertDialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      title: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: isApprove ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              isApprove ? Icons.check_circle_rounded : Icons.cancel_rounded,
+              color: isApprove ? Colors.green : Colors.red,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              isApprove ? 'Approve Request' : 'Reject Request',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+          ),
+        ],
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'You are about to ${isApprove ? "approve" : "reject"} this ${widget.type.toLowerCase()}.',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _commentController,
+            maxLines: 3,
+            decoration: InputDecoration(
+              labelText: 'Comment (Optional)',
+              hintText: isApprove 
+                  ? 'Add approval notes...' 
+                  : 'Provide reason for rejection...',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              filled: true,
+              fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(_commentController.text),
+          style: FilledButton.styleFrom(
+            backgroundColor: isApprove ? Colors.green : Colors.red,
+            foregroundColor: Colors.white,
+          ),
+          child: Text(isApprove ? 'Approve' : 'Reject'),
+        ),
+      ],
     );
   }
 }
 
-Widget _approvalTile(String doctype, dynamic row){
-  final name = (row is Map && row['name']!=null) ? row['name'].toString() : row.toString();
-  return ListTile(
-    title: Text(name),
-    trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-      IconButton(icon: const Icon(Icons.close, color: Colors.redAccent), onPressed: () async {
-        await OutboxQueue.addOperation('approval_action', {'doctype': doctype, 'name': name, 'approve': false});
-      }),
-      IconButton(icon: const Icon(Icons.check_circle, color: Colors.green), onPressed: () async {
-        await OutboxQueue.addOperation('approval_action', {'doctype': doctype, 'name': name, 'approve': true});
-      }),
-    ]),
-  );
+/// Detailed dialog for reviewing request before approval
+class ApprovalReviewDialog extends StatefulWidget {
+  final String type;
+  final Map<String, dynamic> request;
+  
+  const ApprovalReviewDialog({
+    super.key,
+    required this.type,
+    required this.request,
+  });
+  
+  @override
+  State<ApprovalReviewDialog> createState() => _ApprovalReviewDialogState();
+}
+
+class _ApprovalReviewDialogState extends State<ApprovalReviewDialog> {
+  final _commentController = TextEditingController();
+  
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
+  }
+  
+  Widget _buildDetailRow(String label, String value, {Color? valueColor}) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 80,
+            child: Text(
+              '$label:',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: valueColor ?? theme.colorScheme.onSurface,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final request = widget.request;
+    final name = request['name']?.toString() ?? 'Unknown';
+    final employee = request['employee']?.toString() ?? 
+                    request['employee_name']?.toString() ?? 'Unknown Employee';
+    final status = request['status']?.toString() ?? 'Pending';
+    
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Container(
+        constraints: const BoxConstraints(maxHeight: 600),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Header
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primaryContainer.withOpacity(0.3),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      _getIconForType(widget.type),
+                      color: Colors.white,
+                      size: 16,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.type,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                        Text(
+                          'Review for approval',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.close_rounded),
+                  ),
+                ],
+              ),
+            ),
+            
+            // Content
+            Flexible(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Employee Info
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        children: [
+                          _buildDetailRow('Employee', employee),
+                          _buildDetailRow('Request ID', name),
+                          _buildDetailRow('Status', status, valueColor: Colors.orange),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    // Request Details
+                    Text(
+                      'Request Details',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        children: _buildRequestDetails(),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    // Comment Section
+                    Text(
+                      'Approval Comment',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _commentController,
+                      maxLines: 3,
+                      decoration: InputDecoration(
+                        hintText: 'Add your approval comments here...',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        filled: true,
+                        fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            
+            // Actions
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(
+                    color: theme.colorScheme.outline.withOpacity(0.2),
+                  ),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => Navigator.of(context).pop({
+                        'name': name,
+                        'approve': false,
+                        'comment': _commentController.text.isEmpty ? null : _commentController.text,
+                      }),
+                      icon: const Icon(Icons.close_rounded, size: 16),
+                      label: const Text('Reject'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.red,
+                        side: BorderSide(color: Colors.red.withOpacity(0.5)),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: FilledButton.icon(
+                      onPressed: () => Navigator.of(context).pop({
+                        'name': name,
+                        'approve': true,
+                        'comment': _commentController.text.isEmpty ? null : _commentController.text,
+                      }),
+                      icon: const Icon(Icons.check_rounded, size: 16),
+                      label: const Text('Approve'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  IconData _getIconForType(String type) {
+    switch (type) {
+      case 'Leave Application':
+        return Icons.event_note_rounded;
+      case 'Attendance Request':
+        return Icons.access_time_rounded;
+      case 'Shift Request':
+        return Icons.swap_horiz_rounded;
+      case 'Expense Claim':
+        return Icons.receipt_long_rounded;
+      default:
+        return Icons.description_rounded;
+    }
+  }
+  
+  List<Widget> _buildRequestDetails() {
+    final request = widget.request;
+    final details = <Widget>[];
+    
+    switch (widget.type) {
+      case 'Leave Application':
+        final leaveType = request['leave_type']?.toString() ?? '';
+        final fromDate = request['from_date']?.toString() ?? '';
+        final toDate = request['to_date']?.toString() ?? '';
+        final days = request['total_leave_days']?.toString() ?? '';
+        final reason = request['description']?.toString() ?? request['reason']?.toString() ?? '';
+        final halfDay = request['half_day'] == 1 || request['half_day'] == true;
+        
+        if (leaveType.isNotEmpty) details.add(_buildDetailRow('Type', leaveType));
+        if (fromDate.isNotEmpty) details.add(_buildDetailRow('From', fromDate));
+        if (toDate.isNotEmpty) details.add(_buildDetailRow('To', toDate));
+        if (days.isNotEmpty) details.add(_buildDetailRow('Days', '$days day(s)'));
+        if (halfDay) details.add(_buildDetailRow('Half Day', 'Yes', valueColor: Colors.blue));
+        if (reason.isNotEmpty) details.add(_buildDetailRow('Reason', reason));
+        break;
+        
+      case 'Attendance Request':
+        final fromDate = request['from_date']?.toString() ?? request['from_time']?.toString() ?? '';
+        final toDate = request['to_date']?.toString() ?? request['to_time']?.toString() ?? '';
+        final reason = request['reason']?.toString() ?? '';
+        
+        if (fromDate.isNotEmpty) details.add(_buildDetailRow('From', fromDate));
+        if (toDate.isNotEmpty) details.add(_buildDetailRow('To', toDate));
+        if (reason.isNotEmpty) details.add(_buildDetailRow('Reason', reason));
+        break;
+        
+      case 'Shift Request':
+        final shift = request['shift']?.toString() ?? '';
+        final fromDate = request['from_date']?.toString() ?? '';
+        final toDate = request['to_date']?.toString() ?? '';
+        final reason = request['reason']?.toString() ?? '';
+        
+        if (shift.isNotEmpty) details.add(_buildDetailRow('Shift', shift));
+        if (fromDate.isNotEmpty) details.add(_buildDetailRow('From', fromDate));
+        if (toDate.isNotEmpty) details.add(_buildDetailRow('To', toDate));
+        if (reason.isNotEmpty) details.add(_buildDetailRow('Reason', reason));
+        break;
+        
+      case 'Expense Claim':
+        final amount = request['total_claimed_amount']?.toString() ?? request['grand_total']?.toString() ?? '0';
+        final purpose = request['purpose']?.toString() ?? '';
+        final postingDate = request['posting_date']?.toString() ?? '';
+        final company = request['company']?.toString() ?? '';
+        
+        if (amount != '0') details.add(_buildDetailRow('Amount', 'R $amount', valueColor: Colors.green));
+        if (purpose.isNotEmpty) details.add(_buildDetailRow('Purpose', purpose));
+        if (postingDate.isNotEmpty) details.add(_buildDetailRow('Date', postingDate));
+        if (company.isNotEmpty) details.add(_buildDetailRow('Company', company));
+        break;
+    }
+    
+    return details;
+  }
 }
 
 class _ProfilePage extends StatefulWidget {
