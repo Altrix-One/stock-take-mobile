@@ -43,6 +43,10 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
   // Access control
   bool _canApprove = false;
   
+  // Leave balance rotation
+  Timer? _leaveBalanceTimer;
+  int _currentLeaveTypeIndex = 0;
+  
   @override
   void initState() {
     super.initState();
@@ -53,11 +57,15 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
     OutboxQueue.events.listen((_) {
       if (mounted) _loadDashboardData();
     });
+    
+    // Start leave balance rotation timer
+    _startLeaveBalanceRotation();
   }
   
   @override
   void dispose() {
     _pageController.dispose();
+    _leaveBalanceTimer?.cancel();
     super.dispose();
   }
   
@@ -548,13 +556,7 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
         Row(
           children: [
             Expanded(
-              child: ModernStatsCard(
-                label: 'Leave Balance',
-                value: _getLeaveBalanceTotal(),
-                icon: Icons.event_available,
-                color: ModernDesignSystem.success,
-                isCompact: true,
-              ),
+              child: _buildRotatingLeaveBalanceCard(),
             ),
             ModernDesignSystem.horizontalSpaceXS,
             Expanded(
@@ -742,6 +744,223 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
     );
   }
   
+  void _startLeaveBalanceRotation() {
+    _leaveBalanceTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      if (mounted && _leaveBalance != null && _leaveBalance!.isNotEmpty) {
+        setState(() {
+          _currentLeaveTypeIndex = (_currentLeaveTypeIndex + 1) % _leaveBalance!.length;
+        });
+      }
+    });
+  }
+  
+  void _rotateLeaveBalanceManually() {
+    if (_leaveBalance != null && _leaveBalance!.isNotEmpty) {
+      setState(() {
+        _currentLeaveTypeIndex = (_currentLeaveTypeIndex + 1) % _leaveBalance!.length;
+      });
+    }
+  }
+  
+  Map<String, dynamic> _getCurrentLeaveBalanceData() {
+    if (_leaveBalance == null || _leaveBalance!.isEmpty) {
+      return {
+        'type': 'Leave Balance',
+        'balance': '0',
+        'color': ModernDesignSystem.success,
+      };
+    }
+    
+    final leaveTypes = _leaveBalance!.keys.toList();
+    if (_currentLeaveTypeIndex >= leaveTypes.length) {
+      _currentLeaveTypeIndex = 0;
+    }
+    
+    final currentType = leaveTypes[_currentLeaveTypeIndex];
+    final balanceData = _leaveBalance![currentType];
+    
+    String balance = '0';
+    if (balanceData is Map) {
+      // Try different field names for remaining balance
+      balance = (balanceData['remaining_leaves'] ?? 
+               balanceData['balance_leaves'] ?? 
+               balanceData['available_leaves'] ?? 
+               0).toString();
+    }
+    
+    return {
+      'type': currentType,
+      'balance': balance,
+      'color': _getLeaveTypeColor(currentType),
+    };
+  }
+  
+  Color _getLeaveTypeColor(String leaveType) {
+    final lowerType = leaveType.toLowerCase();
+    
+    // Match colors based on leave type
+    if (lowerType.contains('casual') || lowerType.contains('personal')) {
+      return ModernDesignSystem.primaryTeal;
+    } else if (lowerType.contains('sick') || lowerType.contains('medical')) {
+      return ModernDesignSystem.error;
+    } else if (lowerType.contains('annual') || lowerType.contains('vacation')) {
+      return ModernDesignSystem.success;
+    } else if (lowerType.contains('maternity') || lowerType.contains('paternity') || lowerType.contains('parental')) {
+      return ModernDesignSystem.primaryNavy;
+    } else if (lowerType.contains('emergency') || lowerType.contains('urgent')) {
+      return ModernDesignSystem.warning;
+    } else if (lowerType.contains('privilege') || lowerType.contains('earned')) {
+      return ModernDesignSystem.info;
+    } else if (lowerType.contains('compensatory') || lowerType.contains('comp')) {
+      return const Color(0xFF9C27B0); // Purple
+    } else if (lowerType.contains('study') || lowerType.contains('training')) {
+      return const Color(0xFF795548); // Brown
+    } else {
+      // Default color rotation for unknown types
+      final colors = [
+        ModernDesignSystem.primaryTeal,
+        ModernDesignSystem.success, 
+        ModernDesignSystem.warning,
+        ModernDesignSystem.info,
+        ModernDesignSystem.error,
+        ModernDesignSystem.primaryNavy,
+      ];
+      return colors[_currentLeaveTypeIndex % colors.length];
+    }
+  }
+  
+  Widget _buildRotatingLeaveBalanceCard() {
+    final currentData = _getCurrentLeaveBalanceData();
+    final currentColor = currentData['color'] as Color;
+    final brightness = Theme.of(context).brightness;
+    
+    return Container(
+      decoration: ModernDesignSystem.modernCardDecoration(brightness),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _rotateLeaveBalanceManually,
+          borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
+          child: Padding(
+            padding: const EdgeInsets.all(ModernDesignSystem.spaceCompactMD),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      padding: const EdgeInsets.all(ModernDesignSystem.spaceXS),
+                      decoration: BoxDecoration(
+                        color: currentColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(ModernDesignSystem.radiusXS),
+                      ),
+                      child: Stack(
+                        children: [
+                          AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 300),
+                            child: Icon(
+                              Icons.event_available,
+                              key: ValueKey(currentColor.value),
+                              color: currentColor,
+                              size: 16,
+                            ),
+                          ),
+                          // Stack indicator with dynamic color
+                          if (_leaveBalance != null && _leaveBalance!.length > 1)
+                            Positioned(
+                              top: -4,
+                              right: -4,
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 300),
+                                padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                                decoration: BoxDecoration(
+                                  color: currentColor,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  '${_currentLeaveTypeIndex + 1}/${_leaveBalance!.length}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 7,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    const Spacer(),
+                  ],
+                ),
+                
+                ModernDesignSystem.verticalSpaceMD,
+                
+                // Balance value with animation and dynamic color
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  transitionBuilder: (Widget child, Animation<double> animation) {
+                    return SlideTransition(
+                      position: Tween<Offset>(
+                        begin: const Offset(0.0, 0.3),
+                        end: Offset.zero,
+                      ).animate(animation),
+                      child: FadeTransition(
+                        opacity: animation,
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: Text(
+                    currentData['balance']!,
+                    key: ValueKey('${currentData['balance']}-${currentColor.value}'),
+                    style: ModernDesignSystem.headlineCompact.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: ModernDesignSystem.getTextPrimary(brightness),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                
+                ModernDesignSystem.verticalSpaceXS,
+                
+                // Leave type label with animation
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  transitionBuilder: (Widget child, Animation<double> animation) {
+                    return SlideTransition(
+                      position: Tween<Offset>(
+                        begin: const Offset(0.0, -0.3),
+                        end: Offset.zero,
+                      ).animate(animation),
+                      child: FadeTransition(
+                        opacity: animation,
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: Text(
+                    currentData['type']!,
+                    key: ValueKey(currentData['type']),
+                    style: ModernDesignSystem.captionCompact.copyWith(
+                      color: ModernDesignSystem.getTextSecondary(brightness),
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+  
   String _getLeaveBalanceTotal() {
     if (_leaveBalance == null) return '0';
     
@@ -762,7 +981,7 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
     for (final claim in _recentClaims) {
       if (claim is Map) {
         final status = claim['status']?.toString().toLowerCase() ?? '';
-        if (status == 'draft' || status == 'pending' || status == 'open') {
+        if (status == 'draft' || status == 'pending' || status == 'open' || status == 'applied' || status.contains('queued')) {
           pending++;
         }
       }
