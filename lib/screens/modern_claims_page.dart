@@ -54,17 +54,21 @@ class _ModernClaimsPageState extends State<ModernClaimsPage> with TickerProvider
         ClaimsService.claimsStats(),
       ]);
       
-      setState(() {
-        _myClaims = results[0] as List<dynamic>;
-        _claimCategories = results[1] as List<dynamic>;
-        _claimsStats = results[2] as Map<String, dynamic>;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _myClaims = results[0] as List<dynamic>;
+          _claimCategories = results[1] as List<dynamic>;
+          _claimsStats = results[2] as Map<String, dynamic>;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
       print('Error loading claims data: $e');
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
   

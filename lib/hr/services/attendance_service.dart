@@ -350,4 +350,71 @@ class AttendanceService {
       return {'checkedIn': false};
     }
   }
+  
+  // Calculate today's total working hours from all check-in/check-out pairs
+  static Future<Duration> getTodayTotalWorkingHours() async {
+    try {
+      final emp = await ProfileService.currentEmployee();
+      if (emp == null) return Duration.zero;
+      
+      final today = DateTime.now().toIso8601String().split('T')[0];
+      
+      // Get today's Employee Checkin records
+      final checkins = await HrmsApiClient.getJson('/api/resource/Employee Checkin', query: {
+        'fields': '["name","employee","time","log_type"]',
+        'filters': '[["Employee Checkin","employee","=","$emp"],["Employee Checkin","time",">=","$today 00:00:00"],["Employee Checkin","time","<=","$today 23:59:59"]]',
+        'order_by': 'time asc', // Ascending order for pairing
+        'limit': '50',
+      });
+      
+      final checkinData = checkins['data'] as List<dynamic>? ?? [];
+      
+      if (checkinData.isEmpty) {
+        return Duration.zero;
+      }
+      
+      // Sort records by time (oldest first for pairing)
+      checkinData.sort((a, b) {
+        final timeA = (a as Map)['time']?.toString() ?? '';
+        final timeB = (b as Map)['time']?.toString() ?? '';
+        return timeA.compareTo(timeB); // Ascending order
+      });
+      
+      Duration totalWorked = Duration.zero;
+      DateTime? currentCheckinTime;
+      
+      for (final record in checkinData) {
+        if (record is Map) {
+          final logType = record['log_type']?.toString();
+          final timeStr = record['time']?.toString();
+          
+          if (timeStr == null) continue;
+          
+          final time = DateTime.tryParse(timeStr);
+          if (time == null) continue;
+          
+          if (logType == 'IN') {
+            // Start a new working session
+            currentCheckinTime = time;
+          } else if (logType == 'OUT' && currentCheckinTime != null) {
+            // End the current working session
+            final sessionDuration = time.difference(currentCheckinTime);
+            totalWorked = totalWorked + sessionDuration;
+            currentCheckinTime = null; // Reset for next session
+          }
+        }
+      }
+      
+      // If currently checked in (no matching check-out), add time from last check-in to now
+      if (currentCheckinTime != null) {
+        final nowDuration = DateTime.now().difference(currentCheckinTime);
+        totalWorked = totalWorked + nowDuration;
+      }
+      
+      return totalWorked;
+    } catch (e) {
+      print('Error calculating today\'s working hours: $e');
+      return Duration.zero;
+    }
+  }
 }

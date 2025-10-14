@@ -55,18 +55,22 @@ class _ModernApprovalsPageState extends State<ModernApprovalsPage> with TickerPr
         ApprovalsService.approvalsStats(),
       ]);
       
-      setState(() {
-        _pendingApprovals = results[0] as List<dynamic>;
-        _myApprovals = results[1] as List<dynamic>;
-        _teamMembers = results[2] as List<dynamic>;
-        _approvalsStats = results[3] as Map<String, dynamic>;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _pendingApprovals = results[0] as List<dynamic>;
+          _myApprovals = results[1] as List<dynamic>;
+          _teamMembers = results[2] as List<dynamic>;
+          _approvalsStats = results[3] as Map<String, dynamic>;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
       print('Error loading approvals data: $e');
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
   
@@ -363,7 +367,11 @@ class _ModernApprovalsPageState extends State<ModernApprovalsPage> with TickerPr
     final id = approval['id']?.toString() ?? '';
     final type = approval['type']?.toString() ?? '';
     final title = approval['title']?.toString() ?? 'Approval Request';
-    final requesterName = approval['requester_name']?.toString() ?? 'Unknown';
+    // Try multiple fields for requester name with better fallbacks
+    final requesterName = approval['requester_name']?.toString() ?? 
+                          approval['employee_name']?.toString() ?? 
+                          approval['employee']?.toString() ?? 
+                          'Unknown Requester';
     final submittedDate = approval['submitted_date']?.toString() ?? '';
     final amount = approval['amount']?.toString();
     final status = approval['status']?.toString() ?? 'Pending';
@@ -406,10 +414,43 @@ class _ModernApprovalsPageState extends State<ModernApprovalsPage> with TickerPr
         break;
     }
     
+    // Build more detailed subtitle
+    String subtitle = 'Requested by $requesterName';
+    
+    // Add date information
+    final fromDate = approval['from_date']?.toString();
+    final toDate = approval['to_date']?.toString();
+    if (fromDate != null && toDate != null) {
+      subtitle += ' • $fromDate to $toDate';
+    } else if (submittedDate.isNotEmpty) {
+      subtitle += ' • Submitted: ${submittedDate.split(' ')[0]}'; // Just the date part
+    }
+    
+    // Add amount or days information
+    if (amount != null) {
+      try {
+        final value = double.parse(amount);
+        subtitle += ' • \$${value.toStringAsFixed(2)}';
+      } catch (e) {
+        subtitle += ' • $amount';
+      }
+    } else {
+      final totalDays = approval['total_leave_days']?.toString();
+      if (totalDays != null && totalDays.isNotEmpty) {
+        subtitle += ' • $totalDays days';
+      }
+    }
+    
+    // Add leave type for leave applications
+    final leaveType = approval['leave_type']?.toString();
+    if (leaveType != null && leaveType.isNotEmpty && !title.contains(leaveType)) {
+      subtitle += ' • $leaveType';
+    }
+    
     return ModernInfoCard(
-      title: title,
-      subtitle: 'Requested by $requesterName${amount != null ? ' • \$${double.parse(amount).toStringAsFixed(2)}' : ''}',
-      badge: type.toUpperCase(),
+      title: title.isNotEmpty ? title : _generateBetterTitle(approval, type, requesterName),
+      subtitle: subtitle,
+      badge: _getBadgeText(approval, type, status),
       badgeColor: typeColor,
       icon: typeIcon,
       iconColor: typeColor,
@@ -467,7 +508,7 @@ class _ModernApprovalsPageState extends State<ModernApprovalsPage> with TickerPr
     final thisMonth = DateTime.now();
     final thisMonthApproved = _approvalsStats['this_month_approved']?.toString() ?? '0';
     final thisMonthRejected = _approvalsStats['this_month_rejected']?.toString() ?? '0';
-    final avgResponseTime = _approvalsStats['avg_response_time']?.toString() ?? '0';
+    final myPendingCount = _approvalsStats['my_pending_count']?.toString() ?? '0';
     
     return ModernHeroCard(
       title: 'Monthly Overview',
@@ -479,10 +520,10 @@ class _ModernApprovalsPageState extends State<ModernApprovalsPage> with TickerPr
             child: _buildOverviewItem('Approved', thisMonthApproved, Icons.check_circle, ModernDesignSystem.success),
           ),
           Expanded(
-            child: _buildOverviewItem('Rejected', thisMonthRejected, Icons.cancel, ModernDesignSystem.error),
+            child: _buildOverviewItem('Pending', myPendingCount, Icons.pending_actions, ModernDesignSystem.warning),
           ),
           Expanded(
-            child: _buildOverviewItem('Avg Time (hrs)', avgResponseTime, Icons.schedule, ModernDesignSystem.info),
+            child: _buildOverviewItem('Rejected', thisMonthRejected, Icons.cancel, ModernDesignSystem.error),
           ),
         ],
       ),
@@ -603,8 +644,11 @@ class _ModernApprovalsPageState extends State<ModernApprovalsPage> with TickerPr
   }
   
   Widget _buildTeamMemberItem(Map<String, dynamic> member) {
-    final name = member['name']?.toString() ?? 'Unknown';
-    final role = member['role']?.toString() ?? '';
+    // Use employee_name for display, fallback to name if needed
+    final name = member['employee_name']?.toString() ?? 
+                 member['name']?.toString() ?? 'Unknown Employee';
+    final role = member['designation']?.toString() ?? 
+                 member['role']?.toString() ?? '';
     final department = member['department']?.toString() ?? '';
     final isActive = member['is_active'] ?? true;
     final lastSeen = member['last_seen']?.toString() ?? '';
@@ -810,6 +854,75 @@ class _ModernApprovalsPageState extends State<ModernApprovalsPage> with TickerPr
     );
   }
   
+  String _generateBetterTitle(Map<String, dynamic> approval, String type, String requesterName) {
+    final leaveType = approval['leave_type']?.toString();
+    final company = approval['company']?.toString();
+    final department = approval['department']?.toString();
+    
+    String baseTitle = 'Request';
+    
+    switch (type.toLowerCase()) {
+      case 'leave':
+        baseTitle = leaveType != null ? '$leaveType Request' : 'Leave Request';
+        break;
+      case 'expense':
+      case 'claim':
+        baseTitle = 'Expense Claim';
+        break;
+      case 'attendance':
+        baseTitle = 'Attendance Request';
+        break;
+      case 'overtime':
+        baseTitle = 'Overtime Request';
+        break;
+      default:
+        if (leaveType != null) {
+          baseTitle = '$leaveType Request';
+        } else if (approval.containsKey('total_claimed_amount')) {
+          baseTitle = 'Expense Claim';
+        }
+    }
+    
+    return baseTitle;
+  }
+  
+  String _getBadgeText(Map<String, dynamic> approval, String type, String status) {
+    // Show more specific badge text based on status and type
+    if (status.toLowerCase() == 'open' || status.toLowerCase() == 'pending') {
+      return 'PENDING';
+    } else if (status.toLowerCase() == 'approved' || status.toLowerCase() == 'sanctioned') {
+      return 'APPROVED';
+    } else if (status.toLowerCase() == 'rejected' || status.toLowerCase() == 'cancelled') {
+      return 'REJECTED';
+    } else {
+      return status.toUpperCase();
+    }
+  }
+  
+  String _generateHistoryTitle(Map<String, dynamic> approval, String type) {
+    final leaveType = approval['leave_type']?.toString();
+    final company = approval['company']?.toString();
+    
+    switch (type.toLowerCase()) {
+      case 'leave':
+        return leaveType != null ? '$leaveType Application' : 'Leave Application';
+      case 'expense':
+      case 'claim':
+        return 'Expense Claim';
+      case 'attendance':
+        return 'Attendance Correction';
+      case 'overtime':
+        return 'Overtime Request';
+      default:
+        if (leaveType != null) {
+          return '$leaveType Application';
+        } else if (approval.containsKey('total_claimed_amount')) {
+          return 'Expense Claim';
+        }
+        return 'Approval Request';
+    }
+  }
+
   String _getDocTypeFromApproval(Map<String, dynamic> approval) {
     final type = approval['type']?.toString().toLowerCase() ?? '';
     
@@ -895,18 +1008,57 @@ class ApprovalDetailsBottomSheet extends StatelessWidget {
               padding: const EdgeInsets.all(ModernDesignSystem.spaceMD),
               child: Column(
                 children: [
-                  _buildDetailItem(context, 'Type', approval['type']?.toString() ?? ''),
-                  _buildDetailItem(context, 'Title', approval['title']?.toString() ?? ''),
-                  _buildDetailItem(context, 'Requested By', approval['requester_name']?.toString() ?? ''),
-                  _buildDetailItem(context, 'Status', approval['status']?.toString() ?? ''),
-                  if (approval['amount'] != null)
-                    _buildDetailItem(context, 'Amount', '\$${double.parse(approval['amount']?.toString() ?? '0').toStringAsFixed(2)}'),
-                  if (approval['submitted_date'] != null)
-                    _buildDetailItem(context, 'Submitted Date', approval['submitted_date']?.toString() ?? ''),
-                  if (approval['description'] != null && approval['description'].toString().isNotEmpty)
-                    _buildDetailItem(context, 'Description', approval['description']?.toString() ?? ''),
+                  // Basic Information
+                  _buildDetailItem(context, 'Request Type', _getDisplayType(approval)),
+                  _buildDetailItem(context, 'Title/Subject', _getDisplayTitle(approval)),
+                  _buildDetailItem(context, 'Requested By', _getRequesterName(approval)),
+                  _buildDetailItem(context, 'Status', _getDisplayStatus(approval)),
+                  
+                  // Date Information
+                  if (_getSubmittedDate(approval).isNotEmpty)
+                    _buildDetailItem(context, 'Submitted Date', _getSubmittedDate(approval)),
+                  if (_getFromDate(approval).isNotEmpty)
+                    _buildDetailItem(context, 'From Date', _getFromDate(approval)),
+                  if (_getToDate(approval).isNotEmpty)
+                    _buildDetailItem(context, 'To Date', _getToDate(approval)),
+                  
+                  // Leave-specific information
+                  if (_getLeaveType(approval).isNotEmpty)
+                    _buildDetailItem(context, 'Leave Type', _getLeaveType(approval)),
+                  if (_getTotalDays(approval).isNotEmpty)
+                    _buildDetailItem(context, 'Total Days', _getTotalDays(approval)),
+                  
+                  // Financial Information
+                  if (_getAmount(approval).isNotEmpty)
+                    _buildDetailItem(context, 'Amount', _getAmount(approval)),
+                  if (_getTotalClaimedAmount(approval).isNotEmpty)
+                    _buildDetailItem(context, 'Claimed Amount', _getTotalClaimedAmount(approval)),
+                  
+                  // Description/Reason
+                  if (_getDescription(approval).isNotEmpty)
+                    _buildDetailItem(context, 'Description/Reason', _getDescription(approval)),
+                  
+                  // Additional Information
+                  if (_getCompany(approval).isNotEmpty)
+                    _buildDetailItem(context, 'Company', _getCompany(approval)),
+                  if (_getDepartment(approval).isNotEmpty)
+                    _buildDetailItem(context, 'Department', _getDepartment(approval)),
+                  
+                  // Approval workflow information
+                  if (_getApprover(approval).isNotEmpty)
+                    _buildDetailItem(context, 'Approver', _getApprover(approval)),
+                  if (_getApprovalDate(approval).isNotEmpty)
+                    _buildDetailItem(context, 'Approval Date', _getApprovalDate(approval)),
+                  if (_getRejectionReason(approval).isNotEmpty)
+                    _buildDetailItem(context, 'Rejection Reason', _getRejectionReason(approval)),
+                  
+                  // Attachments
                   if (approval['attachments'] != null && (approval['attachments'] as List).isNotEmpty)
                     _buildAttachmentsSection(context, approval['attachments'] as List),
+                    
+                  // Raw data for debugging (only show if other fields are empty)
+                  if (_shouldShowDebugInfo(approval))
+                    _buildDebugSection(context, approval),
                 ],
               ),
             ),
@@ -983,6 +1135,219 @@ class ApprovalDetailsBottomSheet extends StatelessWidget {
     );
   }
   
+  // Helper methods for extracting approval data
+  String _getDisplayType(Map<String, dynamic> approval) {
+    return approval['type']?.toString() ?? 
+           approval['doctype']?.toString() ?? 
+           _inferTypeFromFields(approval) ?? 
+           'Request';
+  }
+  
+  String _getDisplayTitle(Map<String, dynamic> approval) {
+    return approval['title']?.toString() ?? 
+           approval['subject']?.toString() ?? 
+           approval['name']?.toString() ?? 
+           _generateTitleFromType(approval) ?? 
+           'Approval Request';
+  }
+  
+  String _getRequesterName(Map<String, dynamic> approval) {
+    return approval['requester_name']?.toString() ?? 
+           approval['employee_name']?.toString() ?? 
+           approval['employee']?.toString() ?? 
+           approval['owner']?.toString() ?? 
+           approval['created_by']?.toString() ?? 
+           'Unknown Requester';
+  }
+  
+  String _getDisplayStatus(Map<String, dynamic> approval) {
+    final status = approval['status']?.toString() ?? 
+                  approval['workflow_state']?.toString() ?? 
+                  'Unknown';
+    return status.replaceAll('_', ' ').toUpperCase();
+  }
+  
+  String _getSubmittedDate(Map<String, dynamic> approval) {
+    return approval['submitted_date']?.toString() ?? 
+           approval['posting_date']?.toString() ?? 
+           approval['creation']?.toString() ?? 
+           '';
+  }
+  
+  String _getFromDate(Map<String, dynamic> approval) {
+    return approval['from_date']?.toString() ?? '';
+  }
+  
+  String _getToDate(Map<String, dynamic> approval) {
+    return approval['to_date']?.toString() ?? '';
+  }
+  
+  String _getLeaveType(Map<String, dynamic> approval) {
+    return approval['leave_type']?.toString() ?? '';
+  }
+  
+  String _getTotalDays(Map<String, dynamic> approval) {
+    final days = approval['total_leave_days']?.toString() ?? 
+                approval['total_days']?.toString() ?? '';
+    return days.isNotEmpty ? '$days days' : '';
+  }
+  
+  String _getAmount(Map<String, dynamic> approval) {
+    final amount = approval['amount']?.toString() ?? '';
+    if (amount.isNotEmpty) {
+      try {
+        final value = double.parse(amount);
+        return '\$${value.toStringAsFixed(2)}';
+      } catch (e) {
+        return amount;
+      }
+    }
+    return '';
+  }
+  
+  String _getTotalClaimedAmount(Map<String, dynamic> approval) {
+    final amount = approval['total_claimed_amount']?.toString() ?? 
+                  approval['grand_total']?.toString() ?? '';
+    if (amount.isNotEmpty) {
+      try {
+        final value = double.parse(amount);
+        return '\$${value.toStringAsFixed(2)}';
+      } catch (e) {
+        return amount;
+      }
+    }
+    return '';
+  }
+  
+  String _getDescription(Map<String, dynamic> approval) {
+    return approval['description']?.toString() ?? 
+           approval['reason']?.toString() ?? 
+           approval['remarks']?.toString() ?? 
+           approval['purpose']?.toString() ?? 
+           '';
+  }
+  
+  String _getCompany(Map<String, dynamic> approval) {
+    return approval['company']?.toString() ?? '';
+  }
+  
+  String _getDepartment(Map<String, dynamic> approval) {
+    return approval['department']?.toString() ?? '';
+  }
+  
+  String _getApprover(Map<String, dynamic> approval) {
+    return approval['approved_by']?.toString() ?? 
+           approval['leave_approver']?.toString() ?? 
+           approval['expense_approver']?.toString() ?? 
+           '';
+  }
+  
+  String _getApprovalDate(Map<String, dynamic> approval) {
+    return approval['approval_date']?.toString() ?? 
+           approval['approved_on']?.toString() ?? '';
+  }
+  
+  String _getRejectionReason(Map<String, dynamic> approval) {
+    return approval['rejection_reason']?.toString() ?? 
+           approval['rejection_remarks']?.toString() ?? '';
+  }
+  
+  String? _inferTypeFromFields(Map<String, dynamic> approval) {
+    if (approval.containsKey('leave_type')) return 'Leave Application';
+    if (approval.containsKey('total_claimed_amount')) return 'Expense Claim';
+    if (approval.containsKey('attendance_date')) return 'Attendance Request';
+    if (approval.containsKey('overtime_hours')) return 'Overtime Request';
+    return null;
+  }
+  
+  String? _generateTitleFromType(Map<String, dynamic> approval) {
+    final type = _getDisplayType(approval).toLowerCase();
+    final requester = _getRequesterName(approval);
+    
+    if (type.contains('leave')) {
+      final leaveType = _getLeaveType(approval);
+      return leaveType.isNotEmpty ? '$leaveType Request' : 'Leave Request';
+    } else if (type.contains('expense')) {
+      return 'Expense Claim Request';
+    } else if (type.contains('attendance')) {
+      return 'Attendance Correction Request';
+    } else if (type.contains('overtime')) {
+      return 'Overtime Request';
+    }
+    return null;
+  }
+  
+  bool _shouldShowDebugInfo(Map<String, dynamic> approval) {
+    // Show debug info if most display fields are empty
+    final hasBasicInfo = _getDisplayType(approval) != 'Request' ||
+                        _getDisplayTitle(approval) != 'Approval Request' ||
+                        _getRequesterName(approval) != 'Unknown Requester';
+    return !hasBasicInfo;
+  }
+  
+  Widget _buildDebugSection(BuildContext context, Map<String, dynamic> approval) {
+    return Container(
+      margin: const EdgeInsets.only(top: ModernDesignSystem.spaceLG),
+      padding: const EdgeInsets.all(ModernDesignSystem.spaceMD),
+      decoration: BoxDecoration(
+        color: ModernDesignSystem.warning.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(ModernDesignSystem.radiusSM),
+        border: Border.all(
+          color: ModernDesignSystem.warning.withOpacity(0.3),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.bug_report,
+                color: ModernDesignSystem.warning,
+                size: 16,
+              ),
+              ModernDesignSystem.horizontalSpaceXS,
+              Text(
+                'Debug Information',
+                style: ModernDesignSystem.labelMedium.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: ModernDesignSystem.warning,
+                ),
+              ),
+            ],
+          ),
+          ModernDesignSystem.verticalSpaceXS,
+          Text(
+            'Available fields: ${approval.keys.join(', ')}',
+            style: ModernDesignSystem.bodySmall.copyWith(
+              color: ModernDesignSystem.getTextSecondary(Theme.of(context).brightness),
+            ),
+          ),
+          if (approval.isNotEmpty) ...[
+            ModernDesignSystem.verticalSpaceXS,
+            ...approval.entries.take(10).map((entry) => Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Text(
+                '${entry.key}: ${entry.value?.toString() ?? 'null'}',
+                style: ModernDesignSystem.captionLarge.copyWith(
+                  color: ModernDesignSystem.getTextTertiary(Theme.of(context).brightness),
+                ),
+              ),
+            )),
+            if (approval.length > 10)
+              Text(
+                '... and ${approval.length - 10} more fields',
+                style: ModernDesignSystem.captionLarge.copyWith(
+                  color: ModernDesignSystem.getTextTertiary(Theme.of(context).brightness),
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _buildAttachmentsSection(BuildContext context, List attachments) {
     return Container(
       margin: const EdgeInsets.only(bottom: ModernDesignSystem.spaceMD),
@@ -1080,16 +1445,17 @@ class TeamMemberDetailsBottomSheet extends StatelessWidget {
               padding: const EdgeInsets.all(ModernDesignSystem.spaceMD),
               child: Column(
                 children: [
-                  _buildDetailItem(context, 'Name', member['name']?.toString() ?? ''),
-                  _buildDetailItem(context, 'Role', member['role']?.toString() ?? ''),
+                  _buildDetailItem(context, 'Full Name', member['employee_name']?.toString() ?? member['name']?.toString() ?? 'Unknown'),
+                  _buildDetailItem(context, 'Employee ID', member['name']?.toString() ?? ''),
+                  _buildDetailItem(context, 'Designation', member['designation']?.toString() ?? member['role']?.toString() ?? ''),
                   _buildDetailItem(context, 'Department', member['department']?.toString() ?? ''),
                   _buildDetailItem(context, 'Status', (member['is_active'] ?? true) ? 'Active' : 'Inactive'),
-                  if (member['email'] != null)
-                    _buildDetailItem(context, 'Email', member['email']?.toString() ?? ''),
-                  if (member['phone'] != null)
-                    _buildDetailItem(context, 'Phone', member['phone']?.toString() ?? ''),
+                  if (member['user_id'] != null)
+                    _buildDetailItem(context, 'Email', member['user_id']?.toString() ?? ''),
+                  if (member['date_of_joining'] != null)
+                    _buildDetailItem(context, 'Date of Joining', member['date_of_joining']?.toString() ?? ''),
                   if (member['last_seen'] != null)
-                    _buildDetailItem(context, 'Last Seen', member['last_seen']?.toString() ?? ''),
+                    _buildDetailItem(context, 'Last Seen', member['last_seen']?.toString() ?? 'Never'),
                   _buildDetailItem(context, 'Pending Requests', member['pending_requests']?.toString() ?? '0'),
                 ],
               ),
@@ -1199,14 +1565,68 @@ class ApprovalsHistoryPage extends StatelessWidget {
         break;
     }
     
+    // Build more detailed subtitle for history
+    String historySubtitle = 'By $requesterName';
+    
+    // Add date range for leave applications
+    final fromDate = approval['from_date']?.toString();
+    final toDate = approval['to_date']?.toString();
+    if (fromDate != null && toDate != null) {
+      historySubtitle += ' • $fromDate to $toDate';
+    }
+    
+    // Add amount or days
+    final amount = approval['amount']?.toString() ?? approval['total_claimed_amount']?.toString();
+    final totalDays = approval['total_leave_days']?.toString();
+    
+    if (amount != null && amount.isNotEmpty) {
+      try {
+        final value = double.parse(amount);
+        historySubtitle += ' • \$${value.toStringAsFixed(2)}';
+      } catch (e) {
+        historySubtitle += ' • $amount';
+      }
+    } else if (totalDays != null && totalDays.isNotEmpty) {
+      historySubtitle += ' • $totalDays days';
+    }
+    
+    // Add approval/rejection date
+    if (approvedDate.isNotEmpty) {
+      final actionText = status.toLowerCase() == 'approved' ? 'Approved' : 'Processed';
+      historySubtitle += ' • $actionText: ${approvedDate.split(' ')[0]}';
+    }
+    
     return ModernInfoCard(
-      title: title,
-      subtitle: 'By $requesterName${approvedDate.isNotEmpty ? ' • $approvedDate' : ''}',
+      title: title.isNotEmpty ? title : _generateHistoryTitle(approval, type),
+      subtitle: historySubtitle,
       badge: status.toUpperCase(),
       badgeColor: statusColor,
       icon: statusIcon,
       iconColor: statusColor,
       margin: const EdgeInsets.only(bottom: ModernDesignSystem.spaceSM),
     );
+  }
+  
+  String _generateHistoryTitle(Map<String, dynamic> approval, String type) {
+    final leaveType = approval['leave_type']?.toString();
+    
+    switch (type.toLowerCase()) {
+      case 'leave':
+        return leaveType != null ? '$leaveType Application' : 'Leave Application';
+      case 'expense':
+      case 'claim':
+        return 'Expense Claim';
+      case 'attendance':
+        return 'Attendance Correction';
+      case 'overtime':
+        return 'Overtime Request';
+      default:
+        if (leaveType != null) {
+          return '$leaveType Application';
+        } else if (approval.containsKey('total_claimed_amount')) {
+          return 'Expense Claim';
+        }
+        return 'Approval Request';
+    }
   }
 }

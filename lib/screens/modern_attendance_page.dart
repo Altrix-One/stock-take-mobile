@@ -53,7 +53,7 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
     
     // Update working time every second
     _workingTimeTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted && _isCheckedIn) _updateWorkingTime();
+      if (mounted) _updateWorkingTime();
     });
   }
   
@@ -82,22 +82,26 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
         await _checkAttendanceStatus();
       }
       
-      setState(() {
-        _attendanceHistory = results[0] as List<dynamic>;
-        _shiftRequests = results[1] as List<dynamic>;
-        _isLoading = false;
-        print('Attendance history updated: ${_attendanceHistory.length} records');
-        print('Shift requests updated: ${_shiftRequests.length} records');
-      });
+      if (mounted) {
+        setState(() {
+          _attendanceHistory = results[0] as List<dynamic>;
+          _shiftRequests = results[1] as List<dynamic>;
+          _isLoading = false;
+          print('Attendance history updated: ${_attendanceHistory.length} records');
+          print('Shift requests updated: ${_shiftRequests.length} records');
+        });
+      }
       
       if (_isCheckedIn && _lastCheckInTime != null) {
         _updateWorkingTime();
       }
     } catch (e) {
       print('Error loading attendance data: $e');
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
   
@@ -109,27 +113,31 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
       // Get today's attendance status using the updated service
       final result = await AttendanceService.getTodayAttendanceStatus();
       
-      setState(() {
-        final newCheckedInState = result['checkedIn'] == true;
-        print('CheckAttendanceStatus: Setting _isCheckedIn to $newCheckedInState');
-        print('CheckAttendanceStatus result: $result');
-        _isCheckedIn = newCheckedInState;
-        _lastCheckInTime = result['lastCheckinTime'] != null 
-            ? DateTime.tryParse(result['lastCheckinTime'].toString())
-            : null;
-        _lastCheckOutTime = result['lastCheckoutTime'] != null 
-            ? DateTime.tryParse(result['lastCheckoutTime'].toString())
-            : null;
-      });
+      if (mounted) {
+        setState(() {
+          final newCheckedInState = result['checkedIn'] == true;
+          print('CheckAttendanceStatus: Setting _isCheckedIn to $newCheckedInState');
+          print('CheckAttendanceStatus result: $result');
+          _isCheckedIn = newCheckedInState;
+          _lastCheckInTime = result['lastCheckinTime'] != null 
+              ? DateTime.tryParse(result['lastCheckinTime'].toString())
+              : null;
+          _lastCheckOutTime = result['lastCheckoutTime'] != null 
+              ? DateTime.tryParse(result['lastCheckoutTime'].toString())
+              : null;
+        });
+      }
       
       return _isCheckedIn;
     } catch (e) {
       print('Error checking attendance status: $e');
-      setState(() {
-        _isCheckedIn = false;
-        _lastCheckInTime = null;
-        _lastCheckOutTime = null;
-      });
+      if (mounted) {
+        setState(() {
+          _isCheckedIn = false;
+          _lastCheckInTime = null;
+          _lastCheckOutTime = null;
+        });
+      }
       return false;
     }
   }
@@ -137,9 +145,11 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
   Future<void> _refreshHistoryData() async {
     if (_isLoadingHistory) return; // Prevent multiple simultaneous refreshes
     
-    setState(() {
-      _isLoadingHistory = true;
-    });
+    if (mounted) {
+      setState(() {
+        _isLoadingHistory = true;
+      });
+    }
     
     try {
       print('Refreshing attendance history data...');
@@ -162,11 +172,18 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
     }
   }
   
-  void _updateWorkingTime() {
-    if (_isCheckedIn && _lastCheckInTime != null) {
-      setState(() {
-        _workingTime = DateTime.now().difference(_lastCheckInTime!);
-      });
+  void _updateWorkingTime() async {
+    try {
+      // Get today's total working hours from all check-in/check-out sessions
+      final totalWorked = await AttendanceService.getTodayTotalWorkingHours();
+      
+      if (mounted) {
+        setState(() {
+          _workingTime = totalWorked;
+        });
+      }
+    } catch (e) {
+      print('Error updating working time: $e');
     }
   }
   
@@ -897,11 +914,13 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
         if (success) {
           // Immediately update UI state
           print('Check-in successful: Setting _isCheckedIn to true immediately');
-          setState(() {
-            _isCheckedIn = true;
-            _lastCheckInTime = DateTime.now();
-            _lastCheckOutTime = null;
-          });
+          if (mounted) {
+            setState(() {
+              _isCheckedIn = true;
+              _lastCheckInTime = DateTime.now();
+              _lastCheckOutTime = null;
+            });
+          }
           // Wait a moment before refreshing from server to allow the check-in to be processed
           Future.delayed(const Duration(seconds: 2), () {
             if (mounted) _loadAttendanceData();
@@ -937,12 +956,13 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
         if (success) {
           // Immediately update UI state
           print('Check-out successful: Setting _isCheckedIn to false immediately');
-          setState(() {
-            _isCheckedIn = false;
-            _lastCheckOutTime = DateTime.now();
-            // Reset working time
-            _workingTime = Duration.zero;
-          });
+          if (mounted) {
+            setState(() {
+              _isCheckedIn = false;
+              _lastCheckOutTime = DateTime.now();
+              // Don't reset working time - keep the total for the day
+            });
+          }
           // Wait a moment before refreshing from server to allow the check-out to be processed
           Future.delayed(const Duration(seconds: 2), () {
             if (mounted) _loadAttendanceData();
@@ -1090,20 +1110,24 @@ class _ShiftRequestFormPageState extends State<ShiftRequestFormPage> {
   Future<void> _loadShiftTypes() async {
     try {
       final types = await AttendanceService.shiftTypes();
-      setState(() {
-        _shifts = types.map((type) => type.toString()).toList();
-        _isLoadingShifts = false;
-      });
+      if (mounted) {
+        setState(() {
+          _shifts = types.map((type) => type.toString()).toList();
+          _isLoadingShifts = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _shifts = [
-          'Morning Shift (9:00 AM - 5:00 PM)',
-          'Afternoon Shift (1:00 PM - 9:00 PM)',
-          'Night Shift (9:00 PM - 5:00 AM)',
-          'Flexible Hours',
-        ];
-        _isLoadingShifts = false;
-      });
+      if (mounted) {
+        setState(() {
+          _shifts = [
+            'Morning Shift (9:00 AM - 5:00 PM)',
+            'Afternoon Shift (1:00 PM - 9:00 PM)',
+            'Night Shift (9:00 PM - 5:00 AM)',
+            'Flexible Hours',
+          ];
+          _isLoadingShifts = false;
+        });
+      }
     }
   }
   
@@ -1230,7 +1254,11 @@ class _ShiftRequestFormPageState extends State<ShiftRequestFormPage> {
               value: shift,
               child: Text(shift),
             )).toList(),
-            onChanged: (value) => setState(() => _currentShift = value),
+            onChanged: (value) {
+              if (mounted) {
+                setState(() => _currentShift = value);
+              }
+            },
             validator: (value) => value == null ? 'Please select current shift' : null,
           ),
         ),
@@ -1254,7 +1282,11 @@ class _ShiftRequestFormPageState extends State<ShiftRequestFormPage> {
               value: shift,
               child: Text(shift),
             )).toList(),
-            onChanged: (value) => setState(() => _requestedShift = value),
+            onChanged: (value) {
+              if (mounted) {
+                setState(() => _requestedShift = value);
+              }
+            },
             validator: (value) => value == null ? 'Please select requested shift' : null,
           ),
         ),
@@ -1308,7 +1340,9 @@ class _ShiftRequestFormPageState extends State<ShiftRequestFormPage> {
     );
     
     if (date != null) {
-      setState(() => _selectedDate = date);
+      if (mounted) {
+        setState(() => _selectedDate = date);
+      }
     }
   }
   
@@ -1321,7 +1355,9 @@ class _ShiftRequestFormPageState extends State<ShiftRequestFormPage> {
       return;
     }
     
-    setState(() => _isSubmitting = true);
+    if (mounted) {
+      setState(() => _isSubmitting = true);
+    }
     
     try {
       await AttendanceService.requestShiftChange({
@@ -1347,7 +1383,9 @@ class _ShiftRequestFormPageState extends State<ShiftRequestFormPage> {
         );
       }
     } finally {
-      setState(() => _isSubmitting = false);
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
     }
   }
 }

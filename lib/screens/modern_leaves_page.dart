@@ -58,24 +58,30 @@ class _ModernLeavesPageState extends State<ModernLeavesPage> with TickerProvider
         _checkApprovalRights(),
       ]);
       
-      setState(() {
-        _leaveBalance = results[0] as Map<String, dynamic>?;
-        _myLeaves = results[1] as List<dynamic>;
-        _leaveTypes = results[2] as List<dynamic>;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _leaveBalance = results[0] as Map<String, dynamic>?;
+          _myLeaves = results[1] as List<dynamic>;
+          _leaveTypes = results[2] as List<dynamic>;
+          _isLoading = false;
+        });
+      }
       
       if (_canApprove) {
         final teamLeaves = await LeavesService.teamLeaves();
-        setState(() {
-          _teamLeaves = teamLeaves;
-        });
+        if (mounted) {
+          setState(() {
+            _teamLeaves = teamLeaves;
+          });
+        }
       }
     } catch (e) {
       print('Error loading leaves data: $e');
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
   
@@ -638,22 +644,26 @@ class _ApplyLeaveFormPageState extends State<ApplyLeaveFormPage> {
   Future<void> _loadLeaveTypes() async {
     try {
       final types = await LeavesService.leaveTypes();
-      setState(() {
-        _leaveTypes = types.map((type) => type.toString()).toList();
-        _isLoadingLeaveTypes = false;
-      });
+      if (mounted) {
+        setState(() {
+          _leaveTypes = types.map((type) => type.toString()).toList();
+          _isLoadingLeaveTypes = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _leaveTypes = [
-          'Annual Leave',
-          'Sick Leave', 
-          'Casual Leave',
-          'Maternity Leave',
-          'Paternity Leave',
-          'Emergency Leave',
-        ];
-        _isLoadingLeaveTypes = false;
-      });
+      if (mounted) {
+        setState(() {
+          _leaveTypes = [
+            'Annual Leave',
+            'Sick Leave', 
+            'Casual Leave',
+            'Maternity Leave',
+            'Paternity Leave',
+            'Emergency Leave',
+          ];
+          _isLoadingLeaveTypes = false;
+        });
+      }
     }
   }
   
@@ -735,7 +745,11 @@ class _ApplyLeaveFormPageState extends State<ApplyLeaveFormPage> {
                 value: type,
                 child: Text(type),
               )).toList(),
-              onChanged: (value) => setState(() => _selectedLeaveType = value),
+            onChanged: (value) {
+              if (mounted) {
+                setState(() => _selectedLeaveType = value);
+              }
+            },
               validator: (value) => value == null ? 'Please select a leave type' : null,
             ),
     );
@@ -751,7 +765,11 @@ class _ApplyLeaveFormPageState extends State<ApplyLeaveFormPage> {
             child: _buildDateSelector(
               'From Date',
               _fromDate,
-              (date) => setState(() => _fromDate = date),
+              (date) {
+                if (mounted) {
+                  setState(() => _fromDate = date);
+                }
+              },
             ),
           ),
           ModernDesignSystem.horizontalSpaceMD,
@@ -759,7 +777,11 @@ class _ApplyLeaveFormPageState extends State<ApplyLeaveFormPage> {
             child: _buildDateSelector(
               'To Date',
               _toDate,
-              (date) => setState(() => _toDate = date),
+              (date) {
+                if (mounted) {
+                  setState(() => _toDate = date);
+                }
+              },
             ),
           ),
         ],
@@ -884,7 +906,9 @@ class _ApplyLeaveFormPageState extends State<ApplyLeaveFormPage> {
       return;
     }
     
-    setState(() => _isSubmitting = true);
+    if (mounted) {
+      setState(() => _isSubmitting = true);
+    }
     
     try {
       await LeavesService.applyLeave({
@@ -910,7 +934,9 @@ class _ApplyLeaveFormPageState extends State<ApplyLeaveFormPage> {
         );
       }
     } finally {
-      setState(() => _isSubmitting = false);
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
     }
   }
 }
