@@ -41,11 +41,11 @@ class ModernActionCard extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
           child: Padding(
-            padding: const EdgeInsets.all(ModernDesignSystem.spaceMD),
+            padding: const EdgeInsets.all(ModernDesignSystem.spaceCompactMD),
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(ModernDesignSystem.spaceSM),
+                  padding: const EdgeInsets.all(ModernDesignSystem.spaceXS),
                   decoration: BoxDecoration(
                     color: actionColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(ModernDesignSystem.radiusSM),
@@ -53,32 +53,37 @@ class ModernActionCard extends StatelessWidget {
                   child: Icon(
                     icon,
                     color: actionColor,
-                    size: 24,
+                    size: 20,
                   ),
                 ),
                 
-                ModernDesignSystem.horizontalSpaceMD,
+                ModernDesignSystem.horizontalSpaceXS,
                 
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
                         title,
-                        style: ModernDesignSystem.bodyLarge.copyWith(
+                        style: ModernDesignSystem.bodyCompactMedium.copyWith(
                           color: isDestructive
                               ? ModernDesignSystem.error
                               : ModernDesignSystem.getTextPrimary(brightness),
                           fontWeight: FontWeight.w600,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       if (subtitle != null) ...[
-                        ModernDesignSystem.verticalSpaceMicro,
+                        const SizedBox(height: 2),
                         Text(
                           subtitle!,
-                          style: ModernDesignSystem.bodySmall.copyWith(
+                          style: ModernDesignSystem.captionCompact.copyWith(
                             color: ModernDesignSystem.getTextSecondary(brightness),
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ],
@@ -135,8 +140,8 @@ class ModernStatsCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
           child: Padding(
             padding: EdgeInsets.all(isCompact 
-                ? ModernDesignSystem.spaceMD 
-                : ModernDesignSystem.spaceLG),
+                ? ModernDesignSystem.spaceCompactMD 
+                : ModernDesignSystem.spaceMD),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -172,24 +177,28 @@ class ModernStatsCard extends StatelessWidget {
                 Text(
                   value,
                   style: isCompact 
-                      ? ModernDesignSystem.headlineSmall.copyWith(
+                      ? ModernDesignSystem.headlineCompact.copyWith(
                           fontWeight: FontWeight.w700,
                           color: ModernDesignSystem.getTextPrimary(brightness),
                         )
-                      : ModernDesignSystem.headlineLarge.copyWith(
+                      : ModernDesignSystem.headlineSmall.copyWith(
                           fontWeight: FontWeight.w700,
                           color: ModernDesignSystem.getTextPrimary(brightness),
                         ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 
                 ModernDesignSystem.verticalSpaceXS,
                 
                 Text(
                   label,
-                  style: ModernDesignSystem.bodySmall.copyWith(
+                  style: ModernDesignSystem.captionCompact.copyWith(
                     color: ModernDesignSystem.getTextSecondary(brightness),
                     fontWeight: FontWeight.w500,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 
                 if (subtitle != null) ...[
@@ -251,14 +260,14 @@ class ModernInfoCard extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
           child: Padding(
-            padding: const EdgeInsets.all(ModernDesignSystem.spaceMD),
+            padding: const EdgeInsets.all(ModernDesignSystem.spaceCompactMD),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(ModernDesignSystem.spaceSM),
+                      padding: const EdgeInsets.all(ModernDesignSystem.spaceXS),
                       decoration: BoxDecoration(
                         color: cardIconColor.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(ModernDesignSystem.radiusSM),
@@ -266,25 +275,28 @@ class ModernInfoCard extends StatelessWidget {
                       child: Icon(
                         icon,
                         color: cardIconColor,
-                        size: 24,
+                        size: 20,
                       ),
                     ),
                     
-                    ModernDesignSystem.horizontalSpaceMD,
+                    ModernDesignSystem.horizontalSpaceXS,
                     
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Row(
                             children: [
                               Expanded(
                                 child: Text(
                                   title,
-                                  style: ModernDesignSystem.bodyLarge.copyWith(
+                                  style: ModernDesignSystem.bodyCompactMedium.copyWith(
                                     color: ModernDesignSystem.getTextPrimary(brightness),
                                     fontWeight: FontWeight.w600,
                                   ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                               if (badge != null) ...[
@@ -297,12 +309,14 @@ class ModernInfoCard extends StatelessWidget {
                             ],
                           ),
                           if (subtitle != null) ...[
-                            ModernDesignSystem.verticalSpaceMicro,
+                            const SizedBox(height: 2),
                             Text(
                               subtitle!,
-                              style: ModernDesignSystem.bodySmall.copyWith(
+                              style: ModernDesignSystem.captionCompact.copyWith(
                                 color: ModernDesignSystem.getTextSecondary(brightness),
                               ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ],
                         ],
@@ -312,7 +326,7 @@ class ModernInfoCard extends StatelessWidget {
                     if (value != null) ...[
                       Text(
                         value!,
-                        style: ModernDesignSystem.headlineSmall.copyWith(
+                        style: ModernDesignSystem.headlineCompact.copyWith(
                           color: ModernDesignSystem.primaryTeal,
                           fontWeight: FontWeight.w700,
                         ),
@@ -506,7 +520,7 @@ class ModernListItemCard extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(ModernDesignSystem.radiusSM),
           child: Padding(
-            padding: const EdgeInsets.all(ModernDesignSystem.spaceMD),
+            padding: const EdgeInsets.all(ModernDesignSystem.spaceCompactMD),
             child: Column(
               children: [
                 Row(
@@ -536,18 +550,22 @@ class ModernListItemCard extends StatelessWidget {
                         children: [
                           Text(
                             title,
-                            style: ModernDesignSystem.bodyMedium.copyWith(
+                            style: ModernDesignSystem.bodyCompactMedium.copyWith(
                               color: ModernDesignSystem.getTextPrimary(brightness),
                               fontWeight: FontWeight.w500,
                             ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                           if (subtitle != null) ...[
-                            ModernDesignSystem.verticalSpaceMicro,
+                            const SizedBox(height: 2),
                             Text(
                               subtitle!,
-                              style: ModernDesignSystem.bodySmall.copyWith(
+                              style: ModernDesignSystem.captionCompact.copyWith(
                                 color: ModernDesignSystem.getTextSecondary(brightness),
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ],
                         ],
@@ -559,7 +577,7 @@ class ModernListItemCard extends StatelessWidget {
                     else if (trailing != null) ...[
                       Text(
                         trailing!,
-                        style: ModernDesignSystem.bodyMedium.copyWith(
+                        style: ModernDesignSystem.bodyCompact.copyWith(
                           color: ModernDesignSystem.getTextSecondary(brightness),
                           fontWeight: FontWeight.w500,
                         ),

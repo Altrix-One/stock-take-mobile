@@ -35,6 +35,16 @@ class ModernDesignSystem {
   
   /// Massive spacing for hero sections
   static const double space3XL = 48.0;     // 6 * baseUnit
+  
+  // =============================================================================
+  // COMPACT SPACING - For smaller devices and dense layouts
+  // =============================================================================
+  
+  /// Compact spacing variants for better space utilization
+  static const double spaceCompactMicro = 2.0;    // Extra tight
+  static const double spaceCompactXS = 6.0;       // Tight
+  static const double spaceCompactSM = 10.0;      // Small compact
+  static const double spaceCompactMD = 12.0;      // Medium compact
 
   // =============================================================================
   // MODERN CORPORATE COLOR PALETTE - Frappe-inspired professional colors
@@ -228,6 +238,51 @@ class ModernDesignSystem {
     fontWeight: FontWeight.w400,
     letterSpacing: 0.4,
     height: 1.2,
+  );
+  
+  // =============================================================================
+  // COMPACT TEXT STYLES - For smaller devices and dense layouts
+  // =============================================================================
+  
+  /// Compact versions for better fitting on smaller screens
+  static const TextStyle headlineCompact = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 15.0,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0.1,
+    height: 1.35,
+  );
+  
+  static const TextStyle bodyCompact = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 13.0,
+    fontWeight: FontWeight.w400,
+    letterSpacing: 0.2,
+    height: 1.4,
+  );
+  
+  static const TextStyle bodyCompactMedium = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 13.0,
+    fontWeight: FontWeight.w500,
+    letterSpacing: 0.2,
+    height: 1.4,
+  );
+  
+  static const TextStyle labelCompact = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 12.0,
+    fontWeight: FontWeight.w500,
+    letterSpacing: 0.1,
+    height: 1.35,
+  );
+  
+  static const TextStyle captionCompact = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 11.0,
+    fontWeight: FontWeight.w400,
+    letterSpacing: 0.3,
+    height: 1.3,
   );
 
   // =============================================================================

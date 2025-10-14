@@ -17,6 +17,7 @@ class ModernAttendancePage extends StatefulWidget {
 class _ModernAttendancePageState extends State<ModernAttendancePage> with TickerProviderStateMixin {
   late TabController _tabController;
   bool _isLoading = true;
+  bool _isLoadingHistory = false;
   bool _isCheckedIn = false;
   DateTime? _lastCheckInTime;
   DateTime? _lastCheckOutTime;
@@ -30,6 +31,14 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    
+    // Listen to tab changes and refresh data when history tab is selected
+    _tabController.addListener(() {
+      if (_tabController.index == 1 && mounted) { // History tab
+        _refreshHistoryData();
+      }
+    });
+    
     _loadAttendanceData();
     
     // Listen to outbox queue changes
@@ -42,8 +51,8 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
       if (mounted) _loadAttendanceData();
     });
     
-    // Update working time every minute
-    _workingTimeTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+    // Update working time every second
+    _workingTimeTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted && _isCheckedIn) _updateWorkingTime();
     });
   }
@@ -57,6 +66,7 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
   }
   
   Future<void> _loadAttendanceData() async {
+    print('Loading attendance data...');
     try {
       final results = await Future.wait([
         AttendanceService.myAttendanceHistory(),
@@ -76,6 +86,8 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
         _attendanceHistory = results[0] as List<dynamic>;
         _shiftRequests = results[1] as List<dynamic>;
         _isLoading = false;
+        print('Attendance history updated: ${_attendanceHistory.length} records');
+        print('Shift requests updated: ${_shiftRequests.length} records');
       });
       
       if (_isCheckedIn && _lastCheckInTime != null) {
@@ -119,6 +131,34 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
         _lastCheckOutTime = null;
       });
       return false;
+    }
+  }
+  
+  Future<void> _refreshHistoryData() async {
+    if (_isLoadingHistory) return; // Prevent multiple simultaneous refreshes
+    
+    setState(() {
+      _isLoadingHistory = true;
+    });
+    
+    try {
+      print('Refreshing attendance history data...');
+      final historyData = await AttendanceService.myAttendanceHistory();
+      
+      if (mounted) {
+        setState(() {
+          _attendanceHistory = historyData;
+          _isLoadingHistory = false;
+        });
+        print('History refreshed: ${_attendanceHistory.length} records');
+      }
+    } catch (e) {
+      print('Error refreshing history: $e');
+      if (mounted) {
+        setState(() {
+          _isLoadingHistory = false;
+        });
+      }
     }
   }
   
@@ -282,7 +322,7 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
   
   Widget _buildHistoryTab() {
     return RefreshIndicator(
-      onRefresh: _loadAttendanceData,
+      onRefresh: _refreshHistoryData,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(ModernDesignSystem.spaceMD),
@@ -292,8 +332,14 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
             _buildMonthlySummary(),
             ModernDesignSystem.verticalSpaceLG,
             
-            // Attendance History
-            _buildAttendanceHistory(),
+            // Attendance History with loading state
+            if (_isLoadingHistory)
+              Container(
+                padding: const EdgeInsets.all(ModernDesignSystem.spaceLG),
+                child: const ModernLoadingIndicator(message: 'Refreshing attendance history...'),
+              )
+            else
+              _buildAttendanceHistory(),
           ],
         ),
       ),
@@ -354,7 +400,7 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(ModernDesignSystem.spaceSM),
+                  padding: const EdgeInsets.all(ModernDesignSystem.spaceXS),
                   decoration: BoxDecoration(
                     color: _isCheckedIn 
                         ? ModernDesignSystem.success.withOpacity(0.15)
@@ -363,20 +409,20 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
                   ),
                   child: Icon(
                     _isCheckedIn ? Icons.work_outline : Icons.schedule,
-                    size: 24,
+                    size: 20,
                     color: _isCheckedIn 
                         ? ModernDesignSystem.success
                         : ModernDesignSystem.neutralMedium,
                   ),
                 ),
-                ModernDesignSystem.horizontalSpaceSM,
+                ModernDesignSystem.horizontalSpaceXS,
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         _isCheckedIn ? 'Currently Working' : 'Ready to Start',
-                        style: ModernDesignSystem.labelLarge.copyWith(
+                        style: ModernDesignSystem.labelCompact.copyWith(
                           fontWeight: FontWeight.w600,
                           color: _isCheckedIn 
                               ? ModernDesignSystem.success
@@ -386,7 +432,7 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
                       if (_isCheckedIn && _lastCheckInTime != null)
                         Text(
                           'Since ${_formatTime(_lastCheckInTime!)}',
-                          style: ModernDesignSystem.bodySmall.copyWith(
+                          style: ModernDesignSystem.captionCompact.copyWith(
                             color: ModernDesignSystem.getTextTertiary(Theme.of(context).brightness),
                           ),
                         ),
@@ -405,7 +451,7 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
                     ),
                     child: Text(
                       'ACTIVE',
-                      style: ModernDesignSystem.captionLarge.copyWith(
+                      style: ModernDesignSystem.captionSmall.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.5,
@@ -434,13 +480,13 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
                       ModernDesignSystem.horizontalSpaceXS,
                       Text(
                         'Working Time: ',
-                        style: ModernDesignSystem.bodyMedium.copyWith(
+                        style: ModernDesignSystem.bodyCompact.copyWith(
                           color: ModernDesignSystem.getTextSecondary(Theme.of(context).brightness),
                         ),
                       ),
                       Text(
                         _formatDuration(_workingTime),
-                        style: ModernDesignSystem.headlineSmall.copyWith(
+                        style: ModernDesignSystem.headlineCompact.copyWith(
                           fontWeight: FontWeight.w700,
                           color: ModernDesignSystem.getTextPrimary(Theme.of(context).brightness),
                         ),
@@ -454,7 +500,7 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
                     children: [
                       Text(
                         'Start Your Day',
-                        style: ModernDesignSystem.headlineMedium.copyWith(
+                        style: ModernDesignSystem.headlineCompact.copyWith(
                           fontWeight: FontWeight.w600,
                           color: ModernDesignSystem.getTextPrimary(Theme.of(context).brightness),
                         ),
@@ -462,7 +508,7 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
                       ModernDesignSystem.verticalSpaceXS,
                       Text(
                         'Tap the button below to check in and begin tracking your work hours',
-                        style: ModernDesignSystem.bodyMedium.copyWith(
+                        style: ModernDesignSystem.bodyCompact.copyWith(
                           color: ModernDesignSystem.getTextSecondary(Theme.of(context).brightness),
                         ),
                         textAlign: TextAlign.center,
@@ -496,7 +542,7 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
                     icon: Icon(_isCheckedIn ? Icons.logout_outlined : Icons.login_outlined),
                     label: Text(
                       _isCheckedIn ? 'Check Out' : 'Check In',
-                      style: ModernDesignSystem.labelLarge.copyWith(
+                      style: ModernDesignSystem.labelCompact.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
                     ),
