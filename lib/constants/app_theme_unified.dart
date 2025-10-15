@@ -36,19 +36,49 @@ class AppThemeUnified {
   static const Color info = secondaryOceanBlue;
 
   // =============================================================================
-  // GLASS MORPHISM COLORS - Enhanced for better content visibility
+  // COMMON UI COLORS - Centralized for consistency
+  // =============================================================================
+
+  /// Pure white for text on colored backgrounds (buttons, badges, etc)
+  static const Color onPrimaryText = Color(0xFFFFFFFF);
+  
+  /// Transparent for overlays and backgrounds
+  static const Color transparent = Color(0x00000000);
+  
+  /// Success background for snackbars and notifications
+  static const Color successBackground = Color(0xFF238B45);
+  
+  /// Icon/badge opacity for subtle colored backgrounds
+  static const double subtleBackgroundOpacity = 0.1;
+  
+  /// Badge/chip opacity for medium colored backgrounds  
+  static const double mediumBackgroundOpacity = 0.2;
+
+  // =============================================================================
+  // GLASS MORPHISM OPACITY - Centrally configurable
+  // =============================================================================
+  
+  /// Change these values in one place to adjust opacity app-wide
+  static const double glassLightOpacity = 0.20; // 20% white - increased for better readability
+  static const double glassMediumOpacity = 0.35; // 35% white - increased for main content cards
+  static const double glassStrongOpacity = 0.45; // 45% white - increased for dialogs
+  static const double glassBorderOpacity = 0.30; // 30% white - increased for better definition
+  static const double glassDarkOpacity = 0.15; // 15% black - increased slightly
+  static const double glassDarkMediumOpacity = 0.25; // 25% black - increased slightly
+
+  // =============================================================================
+  // GLASS MORPHISM COLORS - Computed from opacity values above
   // =============================================================================
 
   /// Light glass containers (white-based) - enhanced for better readability
-  static const Color glassLight =
-      Color(0x1FFFFFFF); // 12% white (rgba 255,255,255,0.12)
-  static const Color glassMedium = Color(0x40FFFFFF); // 25% white
-  static const Color glassStrong = Color(0x52FFFFFF); // 32% white for dialogs
-  static const Color glassBorder = Color(0x33FFFFFF); // 20% white
+  static final Color glassLight = Colors.white.withOpacity(glassLightOpacity);
+  static final Color glassMedium = Colors.white.withOpacity(glassMediumOpacity);
+  static final Color glassStrong = Colors.white.withOpacity(glassStrongOpacity);
+  static final Color glassBorder = Colors.white.withOpacity(glassBorderOpacity);
 
   /// Dark glass containers (black-based) for contrast
-  static const Color glassDark = Color(0x1A000000); // 10% black
-  static const Color glassDarkMedium = Color(0x33000000); // 20% black
+  static final Color glassDark = Colors.black.withOpacity(glassDarkOpacity);
+  static final Color glassDarkMedium = Colors.black.withOpacity(glassDarkMediumOpacity);
 
   /// Text shadow for enhanced readability on gradient backgrounds
   static const List<Shadow> textShadow = [
@@ -283,7 +313,7 @@ class AppThemeUnified {
       brightness: Brightness.light,
 
       // Color Scheme - Transparent/glass based for wallpaper visibility
-      colorScheme: const ColorScheme.light(
+      colorScheme: ColorScheme.light(
         brightness: Brightness.light,
         primary: primaryRoyalBlue,
         onPrimary: textPrimary,
@@ -361,7 +391,7 @@ class AppThemeUnified {
         shadowColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radiusMD),
-          side: const BorderSide(
+          side: BorderSide(
             color: glassBorder,
             width: 1,
           ),
@@ -386,11 +416,11 @@ class AppThemeUnified {
         fillColor: glassLight,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusSM),
-          borderSide: const BorderSide(color: glassBorder),
+          borderSide: BorderSide(color: glassBorder),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusSM),
-          borderSide: const BorderSide(color: glassBorder),
+          borderSide: BorderSide(color: glassBorder),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusSM),
@@ -440,7 +470,7 @@ class AppThemeUnified {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: textPrimary,
-          side: const BorderSide(color: glassBorder),
+          side: BorderSide(color: glassBorder),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(radiusSM),
           ),
@@ -476,7 +506,7 @@ class AppThemeUnified {
       primaryIconTheme: const IconThemeData(color: textPrimary),
 
       // Divider
-      dividerTheme: const DividerThemeData(
+      dividerTheme: DividerThemeData(
         color: glassBorder,
         thickness: 1,
         space: 1,
@@ -503,12 +533,12 @@ class AppThemeUnified {
             const EdgeInsets.symmetric(horizontal: spaceSM, vertical: spaceXS),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radiusXS),
-          side: const BorderSide(color: glassBorder),
+          side: BorderSide(color: glassBorder),
         ),
       ),
 
       // Progress Indicator
-      progressIndicatorTheme: const ProgressIndicatorThemeData(
+      progressIndicatorTheme: ProgressIndicatorThemeData(
         color: textPrimary,
         linearTrackColor: glassLight,
         circularTrackColor: glassLight,
@@ -538,13 +568,12 @@ class AppThemeUnified {
     EdgeInsetsGeometry? margin,
     double borderRadius = radiusMD,
     Color? color,
-    double opacity = 0.12, // Enhanced from 0.1
   }) {
     return Container(
       padding: padding,
       margin: margin,
       decoration: BoxDecoration(
-        color: color ?? Color(0x1FFFFFFF), // rgba(255, 255, 255, 0.12)
+        color: color ?? glassLight,
         borderRadius: BorderRadius.circular(borderRadius),
         border: Border.all(
           color: glassBorder,

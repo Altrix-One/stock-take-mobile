@@ -111,7 +111,7 @@ class ModernSecondaryButton extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppThemeUnified.glassLight,
         border: Border.all(
-          color: ModernDesignSystem.primaryTeal,
+          color: AppThemeUnified.primaryRoyalBlue,
           width: 1.5,
         ),
         borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
@@ -133,14 +133,14 @@ class ModernSecondaryButton extends StatelessWidget {
                     height: 20,
                     child: CircularProgressIndicator(
                       valueColor: AlwaysStoppedAnimation<Color>(
-                          ModernDesignSystem.primaryTeal),
+                          AppThemeUnified.primaryRoyalBlue),
                       strokeWidth: 2,
                     ),
                   )
                 else if (icon != null) ...[
                   Icon(
                     icon!,
-                    color: ModernDesignSystem.primaryTeal,
+                    color: AppThemeUnified.primaryRoyalBlue,
                     size: 20,
                   ),
                   ModernDesignSystem.horizontalSpaceXS,
@@ -148,7 +148,7 @@ class ModernSecondaryButton extends StatelessWidget {
                 Text(
                   text,
                   style: ModernDesignSystem.labelLarge.copyWith(
-                    color: ModernDesignSystem.primaryTeal,
+                    color: AppThemeUnified.primaryRoyalBlue,
                     fontWeight: FontWeight.w600,
                     shadows: AppThemeUnified.textShadow,
                   ),
@@ -269,7 +269,7 @@ class ModernStatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final badgeColor = color ?? ModernDesignSystem.primaryTeal;
+    final badgeColor = color ?? AppThemeUnified.primaryRoyalBlue;
     final brightness = Theme.of(context).brightness;
 
     return Container(
@@ -352,7 +352,7 @@ class ModernInputField extends StatelessWidget {
                 Text(
                   '*',
                   style: ModernDesignSystem.labelLarge.copyWith(
-                    color: ModernDesignSystem.error,
+                    color: AppThemeUnified.error,
                   ),
                 ),
               ],
@@ -441,7 +441,7 @@ class ModernSectionHeader extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(ModernDesignSystem.spaceXS),
               decoration: BoxDecoration(
-                color: ModernDesignSystem.primaryTeal.withOpacity(0.1),
+                color: AppThemeUnified.primaryRoyalBlue.withOpacity(0.1),
                 borderRadius:
                     BorderRadius.circular(ModernDesignSystem.radiusXS),
               ),
@@ -503,7 +503,7 @@ class ModernLoadingIndicator extends StatelessWidget {
       children: [
         CircularProgressIndicator(
           valueColor:
-              AlwaysStoppedAnimation<Color>(ModernDesignSystem.primaryTeal),
+              AlwaysStoppedAnimation<Color>(AppThemeUnified.primaryRoyalBlue),
           strokeWidth: 3,
         ),
         if (message != null) ...[
@@ -1085,7 +1085,7 @@ class ModernInfoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
-    final cardColor = color ?? ModernDesignSystem.primaryTeal;
+    final cardColor = color ?? AppThemeUnified.primaryRoyalBlue;
 
     return Container(
       margin: margin ??
@@ -1099,7 +1099,15 @@ class ModernInfoCard extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
           child: Container(
-            decoration: ModernDesignSystem.subtleCardDecoration(brightness),
+            decoration: BoxDecoration(
+              color: AppThemeUnified.glassLight,
+              borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
+              border: Border.all(
+                color: AppThemeUnified.glassBorder,
+                width: 1,
+              ),
+              boxShadow: AppThemeUnified.cardShadow,
+            ),
             padding:
                 padding ?? const EdgeInsets.all(ModernDesignSystem.spaceMD),
             child: Column(
@@ -1112,13 +1120,17 @@ class ModernInfoCard extends StatelessWidget {
                         padding:
                             const EdgeInsets.all(ModernDesignSystem.spaceXS),
                         decoration: BoxDecoration(
-                          color: cardColor.withOpacity(0.1),
+                          color: AppThemeUnified.glassMedium,
                           borderRadius: BorderRadius.circular(
                               ModernDesignSystem.radiusXS),
+                          border: Border.all(
+                            color: AppThemeUnified.glassBorder,
+                            width: 0.5,
+                          ),
                         ),
                         child: Icon(
                           icon,
-                          color: iconColor ?? cardColor,
+                          color: iconColor ?? AppThemeUnified.textPrimary,
                           size: 18,
                         ),
                       ),
@@ -1130,9 +1142,8 @@ class ModernInfoCard extends StatelessWidget {
                         children: [
                           Text(
                             title,
-                            style: ModernDesignSystem.headlineSmall.copyWith(
-                              color:
-                                  ModernDesignSystem.getTextPrimary(brightness),
+                            style: AppThemeUnified.headlineSmall.copyWith(
+                              color: AppThemeUnified.textPrimary,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -1140,9 +1151,8 @@ class ModernInfoCard extends StatelessWidget {
                             const SizedBox(height: 2),
                             Text(
                               subtitle!,
-                              style: ModernDesignSystem.bodyMedium.copyWith(
-                                color: ModernDesignSystem.getTextSecondary(
-                                    brightness),
+                              style: AppThemeUnified.bodyMedium.copyWith(
+                                color: AppThemeUnified.textSecondary,
                               ),
                             ),
                           ],
@@ -1157,14 +1167,18 @@ class ModernInfoCard extends StatelessWidget {
                           vertical: ModernDesignSystem.spaceXS,
                         ),
                         decoration: BoxDecoration(
-                          color: (badgeColor ?? cardColor).withOpacity(0.1),
+                          color: (badgeColor ?? cardColor).withOpacity(AppThemeUnified.mediumBackgroundOpacity),
                           borderRadius: BorderRadius.circular(
                               ModernDesignSystem.radiusXS),
+                          border: Border.all(
+                            color: (badgeColor ?? cardColor).withOpacity(AppThemeUnified.glassBorderOpacity),
+                            width: 0.5,
+                          ),
                         ),
                         child: Text(
                           badge!,
-                          style: ModernDesignSystem.labelSmall.copyWith(
-                            color: badgeColor ?? cardColor,
+                          style: AppThemeUnified.labelSmall.copyWith(
+                            color: badgeColor ?? AppThemeUnified.textPrimary,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -1179,8 +1193,8 @@ class ModernInfoCard extends StatelessWidget {
                   else if (content != null)
                     Text(
                       content!,
-                      style: ModernDesignSystem.bodyMedium.copyWith(
-                        color: ModernDesignSystem.getTextPrimary(brightness),
+                      style: AppThemeUnified.bodyMedium.copyWith(
+                        color: AppThemeUnified.textPrimary,
                       ),
                     ),
                 ],

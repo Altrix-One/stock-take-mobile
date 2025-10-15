@@ -712,14 +712,15 @@ class _NewClaimFormPageState extends State<NewClaimFormPage> {
         title:
             widget.existingClaim != null ? 'Edit Claim' : 'New Expense Claim',
       ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.fromLTRB(
-          16,
-          MediaQuery.of(context).padding.top + kToolbarHeight + 16,
-          16,
-          16 + 100, // Extra bottom padding for navigation
-        ),
-        child: Form(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.only(
+            left: AppThemeUnified.spaceMD,
+            right: AppThemeUnified.spaceMD,
+            top: AppThemeUnified.spaceMD,
+            bottom: AppThemeUnified.spaceMD + 100, // Extra bottom padding for navigation
+          ),
+          child: Form(
           key: _formKey,
           child: Column(
             children: [
@@ -732,6 +733,7 @@ class _NewClaimFormPageState extends State<NewClaimFormPage> {
               _buildActionButtons(),
             ],
           ),
+        ),
         ),
       ),
     );
@@ -873,7 +875,7 @@ class _NewClaimFormPageState extends State<NewClaimFormPage> {
                   children: [
                     Icon(
                       Icons.description,
-                      color: ModernDesignSystem.primaryTeal,
+                      color: AppThemeUnified.primaryRoyalBlue,
                       size: 20,
                     ),
                     ModernDesignSystem.horizontalSpaceXS,
@@ -1096,7 +1098,7 @@ class ClaimDetailsBottomSheet extends StatelessWidget {
       height: MediaQuery.of(context).size.height * 0.8,
       decoration: BoxDecoration(
         color: AppThemeUnified.glassLight,
-        border: const Border.fromBorderSide(
+        border: Border.fromBorderSide(
           BorderSide(color: AppThemeUnified.glassBorder, width: 1),
         ),
         borderRadius: const BorderRadius.only(
@@ -1227,7 +1229,7 @@ class ClaimDetailsBottomSheet extends StatelessWidget {
                   children: [
                     Icon(
                       Icons.description,
-                      color: ModernDesignSystem.primaryTeal,
+                      color: AppThemeUnified.primaryRoyalBlue,
                       size: 20,
                     ),
                     ModernDesignSystem.horizontalSpaceXS,
@@ -1260,7 +1262,7 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
       height: MediaQuery.of(context).size.height * 0.5,
       decoration: BoxDecoration(
         color: AppThemeUnified.glassLight,
-        border: const Border.fromBorderSide(
+        border: Border.fromBorderSide(
           BorderSide(color: AppThemeUnified.glassBorder, width: 1),
         ),
         borderRadius: const BorderRadius.only(

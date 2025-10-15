@@ -10,9 +10,10 @@ import 'package:hive/hive.dart'; // Hive for token management
 
 import 'package:stock_count/components/calculator_card.dart';
 import 'package:stock_count/components/center_box.dart';
+import 'package:stock_count/components/liquid_components.dart';
 import 'package:stock_count/screens/setup_dialog.dart';
-import 'package:stock_count/components/calculator_card.dart';
 import 'package:stock_count/constants/theme.dart';
+import 'package:stock_count/constants/wallpaper_manager.dart';
 import 'package:stock_count/utilis/change_notifier.dart';
 import 'package:stock_count/utilis/db_schema.dart';
 import 'package:stock_count/utilis/dialog_messages.dart';

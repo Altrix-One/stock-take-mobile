@@ -735,7 +735,6 @@ class _ModernAttendancePageState extends State<ModernAttendancePage>
       String label, String value, IconData icon, Color color) {
     return AppThemeUnified.glassContainer(
       padding: EdgeInsets.all(AppThemeUnified.spaceMD),
-      opacity: 0.15,
       child: Column(
         children: [
           Container(
@@ -1028,7 +1027,7 @@ class _ModernAttendancePageState extends State<ModernAttendancePage>
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
-          side: const BorderSide(color: AppThemeUnified.glassBorder, width: 1),
+          side: BorderSide(color: AppThemeUnified.glassBorder, width: 1),
         ),
         title: const Text('Take a Break', style: AppThemeUnified.headlineSmall),
         content: const Text(
@@ -1053,7 +1052,7 @@ class _ModernAttendancePageState extends State<ModernAttendancePage>
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
-          side: const BorderSide(color: AppThemeUnified.glassBorder, width: 1),
+          side: BorderSide(color: AppThemeUnified.glassBorder, width: 1),
         ),
         title: const Text('Request Overtime',
             style: AppThemeUnified.headlineSmall),
@@ -1079,7 +1078,7 @@ class _ModernAttendancePageState extends State<ModernAttendancePage>
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
-          side: const BorderSide(color: AppThemeUnified.glassBorder, width: 1),
+          side: BorderSide(color: AppThemeUnified.glassBorder, width: 1),
         ),
         title: const Text('Request Remote Work',
             style: AppThemeUnified.headlineSmall),
@@ -1105,7 +1104,7 @@ class _ModernAttendancePageState extends State<ModernAttendancePage>
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
-          side: const BorderSide(color: AppThemeUnified.glassBorder, width: 1),
+          side: BorderSide(color: AppThemeUnified.glassBorder, width: 1),
         ),
         title: const Text('Report Issue', style: AppThemeUnified.headlineSmall),
         content: const Text(
@@ -1480,7 +1479,7 @@ class ShiftRequestDetailsBottomSheet extends StatelessWidget {
       height: MediaQuery.of(context).size.height * 0.6,
       decoration: BoxDecoration(
         color: AppThemeUnified.glassLight,
-        border: const Border.fromBorderSide(
+        border: Border.fromBorderSide(
           BorderSide(color: AppThemeUnified.glassBorder, width: 1),
         ),
         borderRadius: const BorderRadius.only(

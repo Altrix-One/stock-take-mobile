@@ -830,7 +830,7 @@ class _ModernApprovalsPageState extends State<ModernApprovalsPage>
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
-          side: const BorderSide(color: AppThemeUnified.glassBorder, width: 1),
+          side: BorderSide(color: AppThemeUnified.glassBorder, width: 1),
         ),
         title: Text(title, style: AppThemeUnified.headlineSmall),
         content: Text(content, style: AppThemeUnified.bodyMedium),
@@ -862,7 +862,7 @@ class _ModernApprovalsPageState extends State<ModernApprovalsPage>
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
-          side: const BorderSide(color: AppThemeUnified.glassBorder, width: 1),
+          side: BorderSide(color: AppThemeUnified.glassBorder, width: 1),
         ),
         title:
             const Text('Reject Request', style: AppThemeUnified.headlineSmall),
@@ -1054,7 +1054,7 @@ class ApprovalDetailsBottomSheet extends StatelessWidget {
       height: MediaQuery.of(context).size.height * 0.8,
       decoration: BoxDecoration(
         color: AppThemeUnified.glassLight,
-        border: const Border.fromBorderSide(
+        border: Border.fromBorderSide(
           BorderSide(color: AppThemeUnified.glassBorder, width: 1),
         ),
         borderRadius: const BorderRadius.only(
@@ -1522,7 +1522,7 @@ class TeamMemberDetailsBottomSheet extends StatelessWidget {
       height: MediaQuery.of(context).size.height * 0.6,
       decoration: BoxDecoration(
         color: AppThemeUnified.glassLight,
-        border: const Border.fromBorderSide(
+        border: Border.fromBorderSide(
           BorderSide(color: AppThemeUnified.glassBorder, width: 1),
         ),
         borderRadius: const BorderRadius.only(

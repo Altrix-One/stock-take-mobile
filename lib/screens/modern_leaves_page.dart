@@ -140,7 +140,7 @@ class _ModernLeavesPageState extends State<ModernLeavesPage>
       floatingActionButton: FloatingActionButton(
         onPressed: _showApplyLeaveForm,
         backgroundColor: AppThemeUnified.primaryRoyalBlue,
-        child: const Icon(Icons.add, color: Colors.white),
+        child: const Icon(Icons.add, color: AppThemeUnified.onPrimaryText),
       ),
     );
   }
@@ -154,11 +154,11 @@ class _ModernLeavesPageState extends State<ModernLeavesPage>
           borderRadius: BorderRadius.circular(AppThemeUnified.radiusMD),
           color: AppThemeUnified.primaryRoyalBlue,
         ),
-        labelColor: Colors.white,
+        labelColor: AppThemeUnified.onPrimaryText,
         unselectedLabelColor: AppThemeUnified.textSecondary,
         indicatorSize: TabBarIndicatorSize.tab,
         indicatorWeight: 0,
-        dividerColor: Colors.transparent,
+        dividerColor: AppThemeUnified.transparent,
         labelStyle: AppThemeUnified.labelLarge.copyWith(
           fontWeight: FontWeight.w600,
         ),
@@ -250,17 +250,17 @@ class _ModernLeavesPageState extends State<ModernLeavesPage>
         children: [
           Expanded(
             child: _buildStatCard('Total Balance', totalLeaves,
-                Icons.event_available, ModernDesignSystem.success),
+                Icons.event_available, AppThemeUnified.success),
           ),
           SizedBox(width: AppThemeUnified.spaceXS),
           Expanded(
             child: _buildStatCard('Pending', pendingCount.toString(),
-                Icons.hourglass_empty, ModernDesignSystem.warning),
+                Icons.hourglass_empty, AppThemeUnified.warning),
           ),
           SizedBox(width: AppThemeUnified.spaceXS),
           Expanded(
             child: _buildStatCard('Approved', approvedCount.toString(),
-                Icons.check_circle, ModernDesignSystem.success),
+                Icons.check_circle, AppThemeUnified.success),
           ),
         ],
       ),
@@ -276,7 +276,7 @@ class _ModernLeavesPageState extends State<ModernLeavesPage>
           Container(
             padding: EdgeInsets.all(AppThemeUnified.spaceXS),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.2),
+              color: color.withOpacity(AppThemeUnified.mediumBackgroundOpacity),
               borderRadius: BorderRadius.circular(AppThemeUnified.radiusXS),
             ),
             child: Icon(icon, color: AppThemeUnified.textPrimary, size: 20),
@@ -336,24 +336,24 @@ class _ModernLeavesPageState extends State<ModernLeavesPage>
     final totalDays = leave['total_leave_days']?.toString() ?? '0';
     final reason = leave['description']?.toString() ?? '';
 
-    Color statusColor = ModernDesignSystem.neutralMedium;
+    Color statusColor = AppThemeUnified.textSecondary;
     IconData statusIcon = Icons.info;
 
     switch (status.toLowerCase()) {
       case 'approved':
       case 'sanctioned':
-        statusColor = ModernDesignSystem.success;
+        statusColor = AppThemeUnified.success;
         statusIcon = Icons.check_circle;
         break;
       case 'rejected':
       case 'cancelled':
-        statusColor = ModernDesignSystem.error;
+        statusColor = AppThemeUnified.error;
         statusIcon = Icons.cancel;
         break;
       case 'open':
       case 'pending':
       case 'draft':
-        statusColor = ModernDesignSystem.warning;
+        statusColor = AppThemeUnified.warning;
         statusIcon = Icons.hourglass_empty;
         break;
     }
@@ -373,7 +373,7 @@ class _ModernLeavesPageState extends State<ModernLeavesPage>
                 icon: const Icon(Icons.cancel, size: 16),
                 label: const Text('Cancel'),
                 style: TextButton.styleFrom(
-                  foregroundColor: ModernDesignSystem.error,
+                  foregroundColor: AppThemeUnified.error,
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 ),
@@ -425,11 +425,11 @@ class _ModernLeavesPageState extends State<ModernLeavesPage>
 
           // Dynamic colors
           final colors = [
-            ModernDesignSystem.primaryTeal,
-            ModernDesignSystem.success,
-            ModernDesignSystem.warning,
-            ModernDesignSystem.info,
-            ModernDesignSystem.error,
+            AppThemeUnified.primaryRoyalBlue,
+            AppThemeUnified.success,
+            AppThemeUnified.warning,
+            AppThemeUnified.info,
+            AppThemeUnified.error,
           ];
           final color = colors[index % colors.length];
 
@@ -470,7 +470,7 @@ class _ModernLeavesPageState extends State<ModernLeavesPage>
         Container(
           padding: const EdgeInsets.all(ModernDesignSystem.spaceXS),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withOpacity(AppThemeUnified.subtleBackgroundOpacity),
             borderRadius: BorderRadius.circular(ModernDesignSystem.radiusXS),
           ),
           child: Icon(icon, color: color, size: 20),
@@ -527,7 +527,7 @@ class _ModernLeavesPageState extends State<ModernLeavesPage>
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppThemeUnified.transparent,
       builder: (context) => LeaveDetailsBottomSheet(leave: leave),
     );
   }
@@ -585,7 +585,7 @@ class _ModernLeavesPageState extends State<ModernLeavesPage>
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('✅ Leave application cancelled successfully'),
-              backgroundColor: Colors.green,
+              backgroundColor: AppThemeUnified.successBackground,
             ),
           );
           _loadLeavesData();
@@ -711,7 +711,7 @@ class _ApplyLeaveFormPageState extends State<ApplyLeaveFormPage> {
               padding: const EdgeInsets.all(ModernDesignSystem.spaceLG),
               child: const Center(
                 child: CircularProgressIndicator(
-                  color: ModernDesignSystem.primaryTeal,
+                  color: AppThemeUnified.primaryRoyalBlue,
                 ),
               ),
             )
@@ -810,7 +810,7 @@ class _ApplyLeaveFormPageState extends State<ApplyLeaveFormPage> {
                 Icon(
                   Icons.calendar_today,
                   size: 16,
-                  color: ModernDesignSystem.primaryTeal,
+                  color: AppThemeUnified.primaryRoyalBlue,
                 ),
                 ModernDesignSystem.horizontalSpaceXS,
                 Text(
@@ -873,7 +873,7 @@ class _ApplyLeaveFormPageState extends State<ApplyLeaveFormPage> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: Theme.of(context).colorScheme.copyWith(
-                  primary: ModernDesignSystem.primaryTeal,
+                  primary: AppThemeUnified.primaryRoyalBlue,
                 ),
           ),
           child: child!,
@@ -918,7 +918,7 @@ class _ApplyLeaveFormPageState extends State<ApplyLeaveFormPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('✅ Leave application submitted successfully'),
-            backgroundColor: Colors.green,
+            backgroundColor: AppThemeUnified.successBackground,
           ),
         );
         Navigator.of(context).pop();
