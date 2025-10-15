@@ -15,7 +15,8 @@ class ModernAttendancePage extends StatefulWidget {
   State<ModernAttendancePage> createState() => _ModernAttendancePageState();
 }
 
-class _ModernAttendancePageState extends State<ModernAttendancePage> with TickerProviderStateMixin {
+class _ModernAttendancePageState extends State<ModernAttendancePage>
+    with TickerProviderStateMixin {
   late TabController _tabController;
   bool _isLoading = true;
   bool _isLoadingHistory = false;
@@ -32,32 +33,33 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    
+
     // Listen to tab changes and refresh data when history tab is selected
     _tabController.addListener(() {
-      if (_tabController.index == 1 && mounted) { // History tab
+      if (_tabController.index == 1 && mounted) {
+        // History tab
         _refreshHistoryData();
       }
     });
-    
+
     _loadAttendanceData();
-    
+
     // Listen to outbox queue changes
     OutboxQueue.events.listen((_) {
       if (mounted) _loadAttendanceData();
     });
-    
+
     // Auto-refresh every 30 seconds
     _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
       if (mounted) _loadAttendanceData();
     });
-    
+
     // Update working time every second
     _workingTimeTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted) _updateWorkingTime();
     });
   }
-  
+
   @override
   void dispose() {
     _tabController.dispose();
@@ -65,7 +67,7 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
     _workingTimeTimer?.cancel();
     super.dispose();
   }
-  
+
   Future<void> _loadAttendanceData() async {
     print('Loading attendance data...');
     try {
@@ -73,26 +75,28 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
         AttendanceService.myAttendanceHistory(),
         AttendanceService.myShiftRequests(),
       ]);
-      
+
       // Only check attendance status if we haven't just performed a check-in/out action
       final now = DateTime.now();
-      final shouldCheckStatus = _lastCheckInTime == null || 
-          (_lastCheckInTime != null && now.difference(_lastCheckInTime!).inSeconds > 5);
-      
+      final shouldCheckStatus = _lastCheckInTime == null ||
+          (_lastCheckInTime != null &&
+              now.difference(_lastCheckInTime!).inSeconds > 5);
+
       if (shouldCheckStatus) {
         await _checkAttendanceStatus();
       }
-      
+
       if (mounted) {
         setState(() {
           _attendanceHistory = results[0] as List<dynamic>;
           _shiftRequests = results[1] as List<dynamic>;
           _isLoading = false;
-          print('Attendance history updated: ${_attendanceHistory.length} records');
+          print(
+              'Attendance history updated: ${_attendanceHistory.length} records');
           print('Shift requests updated: ${_shiftRequests.length} records');
         });
       }
-      
+
       if (_isCheckedIn && _lastCheckInTime != null) {
         _updateWorkingTime();
       }
@@ -105,30 +109,31 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
       }
     }
   }
-  
+
   Future<bool> _checkAttendanceStatus() async {
     try {
       final emp = await ProfileService.currentEmployee();
       if (emp == null) return false;
-      
+
       // Get today's attendance status using the updated service
       final result = await AttendanceService.getTodayAttendanceStatus();
-      
+
       if (mounted) {
         setState(() {
           final newCheckedInState = result['checkedIn'] == true;
-          print('CheckAttendanceStatus: Setting _isCheckedIn to $newCheckedInState');
+          print(
+              'CheckAttendanceStatus: Setting _isCheckedIn to $newCheckedInState');
           print('CheckAttendanceStatus result: $result');
           _isCheckedIn = newCheckedInState;
-          _lastCheckInTime = result['lastCheckinTime'] != null 
+          _lastCheckInTime = result['lastCheckinTime'] != null
               ? DateTime.tryParse(result['lastCheckinTime'].toString())
               : null;
-          _lastCheckOutTime = result['lastCheckoutTime'] != null 
+          _lastCheckOutTime = result['lastCheckoutTime'] != null
               ? DateTime.tryParse(result['lastCheckoutTime'].toString())
               : null;
         });
       }
-      
+
       return _isCheckedIn;
     } catch (e) {
       print('Error checking attendance status: $e');
@@ -142,20 +147,20 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
       return false;
     }
   }
-  
+
   Future<void> _refreshHistoryData() async {
     if (_isLoadingHistory) return; // Prevent multiple simultaneous refreshes
-    
+
     if (mounted) {
       setState(() {
         _isLoadingHistory = true;
       });
     }
-    
+
     try {
       print('Refreshing attendance history data...');
       final historyData = await AttendanceService.myAttendanceHistory();
-      
+
       if (mounted) {
         setState(() {
           _attendanceHistory = historyData;
@@ -172,12 +177,12 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
       }
     }
   }
-  
+
   void _updateWorkingTime() async {
     try {
       // Get today's total working hours from all check-in/check-out sessions
       final totalWorked = await AttendanceService.getTodayTotalWorkingHours();
-      
+
       if (mounted) {
         setState(() {
           _workingTime = totalWorked;
@@ -187,7 +192,7 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
       print('Error updating working time: $e');
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return UniversalScaffold(
@@ -209,7 +214,7 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
           ),
         ],
       ),
-      body: _isLoading 
+      body: _isLoading
           ? const UniversalLoading(message: 'Loading attendance data...')
           : SafeArea(
               child: Column(
@@ -218,8 +223,9 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
                   _buildTabBar(),
                   const SizedBox(height: AppThemeUnified.spaceMD),
                   Expanded(
-                    child: _isLoading 
-                        ? const ModernLoadingIndicator(message: 'Loading attendance data...')
+                    child: _isLoading
+                        ? const ModernLoadingIndicator(
+                            message: 'Loading attendance data...')
                         : TabBarView(
                             controller: _tabController,
                             children: [
@@ -232,7 +238,7 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
                 ],
               ),
             ),
-      floatingActionButton: _tabController.index == 2 
+      floatingActionButton: _tabController.index == 2
           ? FloatingActionButton(
               onPressed: _showShiftRequestForm,
               heroTag: 'requestShift',
@@ -242,7 +248,7 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
           : null,
     );
   }
-  
+
   Widget _buildHeader() {
     return Container(
       padding: const EdgeInsets.all(ModernDesignSystem.spaceMD),
@@ -255,7 +261,8 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
                 Text(
                   'Attendance',
                   style: ModernDesignSystem.displaySmall.copyWith(
-                    color: ModernDesignSystem.getTextPrimary(Theme.of(context).brightness),
+                    color: ModernDesignSystem.getTextPrimary(
+                        Theme.of(context).brightness),
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -263,7 +270,8 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
                 Text(
                   'Track your working hours',
                   style: ModernDesignSystem.bodyMedium.copyWith(
-                    color: ModernDesignSystem.getTextSecondary(Theme.of(context).brightness),
+                    color: ModernDesignSystem.getTextSecondary(
+                        Theme.of(context).brightness),
                   ),
                 ),
               ],
@@ -278,7 +286,8 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
             style: IconButton.styleFrom(
               backgroundColor: ModernDesignSystem.primaryTeal.withOpacity(0.1),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(ModernDesignSystem.radiusSM),
+                borderRadius:
+                    BorderRadius.circular(ModernDesignSystem.radiusSM),
               ),
             ),
           ),
@@ -286,7 +295,7 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
       ),
     );
   }
-  
+
   Widget _buildTabBar() {
     return AppThemeUnified.glassContainer(
       margin: const EdgeInsets.symmetric(horizontal: AppThemeUnified.spaceMD),
@@ -313,7 +322,7 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
       ),
     );
   }
-  
+
   Widget _buildTodayTab() {
     return RefreshIndicator(
       onRefresh: _loadAttendanceData,
@@ -327,11 +336,11 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
             // Check-in/Check-out Card
             _buildCheckInOutCard(),
             const SizedBox(height: AppThemeUnified.spaceLG),
-            
+
             // Today's Stats
             _buildTodayStats(),
             const SizedBox(height: AppThemeUnified.spaceLG),
-            
+
             // Quick Actions
             _buildQuickActions(),
           ],
@@ -339,7 +348,7 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
       ),
     );
   }
-  
+
   Widget _buildHistoryTab() {
     return RefreshIndicator(
       onRefresh: _refreshHistoryData,
@@ -353,12 +362,13 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
             // Monthly Summary
             _buildMonthlySummary(),
             const SizedBox(height: AppThemeUnified.spaceLG),
-            
+
             // Attendance History with loading state
             if (_isLoadingHistory)
               Container(
                 padding: const EdgeInsets.all(AppThemeUnified.spaceLG),
-                child: const ModernLoadingIndicator(message: 'Refreshing attendance history...'),
+                child: const ModernLoadingIndicator(
+                    message: 'Refreshing attendance history...'),
               )
             else
               _buildAttendanceHistory(),
@@ -367,7 +377,7 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
       ),
     );
   }
-  
+
   Widget _buildShiftRequestsTab() {
     return RefreshIndicator(
       onRefresh: _loadAttendanceData,
@@ -380,7 +390,7 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
           children: [
             // Shift Requests
             _buildShiftRequests(),
-            
+
             // Bottom spacing for FAB
             const SizedBox(height: 80),
           ],
@@ -388,24 +398,11 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
       ),
     );
   }
-  
+
   Widget _buildCheckInOutCard() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: ModernDesignSystem.spaceXS),
-      decoration: BoxDecoration(
-        color: ModernDesignSystem.getSurfaceColor(Theme.of(context).brightness),
-        borderRadius: BorderRadius.circular(ModernDesignSystem.radiusLG),
-        border: Border.all(
-          color: ModernDesignSystem.getBorderColor(Theme.of(context).brightness),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+    return AppThemeUnified.glassContainer(
+      margin:
+          const EdgeInsets.symmetric(horizontal: ModernDesignSystem.spaceXS),
       child: Column(
         children: [
           // Header section with status indicator
@@ -413,9 +410,9 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
             width: double.infinity,
             padding: const EdgeInsets.all(ModernDesignSystem.spaceLG),
             decoration: BoxDecoration(
-              color: _isCheckedIn 
-                  ? ModernDesignSystem.success.withOpacity(0.08)
-                  : ModernDesignSystem.neutralLight.withOpacity(0.3),
+              color: _isCheckedIn
+                  ? ModernDesignSystem.success.withOpacity(0.12)
+                  : ModernDesignSystem.neutralLight.withOpacity(0.25),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(ModernDesignSystem.radiusLG),
                 topRight: Radius.circular(ModernDesignSystem.radiusLG),
@@ -426,15 +423,16 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
                 Container(
                   padding: const EdgeInsets.all(ModernDesignSystem.spaceXS),
                   decoration: BoxDecoration(
-                    color: _isCheckedIn 
+                    color: _isCheckedIn
                         ? ModernDesignSystem.success.withOpacity(0.15)
                         : ModernDesignSystem.neutralMedium.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
+                    borderRadius:
+                        BorderRadius.circular(ModernDesignSystem.radiusMD),
                   ),
                   child: Icon(
                     _isCheckedIn ? Icons.work_outline : Icons.schedule,
                     size: 20,
-                    color: _isCheckedIn 
+                    color: _isCheckedIn
                         ? ModernDesignSystem.success
                         : ModernDesignSystem.neutralMedium,
                   ),
@@ -448,16 +446,16 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
                         _isCheckedIn ? 'Currently Working' : 'Ready to Start',
                         style: ModernDesignSystem.labelCompact.copyWith(
                           fontWeight: FontWeight.w600,
-                          color: _isCheckedIn 
+                          color: _isCheckedIn
                               ? ModernDesignSystem.success
-                              : ModernDesignSystem.getTextSecondary(Theme.of(context).brightness),
+                              : AppThemeUnified.textSecondary,
                         ),
                       ),
                       if (_isCheckedIn && _lastCheckInTime != null)
                         Text(
                           'Since ${_formatTime(_lastCheckInTime!)}',
                           style: ModernDesignSystem.captionCompact.copyWith(
-                            color: ModernDesignSystem.getTextTertiary(Theme.of(context).brightness),
+                            color: AppThemeUnified.textTertiary,
                           ),
                         ),
                     ],
@@ -471,7 +469,8 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
                     ),
                     decoration: BoxDecoration(
                       color: ModernDesignSystem.success,
-                      borderRadius: BorderRadius.circular(ModernDesignSystem.radiusXS),
+                      borderRadius:
+                          BorderRadius.circular(ModernDesignSystem.radiusXS),
                     ),
                     child: Text(
                       'ACTIVE',
@@ -485,7 +484,7 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
               ],
             ),
           ),
-          
+
           // Content section
           Padding(
             padding: const EdgeInsets.all(ModernDesignSystem.spaceLG),
@@ -498,21 +497,21 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
                     children: [
                       Icon(
                         Icons.timer_outlined,
-                        color: ModernDesignSystem.getTextSecondary(Theme.of(context).brightness),
+                        color: AppThemeUnified.textSecondary,
                         size: 20,
                       ),
                       ModernDesignSystem.horizontalSpaceXS,
                       Text(
                         'Working Time: ',
                         style: ModernDesignSystem.bodyCompact.copyWith(
-                          color: ModernDesignSystem.getTextSecondary(Theme.of(context).brightness),
+                          color: AppThemeUnified.textSecondary,
                         ),
                       ),
                       Text(
                         _formatDuration(_workingTime),
                         style: ModernDesignSystem.headlineCompact.copyWith(
                           fontWeight: FontWeight.w700,
-                          color: ModernDesignSystem.getTextPrimary(Theme.of(context).brightness),
+                          color: AppThemeUnified.textPrimary,
                         ),
                       ),
                     ],
@@ -526,14 +525,14 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
                         'Start Your Day',
                         style: ModernDesignSystem.headlineCompact.copyWith(
                           fontWeight: FontWeight.w600,
-                          color: ModernDesignSystem.getTextPrimary(Theme.of(context).brightness),
+                          color: AppThemeUnified.textPrimary,
                         ),
                       ),
                       ModernDesignSystem.verticalSpaceXS,
                       Text(
                         'Tap the button below to check in and begin tracking your work hours',
                         style: ModernDesignSystem.bodyCompact.copyWith(
-                          color: ModernDesignSystem.getTextSecondary(Theme.of(context).brightness),
+                          color: AppThemeUnified.textSecondary,
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -541,29 +540,36 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
                   ),
                   ModernDesignSystem.verticalSpaceLG,
                 ],
-                
+
                 // Check-in/Check-out button
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
                     onPressed: _isCheckedIn ? _checkOut : _checkIn,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _isCheckedIn 
+                      backgroundColor: _isCheckedIn
                           ? ModernDesignSystem.error.withOpacity(0.1)
                           : ModernDesignSystem.primaryTeal,
-                      foregroundColor: _isCheckedIn 
+                      foregroundColor: _isCheckedIn
                           ? ModernDesignSystem.error
                           : Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: ModernDesignSystem.spaceLG),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: ModernDesignSystem.spaceLG),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
-                        side: _isCheckedIn ? BorderSide(
-                          color: ModernDesignSystem.error.withOpacity(0.3),
-                        ) : BorderSide.none,
+                        borderRadius:
+                            BorderRadius.circular(ModernDesignSystem.radiusMD),
+                        side: _isCheckedIn
+                            ? BorderSide(
+                                color:
+                                    ModernDesignSystem.error.withOpacity(0.3),
+                              )
+                            : BorderSide.none,
                       ),
                       elevation: _isCheckedIn ? 0 : 2,
                     ),
-                    icon: Icon(_isCheckedIn ? Icons.logout_outlined : Icons.login_outlined),
+                    icon: Icon(_isCheckedIn
+                        ? Icons.logout_outlined
+                        : Icons.login_outlined),
                     label: Text(
                       _isCheckedIn ? 'Check Out' : 'Check In',
                       style: ModernDesignSystem.labelCompact.copyWith(
@@ -579,12 +585,14 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
       ),
     );
   }
-  
+
   Widget _buildTodayStats() {
-    final hoursWorked = _workingTime.inHours + (_workingTime.inMinutes % 60) / 60.0;
+    final hoursWorked =
+        _workingTime.inHours + (_workingTime.inMinutes % 60) / 60.0;
     final regularHours = 8.0;
-    final overtimeHours = hoursWorked > regularHours ? hoursWorked - regularHours : 0.0;
-    
+    final overtimeHours =
+        hoursWorked > regularHours ? hoursWorked - regularHours : 0.0;
+
     return Row(
       children: [
         Expanded(
@@ -600,7 +608,8 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
         Expanded(
           child: ModernStatsCard(
             label: 'Regular Hours',
-            value: (hoursWorked > regularHours ? regularHours : hoursWorked).toStringAsFixed(1),
+            value: (hoursWorked > regularHours ? regularHours : hoursWorked)
+                .toStringAsFixed(1),
             icon: Icons.work_history,
             color: ModernDesignSystem.success,
             isCompact: true,
@@ -612,14 +621,16 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
             label: 'Overtime',
             value: overtimeHours.toStringAsFixed(1),
             icon: Icons.trending_up,
-            color: overtimeHours > 0 ? ModernDesignSystem.warning : ModernDesignSystem.neutralLight,
+            color: overtimeHours > 0
+                ? ModernDesignSystem.warning
+                : ModernDesignSystem.neutralLight,
             isCompact: true,
           ),
         ),
       ],
     );
   }
-  
+
   Widget _buildQuickActions() {
     return ModernHeroCard(
       title: 'Quick Actions',
@@ -673,8 +684,9 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
       ),
     );
   }
-  
-  Widget _buildQuickActionButton(String label, IconData icon, Color color, VoidCallback onTap) {
+
+  Widget _buildQuickActionButton(
+      String label, IconData icon, Color color, VoidCallback onTap) {
     return ModernActionCard(
       title: label,
       icon: icon,
@@ -684,13 +696,13 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
       margin: EdgeInsets.zero,
     );
   }
-  
+
   Widget _buildMonthlySummary() {
     final thisMonth = DateTime.now();
     final workingDays = _getWorkingDaysInMonth(thisMonth);
     final presentDays = _getPresentDaysInMonth(thisMonth);
     final totalHours = _getTotalHoursInMonth(thisMonth);
-    
+
     return ModernHeroCard(
       title: 'This Month Summary',
       subtitle: '${thisMonth.month}/${thisMonth.year}',
@@ -698,26 +710,32 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
       child: Row(
         children: [
           Expanded(
-            child: _buildSummaryItem('Working Days', workingDays.toString(), Icons.calendar_today, AppThemeUnified.primaryRoyalBlue),
+            child: _buildSummaryItem('Working Days', workingDays.toString(),
+                Icons.calendar_today, AppThemeUnified.primaryRoyalBlue),
           ),
           SizedBox(width: AppThemeUnified.spaceXS),
           Expanded(
-            child: _buildSummaryItem('Present Days', presentDays.toString(), Icons.check_circle, ModernDesignSystem.success),
+            child: _buildSummaryItem('Present Days', presentDays.toString(),
+                Icons.check_circle, ModernDesignSystem.success),
           ),
           SizedBox(width: AppThemeUnified.spaceXS),
           Expanded(
-            child: _buildSummaryItem('Total Hours', totalHours.toStringAsFixed(1), Icons.schedule, ModernDesignSystem.info),
+            child: _buildSummaryItem(
+                'Total Hours',
+                totalHours.toStringAsFixed(1),
+                Icons.schedule,
+                ModernDesignSystem.info),
           ),
         ],
       ),
     );
   }
-  
-  Widget _buildSummaryItem(String label, String value, IconData icon, Color color) {
+
+  Widget _buildSummaryItem(
+      String label, String value, IconData icon, Color color) {
     return AppThemeUnified.glassContainer(
       padding: EdgeInsets.all(AppThemeUnified.spaceMD),
-      color: Colors.white,
-      opacity: 0.9,
+      opacity: 0.15,
       child: Column(
         children: [
           Container(
@@ -749,7 +767,7 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
       ),
     );
   }
-  
+
   Widget _buildAttendanceHistory() {
     if (_attendanceHistory.isEmpty) {
       return ModernEmptyState(
@@ -758,7 +776,7 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
         subtitle: 'Your attendance history will appear here',
       );
     }
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -767,21 +785,21 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
           subtitle: '${_attendanceHistory.length} records',
           icon: Icons.history,
         ),
-        
-        ...(_attendanceHistory.take(10).map((attendance) => _buildAttendanceItem(attendance as Map<String, dynamic>))),
+        ...(_attendanceHistory.take(10).map((attendance) =>
+            _buildAttendanceItem(attendance as Map<String, dynamic>))),
       ],
     );
   }
-  
+
   Widget _buildAttendanceItem(Map<String, dynamic> attendance) {
     final date = attendance['date']?.toString() ?? '';
     final checkIn = attendance['check_in']?.toString();
     final checkOut = attendance['check_out']?.toString();
     final status = attendance['status']?.toString() ?? 'Present';
-    
+
     Color statusColor = ModernDesignSystem.success;
     IconData statusIcon = Icons.check_circle;
-    
+
     switch (status.toLowerCase()) {
       case 'absent':
         statusColor = ModernDesignSystem.error;
@@ -796,12 +814,12 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
         statusIcon = Icons.access_time;
         break;
     }
-    
+
     return ModernInfoCard(
       title: date,
-      subtitle: checkIn != null && checkOut != null 
+      subtitle: checkIn != null && checkOut != null
           ? 'In: ${_formatTime(DateTime.parse(checkIn))} - Out: ${_formatTime(DateTime.parse(checkOut))}'
-          : checkIn != null 
+          : checkIn != null
               ? 'In: ${_formatTime(DateTime.parse(checkIn))} - Still working'
               : 'No attendance data',
       badge: status.toUpperCase(),
@@ -811,7 +829,7 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
       margin: const EdgeInsets.only(bottom: ModernDesignSystem.spaceSM),
     );
   }
-  
+
   Widget _buildShiftRequests() {
     if (_shiftRequests.isEmpty) {
       return ModernEmptyState(
@@ -822,7 +840,7 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
         onAction: _showShiftRequestForm,
       );
     }
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -831,19 +849,19 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
           subtitle: '${_shiftRequests.length} requests',
           icon: Icons.schedule,
         ),
-        
-        ...(_shiftRequests.map((request) => _buildShiftRequestItem(request as Map<String, dynamic>))),
+        ...(_shiftRequests.map((request) =>
+            _buildShiftRequestItem(request as Map<String, dynamic>))),
       ],
     );
   }
-  
+
   Widget _buildShiftRequestItem(Map<String, dynamic> request) {
     final date = request['date']?.toString() ?? '';
     final fromShift = request['from_shift']?.toString() ?? '';
     final toShift = request['to_shift']?.toString() ?? '';
     final status = request['status']?.toString() ?? '';
     final reason = request['reason']?.toString() ?? '';
-    
+
     Color statusColor = ModernDesignSystem.warning;
     switch (status.toLowerCase()) {
       case 'approved':
@@ -853,7 +871,7 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
         statusColor = ModernDesignSystem.error;
         break;
     }
-    
+
     return ModernInfoCard(
       title: 'Shift Change Request',
       subtitle: '$fromShift → $toShift ($date)',
@@ -864,41 +882,42 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
       onTap: () => _showShiftRequestDetails(request),
     );
   }
-  
+
   String _formatDuration(Duration duration) {
     final hours = duration.inHours;
     final minutes = duration.inMinutes % 60;
     return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}';
   }
-  
+
   String _formatTime(DateTime time) {
     return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
   }
-  
+
   int _getWorkingDaysInMonth(DateTime month) {
     // Simplified calculation - in a real app, you'd consider holidays and weekends
     final daysInMonth = DateTime(month.year, month.month + 1, 0).day;
     return (daysInMonth * 5 / 7).round(); // Rough estimate of working days
   }
-  
+
   int _getPresentDaysInMonth(DateTime month) {
     return _attendanceHistory.where((attendance) {
       if (attendance is Map && attendance['date'] != null) {
         final attendanceDate = DateTime.parse(attendance['date'].toString());
-        return attendanceDate.year == month.year && 
-               attendanceDate.month == month.month &&
-               attendance['status']?.toString().toLowerCase() != 'absent';
+        return attendanceDate.year == month.year &&
+            attendanceDate.month == month.month &&
+            attendance['status']?.toString().toLowerCase() != 'absent';
       }
       return false;
     }).length;
   }
-  
+
   double _getTotalHoursInMonth(DateTime month) {
     double totalHours = 0.0;
     for (final attendance in _attendanceHistory) {
       if (attendance is Map && attendance['date'] != null) {
         final attendanceDate = DateTime.parse(attendance['date'].toString());
-        if (attendanceDate.year == month.year && attendanceDate.month == month.month) {
+        if (attendanceDate.year == month.year &&
+            attendanceDate.month == month.month) {
           final checkIn = attendance['check_in']?.toString();
           final checkOut = attendance['check_out']?.toString();
           if (checkIn != null && checkOut != null) {
@@ -912,24 +931,26 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
     }
     return totalHours;
   }
-  
+
   Future<void> _checkIn() async {
     try {
       final result = await AttendanceService.checkIn();
       if (mounted) {
         final success = result['success'] == true;
-        final message = result['message']?.toString() ?? (success ? 'Checked in successfully' : 'Failed to check in');
-        
+        final message = result['message']?.toString() ??
+            (success ? 'Checked in successfully' : 'Failed to check in');
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(success ? '✅ $message' : '❌ $message'),
             backgroundColor: success ? Colors.green : Colors.red,
           ),
         );
-        
+
         if (success) {
           // Immediately update UI state
-          print('Check-in successful: Setting _isCheckedIn to true immediately');
+          print(
+              'Check-in successful: Setting _isCheckedIn to true immediately');
           if (mounted) {
             setState(() {
               _isCheckedIn = true;
@@ -954,24 +975,26 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
       }
     }
   }
-  
+
   Future<void> _checkOut() async {
     try {
       final result = await AttendanceService.checkOut();
       if (mounted) {
         final success = result['success'] == true;
-        final message = result['message']?.toString() ?? (success ? 'Checked out successfully' : 'Failed to check out');
-        
+        final message = result['message']?.toString() ??
+            (success ? 'Checked out successfully' : 'Failed to check out');
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(success ? '✅ $message' : '❌ $message'),
             backgroundColor: success ? Colors.green : Colors.red,
           ),
         );
-        
+
         if (success) {
           // Immediately update UI state
-          print('Check-out successful: Setting _isCheckedIn to false immediately');
+          print(
+              'Check-out successful: Setting _isCheckedIn to false immediately');
           if (mounted) {
             setState(() {
               _isCheckedIn = false;
@@ -996,16 +1019,22 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
       }
     }
   }
-  
+
   void _takeBreak() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        backgroundColor: AppThemeUnified.glassMedium,
+        surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
+          side: const BorderSide(color: AppThemeUnified.glassBorder, width: 1),
         ),
-        title: const Text('Take a Break'),
-        content: const Text('This feature will be available in a future update.'),
+        title: const Text('Take a Break', style: AppThemeUnified.headlineSmall),
+        content: const Text(
+          'This feature will be available in a future update.',
+          style: AppThemeUnified.bodyMedium,
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -1015,16 +1044,23 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
       ),
     );
   }
-  
+
   void _requestOvertime() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        backgroundColor: AppThemeUnified.glassMedium,
+        surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
+          side: const BorderSide(color: AppThemeUnified.glassBorder, width: 1),
         ),
-        title: const Text('Request Overtime'),
-        content: const Text('This feature will be available in a future update.'),
+        title: const Text('Request Overtime',
+            style: AppThemeUnified.headlineSmall),
+        content: const Text(
+          'This feature will be available in a future update.',
+          style: AppThemeUnified.bodyMedium,
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -1034,16 +1070,23 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
       ),
     );
   }
-  
+
   void _requestRemoteWork() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        backgroundColor: AppThemeUnified.glassMedium,
+        surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
+          side: const BorderSide(color: AppThemeUnified.glassBorder, width: 1),
         ),
-        title: const Text('Request Remote Work'),
-        content: const Text('This feature will be available in a future update.'),
+        title: const Text('Request Remote Work',
+            style: AppThemeUnified.headlineSmall),
+        content: const Text(
+          'This feature will be available in a future update.',
+          style: AppThemeUnified.bodyMedium,
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -1053,16 +1096,22 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
       ),
     );
   }
-  
+
   void _reportIssue() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        backgroundColor: AppThemeUnified.glassMedium,
+        surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
+          side: const BorderSide(color: AppThemeUnified.glassBorder, width: 1),
         ),
-        title: const Text('Report Issue'),
-        content: const Text('This feature will be available in a future update.'),
+        title: const Text('Report Issue', style: AppThemeUnified.headlineSmall),
+        content: const Text(
+          'This feature will be available in a future update.',
+          style: AppThemeUnified.bodyMedium,
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -1072,15 +1121,17 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
       ),
     );
   }
-  
+
   void _showShiftRequestForm() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => const ShiftRequestFormPage(),
-      ),
-    ).then((_) => _loadAttendanceData());
+    Navigator.of(context)
+        .push(
+          MaterialPageRoute(
+            builder: (context) => const ShiftRequestFormPage(),
+          ),
+        )
+        .then((_) => _loadAttendanceData());
   }
-  
+
   void _showShiftRequestDetails(Map<String, dynamic> request) {
     showModalBottomSheet(
       context: context,
@@ -1094,7 +1145,7 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
 // Shift Request Form Page
 class ShiftRequestFormPage extends StatefulWidget {
   const ShiftRequestFormPage({super.key});
-  
+
   @override
   State<ShiftRequestFormPage> createState() => _ShiftRequestFormPageState();
 }
@@ -1102,27 +1153,27 @@ class ShiftRequestFormPage extends StatefulWidget {
 class _ShiftRequestFormPageState extends State<ShiftRequestFormPage> {
   final _formKey = GlobalKey<FormState>();
   final _reasonController = TextEditingController();
-  
+
   DateTime? _selectedDate;
   String? _currentShift;
   String? _requestedShift;
   bool _isSubmitting = false;
   bool _isLoadingShifts = true;
-  
+
   List<String> _shifts = [];
-  
+
   @override
   void initState() {
     super.initState();
     _loadShiftTypes();
   }
-  
+
   @override
   void dispose() {
     _reasonController.dispose();
     super.dispose();
   }
-  
+
   Future<void> _loadShiftTypes() async {
     try {
       final types = await AttendanceService.shiftTypes();
@@ -1146,7 +1197,7 @@ class _ShiftRequestFormPageState extends State<ShiftRequestFormPage> {
       }
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1157,7 +1208,8 @@ class _ShiftRequestFormPageState extends State<ShiftRequestFormPage> {
             end: Alignment.bottomCenter,
             colors: [
               ModernDesignSystem.getSurfaceColor(Theme.of(context).brightness),
-              ModernDesignSystem.getSurfaceVariant(Theme.of(context).brightness),
+              ModernDesignSystem.getSurfaceVariant(
+                  Theme.of(context).brightness),
             ],
           ),
         ),
@@ -1168,7 +1220,6 @@ class _ShiftRequestFormPageState extends State<ShiftRequestFormPage> {
                 title: 'Request Shift Change',
                 showBackButton: true,
               ),
-              
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.all(ModernDesignSystem.spaceMD),
@@ -1178,13 +1229,10 @@ class _ShiftRequestFormPageState extends State<ShiftRequestFormPage> {
                       children: [
                         _buildDateSelector(),
                         ModernDesignSystem.verticalSpaceMD,
-                        
                         _buildShiftSelectors(),
                         ModernDesignSystem.verticalSpaceMD,
-                        
                         _buildReasonField(),
                         ModernDesignSystem.verticalSpaceXL,
-                        
                         _buildSubmitButton(),
                       ],
                     ),
@@ -1197,7 +1245,7 @@ class _ShiftRequestFormPageState extends State<ShiftRequestFormPage> {
       ),
     );
   }
-  
+
   Widget _buildDateSelector() {
     return ModernHeroCard(
       title: 'Select Date',
@@ -1208,7 +1256,9 @@ class _ShiftRequestFormPageState extends State<ShiftRequestFormPage> {
         child: Container(
           padding: const EdgeInsets.all(ModernDesignSystem.spaceMD),
           decoration: BoxDecoration(
-            border: Border.all(color: ModernDesignSystem.getBorderColor(Theme.of(context).brightness)),
+            border: Border.all(
+                color: ModernDesignSystem.getBorderColor(
+                    Theme.of(context).brightness)),
             borderRadius: BorderRadius.circular(ModernDesignSystem.radiusSM),
           ),
           child: Row(
@@ -1219,13 +1269,15 @@ class _ShiftRequestFormPageState extends State<ShiftRequestFormPage> {
               ),
               ModernDesignSystem.horizontalSpaceSM,
               Text(
-                _selectedDate != null 
+                _selectedDate != null
                     ? '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}'
                     : 'Select date for shift change',
                 style: ModernDesignSystem.bodyMedium.copyWith(
-                  color: _selectedDate != null 
-                      ? ModernDesignSystem.getTextPrimary(Theme.of(context).brightness)
-                      : ModernDesignSystem.getTextTertiary(Theme.of(context).brightness),
+                  color: _selectedDate != null
+                      ? ModernDesignSystem.getTextPrimary(
+                          Theme.of(context).brightness)
+                      : ModernDesignSystem.getTextTertiary(
+                          Theme.of(context).brightness),
                 ),
               ),
             ],
@@ -1234,7 +1286,7 @@ class _ShiftRequestFormPageState extends State<ShiftRequestFormPage> {
       ),
     );
   }
-  
+
   Widget _buildShiftSelectors() {
     if (_isLoadingShifts) {
       return ModernHeroCard(
@@ -1250,7 +1302,7 @@ class _ShiftRequestFormPageState extends State<ShiftRequestFormPage> {
         ),
       );
     }
-    
+
     return Column(
       children: [
         ModernHeroCard(
@@ -1261,26 +1313,30 @@ class _ShiftRequestFormPageState extends State<ShiftRequestFormPage> {
             decoration: InputDecoration(
               hintText: 'Select current shift',
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(ModernDesignSystem.radiusSM),
-                borderSide: BorderSide(color: ModernDesignSystem.getBorderColor(Theme.of(context).brightness)),
+                borderRadius:
+                    BorderRadius.circular(ModernDesignSystem.radiusSM),
+                borderSide: BorderSide(
+                    color: ModernDesignSystem.getBorderColor(
+                        Theme.of(context).brightness)),
               ),
               contentPadding: const EdgeInsets.all(ModernDesignSystem.spaceMD),
             ),
-            items: _shifts.map((shift) => DropdownMenuItem(
-              value: shift,
-              child: Text(shift),
-            )).toList(),
+            items: _shifts
+                .map((shift) => DropdownMenuItem(
+                      value: shift,
+                      child: Text(shift),
+                    ))
+                .toList(),
             onChanged: (value) {
               if (mounted) {
                 setState(() => _currentShift = value);
               }
             },
-            validator: (value) => value == null ? 'Please select current shift' : null,
+            validator: (value) =>
+                value == null ? 'Please select current shift' : null,
           ),
         ),
-        
         ModernDesignSystem.verticalSpaceMD,
-        
         ModernHeroCard(
           title: 'Requested Shift',
           icon: Icons.swap_horiz,
@@ -1289,27 +1345,33 @@ class _ShiftRequestFormPageState extends State<ShiftRequestFormPage> {
             decoration: InputDecoration(
               hintText: 'Select requested shift',
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(ModernDesignSystem.radiusSM),
-                borderSide: BorderSide(color: ModernDesignSystem.getBorderColor(Theme.of(context).brightness)),
+                borderRadius:
+                    BorderRadius.circular(ModernDesignSystem.radiusSM),
+                borderSide: BorderSide(
+                    color: ModernDesignSystem.getBorderColor(
+                        Theme.of(context).brightness)),
               ),
               contentPadding: const EdgeInsets.all(ModernDesignSystem.spaceMD),
             ),
-            items: _shifts.map((shift) => DropdownMenuItem(
-              value: shift,
-              child: Text(shift),
-            )).toList(),
+            items: _shifts
+                .map((shift) => DropdownMenuItem(
+                      value: shift,
+                      child: Text(shift),
+                    ))
+                .toList(),
             onChanged: (value) {
               if (mounted) {
                 setState(() => _requestedShift = value);
               }
             },
-            validator: (value) => value == null ? 'Please select requested shift' : null,
+            validator: (value) =>
+                value == null ? 'Please select requested shift' : null,
           ),
         ),
       ],
     );
   }
-  
+
   Widget _buildReasonField() {
     return ModernHeroCard(
       title: 'Reason for Change',
@@ -1327,7 +1389,7 @@ class _ShiftRequestFormPageState extends State<ShiftRequestFormPage> {
       ),
     );
   }
-  
+
   Widget _buildSubmitButton() {
     return ModernPrimaryButton(
       text: 'Submit Shift Request',
@@ -1336,7 +1398,7 @@ class _ShiftRequestFormPageState extends State<ShiftRequestFormPage> {
       icon: Icons.send,
     );
   }
-  
+
   Future<void> _selectDate() async {
     final date = await showDatePicker(
       context: context,
@@ -1347,21 +1409,21 @@ class _ShiftRequestFormPageState extends State<ShiftRequestFormPage> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: Theme.of(context).colorScheme.copyWith(
-              primary: ModernDesignSystem.primaryTeal,
-            ),
+                  primary: ModernDesignSystem.primaryTeal,
+                ),
           ),
           child: child!,
         );
       },
     );
-    
+
     if (date != null) {
       if (mounted) {
         setState(() => _selectedDate = date);
       }
     }
   }
-  
+
   Future<void> _submitShiftRequest() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedDate == null) {
@@ -1370,11 +1432,11 @@ class _ShiftRequestFormPageState extends State<ShiftRequestFormPage> {
       );
       return;
     }
-    
+
     if (mounted) {
       setState(() => _isSubmitting = true);
     }
-    
+
     try {
       await AttendanceService.requestShiftChange({
         'date': _selectedDate!.toIso8601String(),
@@ -1382,7 +1444,7 @@ class _ShiftRequestFormPageState extends State<ShiftRequestFormPage> {
         'to_shift': _requestedShift!,
         'reason': _reasonController.text.trim(),
       });
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -1409,15 +1471,18 @@ class _ShiftRequestFormPageState extends State<ShiftRequestFormPage> {
 // Shift Request Details Bottom Sheet
 class ShiftRequestDetailsBottomSheet extends StatelessWidget {
   final Map<String, dynamic> request;
-  
+
   const ShiftRequestDetailsBottomSheet({super.key, required this.request});
-  
+
   @override
   Widget build(BuildContext context) {
     return Container(
       height: MediaQuery.of(context).size.height * 0.6,
       decoration: BoxDecoration(
-        color: ModernDesignSystem.getSurfaceColor(Theme.of(context).brightness),
+        color: AppThemeUnified.glassLight,
+        border: const Border.fromBorderSide(
+          BorderSide(color: AppThemeUnified.glassBorder, width: 1),
+        ),
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(ModernDesignSystem.radiusLG),
           topRight: Radius.circular(ModernDesignSystem.radiusLG),
@@ -1430,7 +1495,8 @@ class ShiftRequestDetailsBottomSheet extends StatelessWidget {
             decoration: BoxDecoration(
               border: Border(
                 bottom: BorderSide(
-                  color: ModernDesignSystem.getBorderColor(Theme.of(context).brightness),
+                  color: ModernDesignSystem.getBorderColor(
+                      Theme.of(context).brightness),
                   width: 1,
                 ),
               ),
@@ -1442,7 +1508,8 @@ class ShiftRequestDetailsBottomSheet extends StatelessWidget {
                     'Shift Request Details',
                     style: ModernDesignSystem.headlineMedium.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: ModernDesignSystem.getTextPrimary(Theme.of(context).brightness),
+                      color: ModernDesignSystem.getTextPrimary(
+                          Theme.of(context).brightness),
                     ),
                   ),
                 ),
@@ -1453,19 +1520,24 @@ class ShiftRequestDetailsBottomSheet extends StatelessWidget {
               ],
             ),
           ),
-          
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(ModernDesignSystem.spaceMD),
               child: Column(
                 children: [
-                  _buildDetailItem(context, 'Date', request['date']?.toString() ?? ''),
-                  _buildDetailItem(context, 'Current Shift', request['from_shift']?.toString() ?? ''),
-                  _buildDetailItem(context, 'Requested Shift', request['to_shift']?.toString() ?? ''),
-                  _buildDetailItem(context, 'Status', request['status']?.toString() ?? ''),
-                  _buildDetailItem(context, 'Reason', request['reason']?.toString() ?? ''),
+                  _buildDetailItem(
+                      context, 'Date', request['date']?.toString() ?? ''),
+                  _buildDetailItem(context, 'Current Shift',
+                      request['from_shift']?.toString() ?? ''),
+                  _buildDetailItem(context, 'Requested Shift',
+                      request['to_shift']?.toString() ?? ''),
+                  _buildDetailItem(
+                      context, 'Status', request['status']?.toString() ?? ''),
+                  _buildDetailItem(
+                      context, 'Reason', request['reason']?.toString() ?? ''),
                   if (request['submitted_date'] != null)
-                    _buildDetailItem(context, 'Submitted On', request['submitted_date']?.toString() ?? ''),
+                    _buildDetailItem(context, 'Submitted On',
+                        request['submitted_date']?.toString() ?? ''),
                 ],
               ),
             ),
@@ -1474,7 +1546,7 @@ class ShiftRequestDetailsBottomSheet extends StatelessWidget {
       ),
     );
   }
-  
+
   Widget _buildDetailItem(BuildContext context, String label, String value) {
     return Container(
       margin: const EdgeInsets.only(bottom: ModernDesignSystem.spaceMD),
@@ -1487,7 +1559,8 @@ class ShiftRequestDetailsBottomSheet extends StatelessWidget {
               label,
               style: ModernDesignSystem.labelLarge.copyWith(
                 fontWeight: FontWeight.w500,
-                color: ModernDesignSystem.getTextSecondary(Theme.of(context).brightness),
+                color: ModernDesignSystem.getTextSecondary(
+                    Theme.of(context).brightness),
               ),
             ),
           ),
@@ -1495,7 +1568,8 @@ class ShiftRequestDetailsBottomSheet extends StatelessWidget {
             child: Text(
               value,
               style: ModernDesignSystem.bodyMedium.copyWith(
-                color: ModernDesignSystem.getTextPrimary(Theme.of(context).brightness),
+                color: ModernDesignSystem.getTextPrimary(
+                    Theme.of(context).brightness),
               ),
             ),
           ),

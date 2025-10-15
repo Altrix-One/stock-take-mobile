@@ -77,13 +77,13 @@ class ModernAttendanceItem extends StatelessWidget {
   IconData _getAttendanceIcon(String? reason) {
     if (reason == null) return Icons.access_time_rounded;
     final reasonLower = reason.toLowerCase();
-    
+
     if (reasonLower.contains('sick')) return Icons.healing_rounded;
     if (reasonLower.contains('emergency')) return Icons.warning_rounded;
     if (reasonLower.contains('meeting')) return Icons.groups_rounded;
     if (reasonLower.contains('training')) return Icons.school_rounded;
     if (reasonLower.contains('personal')) return Icons.person_rounded;
-    
+
     return Icons.access_time_rounded;
   }
 
@@ -109,15 +109,17 @@ class ModernAttendanceItem extends StatelessWidget {
 
   String _formatDateTimeRange(String? fromDate, String? toDate) {
     if (fromDate == null || toDate == null) return 'N/A';
-    
+
     try {
       final from = DateTime.parse(fromDate);
       final to = DateTime.parse(toDate);
-      
-      if (from.year == to.year && from.month == to.month && from.day == to.day) {
+
+      if (from.year == to.year &&
+          from.month == to.month &&
+          from.day == to.day) {
         return '${DateFormat('MMM dd, yyyy').format(from)} • ${DateFormat('hh:mm a').format(from)} - ${DateFormat('hh:mm a').format(to)}';
       }
-      
+
       return '${DateFormat('MMM dd, hh:mm a').format(from)} - ${DateFormat('MMM dd, hh:mm a').format(to)}';
     } catch (_) {
       return '$fromDate - $toDate';
@@ -126,7 +128,7 @@ class ModernAttendanceItem extends StatelessWidget {
 
   double _calculateHours(String? fromDate, String? toDate) {
     if (fromDate == null || toDate == null) return 0;
-    
+
     try {
       final from = DateTime.parse(fromDate);
       final to = DateTime.parse(toDate);
@@ -140,13 +142,16 @@ class ModernAttendanceItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final reason = attendance['reason']?.toString() ?? 'Attendance Request';
-    final fromDate = attendance['from_date']?.toString() ?? attendance['from_time']?.toString();
-    final toDate = attendance['to_date']?.toString() ?? attendance['to_time']?.toString();
+    final fromDate = attendance['from_date']?.toString() ??
+        attendance['from_time']?.toString();
+    final toDate =
+        attendance['to_date']?.toString() ?? attendance['to_time']?.toString();
     final status = _getAttendanceStatus(attendance['status']?.toString());
     final hours = _calculateHours(fromDate, toDate);
-    
+
     final statusColor = _getStatusColor(status, context);
-    final canCancel = status.toLowerCase() == 'pending' || status.toLowerCase() == 'open';
+    final canCancel =
+        status.toLowerCase() == 'pending' || status.toLowerCase() == 'open';
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -213,7 +218,8 @@ class ModernAttendanceItem extends StatelessWidget {
                   ),
                   // Status badge
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: statusColor.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(20),
@@ -244,9 +250,9 @@ class ModernAttendanceItem extends StatelessWidget {
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Stats row
               Row(
                 children: [
@@ -281,7 +287,7 @@ class ModernAttendanceItem extends StatelessWidget {
                     ),
                 ],
               ),
-              
+
               // Reason (if available)
               if (reason.isNotEmpty && reason != 'Attendance Request') ...[
                 const SizedBox(height: 16),
@@ -319,7 +325,8 @@ class ModernAttendanceItem extends StatelessWidget {
                       Text(
                         reason,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8),
+                          color: theme.colorScheme.onSurfaceVariant
+                              .withOpacity(0.8),
                           height: 1.4,
                         ),
                       ),
@@ -327,7 +334,7 @@ class ModernAttendanceItem extends StatelessWidget {
                   ),
                 ),
               ],
-              
+
               // Action buttons (if available)
               if (canCancel && onCancel != null) ...[
                 const SizedBox(height: 16),
@@ -340,7 +347,8 @@ class ModernAttendanceItem extends StatelessWidget {
                       label: const Text('Cancel'),
                       style: TextButton.styleFrom(
                         foregroundColor: theme.colorScheme.error,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
                       ),
                     ),
                   ],
@@ -353,9 +361,10 @@ class ModernAttendanceItem extends StatelessWidget {
     );
   }
 
-  Widget _statItem(BuildContext context, String label, String value, IconData icon) {
+  Widget _statItem(
+      BuildContext context, String label, String value, IconData icon) {
     final theme = Theme.of(context);
-    
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(

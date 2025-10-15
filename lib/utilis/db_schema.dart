@@ -14,7 +14,8 @@ class DBSchema {
   }
 
   // Function to handle migrations
-  static Future<void> upgradeDB(Database db, int oldVersion, int newVersion) async {
+  static Future<void> upgradeDB(
+      Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await _createStockMovementTables(db);
       await _createPickPackTables(db);
@@ -158,8 +159,11 @@ class DBSchema {
   }
 
   static Future<void> _createIndexes(Database db) async {
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_outbox_status ON Outbox(status);');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_stockentry_synced ON StockEntry(synced);');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_stockentryitem_entry ON StockEntryItem(stock_entry_id);');
+    await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_outbox_status ON Outbox(status);');
+    await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_stockentry_synced ON StockEntry(synced);');
+    await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_stockentryitem_entry ON StockEntryItem(stock_entry_id);');
   }
 }

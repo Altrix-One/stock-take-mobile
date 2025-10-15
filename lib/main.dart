@@ -33,7 +33,6 @@ void startPeriodicHRSync() {
   print("Periodic HR sync scheduled every 15 minutes");
 }
 
-
 // Initialize Hive for background tasks
 Future<void> initializeHiveForBackgroundTasks() async {
   final appDocumentDir = await getApplicationDocumentsDirectory();

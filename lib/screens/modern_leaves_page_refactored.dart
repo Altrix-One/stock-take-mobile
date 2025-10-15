@@ -9,37 +9,37 @@ class ModernLeavesPageRefactored extends StatefulWidget {
   const ModernLeavesPageRefactored({super.key});
 
   @override
-  State<ModernLeavesPageRefactored> createState() => _ModernLeavesPageRefactoredState();
+  State<ModernLeavesPageRefactored> createState() =>
+      _ModernLeavesPageRefactoredState();
 }
 
-class _ModernLeavesPageRefactoredState extends State<ModernLeavesPageRefactored> 
+class _ModernLeavesPageRefactoredState extends State<ModernLeavesPageRefactored>
     with SingleTickerProviderStateMixin {
-  
   late TabController _tabController;
   bool _isLoading = true;
-  
+
   // Leave data
   Map<String, dynamic>? _leaveBalance;
   List<dynamic> _myLeaves = [];
-  
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _loadLeaveData();
   }
-  
+
   @override
   void dispose() {
     _tabController.dispose();
     super.dispose();
   }
-  
+
   Future<void> _loadLeaveData() async {
     try {
       final balance = await LeavesService.leaveBalanceWithPending();
       final leaves = await LeavesService.myLeaves();
-      
+
       if (mounted) {
         setState(() {
           _leaveBalance = balance;
@@ -56,7 +56,7 @@ class _ModernLeavesPageRefactoredState extends State<ModernLeavesPageRefactored>
       }
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return UniversalScaffold(
@@ -92,7 +92,7 @@ class _ModernLeavesPageRefactoredState extends State<ModernLeavesPageRefactored>
           unselectedLabelStyle: AppThemeUnified.labelMedium,
         ),
       ),
-      body: _isLoading 
+      body: _isLoading
           ? const UniversalLoading(
               message: 'Loading leave information...',
             )
@@ -115,7 +115,7 @@ class _ModernLeavesPageRefactoredState extends State<ModernLeavesPageRefactored>
       ),
     );
   }
-  
+
   Widget _buildMyApplicationsTab() {
     if (_myLeaves.isEmpty) {
       return const UniversalEmptyState(
@@ -124,7 +124,7 @@ class _ModernLeavesPageRefactoredState extends State<ModernLeavesPageRefactored>
         message: 'Your leave applications will appear here',
       );
     }
-    
+
     return RefreshIndicator(
       onRefresh: _loadLeaveData,
       child: UniversalPageContent(
@@ -134,16 +134,16 @@ class _ModernLeavesPageRefactoredState extends State<ModernLeavesPageRefactored>
             subtitle: '${_myLeaves.length} applications found',
             icon: Icons.history,
           ),
-          
+
           ..._myLeaves.map((leave) => _buildLeaveApplicationCard(leave)),
-          
+
           // Bottom spacing for FAB
           const SizedBox(height: 100),
         ],
       ),
     );
   }
-  
+
   Widget _buildLeaveBalanceTab() {
     if (_leaveBalance == null || _leaveBalance!.isEmpty) {
       return const UniversalEmptyState(
@@ -152,7 +152,7 @@ class _ModernLeavesPageRefactoredState extends State<ModernLeavesPageRefactored>
         message: 'Your leave balance information will appear here',
       );
     }
-    
+
     return RefreshIndicator(
       onRefresh: _loadLeaveData,
       child: UniversalPageContent(
@@ -162,24 +162,21 @@ class _ModernLeavesPageRefactoredState extends State<ModernLeavesPageRefactored>
             subtitle: 'Current allocation and usage',
             icon: Icons.account_balance_wallet,
           ),
-          
-          ..._leaveBalance!.entries.map((entry) => 
-            _buildLeaveBalanceCard(entry.key, entry.value)
-          ),
-          
+          ..._leaveBalance!.entries
+              .map((entry) => _buildLeaveBalanceCard(entry.key, entry.value)),
           const SizedBox(height: AppThemeUnified.spaceLG),
         ],
       ),
     );
   }
-  
+
   Widget _buildLeaveApplicationCard(Map<String, dynamic> leave) {
     final leaveType = leave['leave_type']?.toString() ?? 'Leave';
     final fromDate = leave['from_date']?.toString() ?? '';
     final toDate = leave['to_date']?.toString() ?? '';
     final status = leave['status']?.toString() ?? '';
     final days = leave['total_leave_days']?.toString() ?? '0';
-    
+
     return UniversalCard(
       onTap: () => _showLeaveDetails(leave),
       child: Column(
@@ -225,7 +222,8 @@ class _ModernLeavesPageRefactoredState extends State<ModernLeavesPageRefactored>
                     ),
                     decoration: BoxDecoration(
                       color: _getStatusColor(status),
-                      borderRadius: BorderRadius.circular(AppThemeUnified.radiusXS),
+                      borderRadius:
+                          BorderRadius.circular(AppThemeUnified.radiusXS),
                     ),
                     child: Text(
                       status.toUpperCase(),
@@ -247,22 +245,23 @@ class _ModernLeavesPageRefactoredState extends State<ModernLeavesPageRefactored>
       ),
     );
   }
-  
+
   Widget _buildLeaveBalanceCard(String leaveType, dynamic balanceData) {
     String allocated = '0';
     String used = '0';
     String remaining = '0';
-    
+
     if (balanceData is Map<String, dynamic>) {
       allocated = balanceData['allocated_leaves']?.toString() ?? '0';
       used = balanceData['leaves_taken']?.toString() ?? '0';
       remaining = balanceData['remaining_leaves']?.toString() ?? '0';
     }
-    
-    final progress = double.tryParse(allocated) != null && double.parse(allocated) > 0
-        ? double.tryParse(used)! / double.parse(allocated)
-        : 0.0;
-    
+
+    final progress =
+        double.tryParse(allocated) != null && double.parse(allocated) > 0
+            ? double.tryParse(used)! / double.parse(allocated)
+            : 0.0;
+
     return UniversalCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -297,9 +296,9 @@ class _ModernLeavesPageRefactoredState extends State<ModernLeavesPageRefactored>
               ),
             ],
           ),
-          
+
           const SizedBox(height: AppThemeUnified.spaceMD),
-          
+
           // Progress indicator
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -332,7 +331,7 @@ class _ModernLeavesPageRefactoredState extends State<ModernLeavesPageRefactored>
       ),
     );
   }
-  
+
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'approved':
@@ -347,25 +346,27 @@ class _ModernLeavesPageRefactoredState extends State<ModernLeavesPageRefactored>
         return AppThemeUnified.glassMedium;
     }
   }
-  
+
   Color _getLeaveTypeColor(String leaveType) {
     final type = leaveType.toLowerCase();
     if (type.contains('casual')) return AppThemeUnified.primaryRoyalBlue;
     if (type.contains('sick')) return AppThemeUnified.error;
     if (type.contains('annual')) return AppThemeUnified.success;
-    if (type.contains('maternity') || type.contains('paternity')) return const Color(0xFF9C27B0);
+    if (type.contains('maternity') || type.contains('paternity'))
+      return const Color(0xFF9C27B0);
     return AppThemeUnified.secondaryOceanBlue;
   }
-  
+
   IconData _getLeaveTypeIcon(String leaveType) {
     final type = leaveType.toLowerCase();
     if (type.contains('casual')) return Icons.event_note;
     if (type.contains('sick')) return Icons.local_hospital;
     if (type.contains('annual')) return Icons.beach_access;
-    if (type.contains('maternity') || type.contains('paternity')) return Icons.child_care;
+    if (type.contains('maternity') || type.contains('paternity'))
+      return Icons.child_care;
     return Icons.event;
   }
-  
+
   void _showLeaveDetails(Map<String, dynamic> leave) {
     showDialog(
       context: context,
@@ -394,7 +395,7 @@ class _ModernLeavesPageRefactoredState extends State<ModernLeavesPageRefactored>
       ),
     );
   }
-  
+
   void _showApplyLeaveDialog() {
     showDialog(
       context: context,

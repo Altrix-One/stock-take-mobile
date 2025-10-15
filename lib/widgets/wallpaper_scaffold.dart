@@ -42,7 +42,7 @@ class WallpaperScaffold extends StatefulWidget {
 class _WallpaperScaffoldState extends State<WallpaperScaffold> {
   String? _wallpaperKey;
   WallpaperDefinition? _wallpaperDef;
-  
+
   @override
   void initState() {
     super.initState();
@@ -51,11 +51,11 @@ class _WallpaperScaffoldState extends State<WallpaperScaffold> {
 
   Future<void> _loadWallpaper() async {
     try {
-      final wallpaperKey = widget.customWallpaperKey ?? 
+      final wallpaperKey = widget.customWallpaperKey ??
           await UnifiedThemeSystem.getCurrentWallpaperKey();
-      final wallpaperDef = WallpaperManager.wallpapers[wallpaperKey] ?? 
+      final wallpaperDef = WallpaperManager.wallpapers[wallpaperKey] ??
           WallpaperManager.wallpapers['royal_ocean_blue']!;
-      
+
       if (mounted) {
         setState(() {
           _wallpaperKey = wallpaperKey;

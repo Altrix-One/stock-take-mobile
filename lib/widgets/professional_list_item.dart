@@ -58,7 +58,8 @@ class ProfessionalListItem extends StatelessWidget {
         break;
       case ListItemStyle.card:
         backgroundColor = isDark ? const Color(0xFF1E1E1E) : whiteColor;
-        borderColor = isDark ? borderMediumColor.withOpacity(0.1) : borderLightColor;
+        borderColor =
+            isDark ? borderMediumColor.withOpacity(0.1) : borderLightColor;
         elevation = elevationSM;
         borderRadius = BorderRadius.circular(radiusMD);
         break;
@@ -77,7 +78,10 @@ class ProfessionalListItem extends StatelessWidget {
     }
 
     final paddingValue = padding ?? const EdgeInsets.all(paddingMD);
-    final marginValue = margin ?? (style == ListItemStyle.card ? const EdgeInsets.symmetric(vertical: paddingXS) : EdgeInsets.zero);
+    final marginValue = margin ??
+        (style == ListItemStyle.card
+            ? const EdgeInsets.symmetric(vertical: paddingXS)
+            : EdgeInsets.zero);
 
     Widget content = Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -104,7 +108,9 @@ class ProfessionalListItem extends StatelessWidget {
                 Text(
                   subtitle!,
                   style: bodySmall.copyWith(
-                    color: isSelected ? accentColor.withOpacity(0.8) : textSecondaryColor,
+                    color: isSelected
+                        ? accentColor.withOpacity(0.8)
+                        : textSecondaryColor,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -145,7 +151,9 @@ class ProfessionalListItem extends StatelessWidget {
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: borderRadius,
-        border: borderColor != null ? Border.all(color: borderColor, width: 1) : null,
+        border: borderColor != null
+            ? Border.all(color: borderColor, width: 1)
+            : null,
         boxShadow: elevation != null
             ? [
                 BoxShadow(
@@ -220,7 +228,8 @@ class LeaveListItem extends ProfessionalListItem {
                 IconButton(
                   icon: const Icon(Icons.cancel_outlined, color: errorColor),
                   onPressed: onCancel,
-                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  constraints:
+                      const BoxConstraints(minWidth: 32, minHeight: 32),
                   padding: EdgeInsets.zero,
                   iconSize: 16,
                 ),
@@ -240,7 +249,8 @@ class LeaveListItem extends ProfessionalListItem {
   static IconData _getLeaveTypeIcon(String leaveType) {
     final type = leaveType.toLowerCase();
     if (type.contains('sick')) return Icons.healing_outlined;
-    if (type.contains('annual') || type.contains('vacation')) return Icons.beach_access_outlined;
+    if (type.contains('annual') || type.contains('vacation'))
+      return Icons.beach_access_outlined;
     if (type.contains('casual')) return Icons.weekend_outlined;
     return Icons.event_available_outlined;
   }

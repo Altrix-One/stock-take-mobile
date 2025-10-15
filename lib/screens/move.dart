@@ -49,7 +49,9 @@ class _MoveScreenState extends State<MoveScreen> {
         });
       }
       if (_companies.isNotEmpty) {
-        _company = _company != null && _companies.contains(_company!) ? _company : _companies.first;
+        _company = _company != null && _companies.contains(_company!)
+            ? _company
+            : _companies.first;
       } else {
         _company = null;
       }
@@ -72,7 +74,8 @@ class _MoveScreenState extends State<MoveScreen> {
   Future<void> _enqueue() async {
     if (!_formKey.currentState!.validate()) return;
     if (_lines.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Add at least one item')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Add at least one item')));
       return;
     }
     _formKey.currentState!.save();
@@ -103,7 +106,9 @@ class _MoveScreenState extends State<MoveScreen> {
     // Also persist a local draft StockEntry row for visibility
     final dbPath = await getDatabasesPath();
     final db = await openDatabase(p.join(dbPath, 'stock_count.db'),
-        version: DBSchema.dbVersion, onCreate: DBSchema.initDB, onUpgrade: DBSchema.upgradeDB);
+        version: DBSchema.dbVersion,
+        onCreate: DBSchema.initDB,
+        onUpgrade: DBSchema.upgradeDB);
     final entryId = await db.insert('StockEntry', {
       'type': _type,
       'company': _company,
@@ -127,13 +132,15 @@ class _MoveScreenState extends State<MoveScreen> {
     }
 
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Movement queued for sync')));
+    ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Movement queued for sync')));
     Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
-    final whs = _company != null ? (_warehousesByCompany[_company] ?? []) : <String>[];
+    final whs =
+        _company != null ? (_warehousesByCompany[_company] ?? []) : <String>[];
 
     return Scaffold(
       appBar: AppBar(
@@ -145,7 +152,8 @@ class _MoveScreenState extends State<MoveScreen> {
             onPressed: () async {
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Refreshing companies and warehouses...')),
+                  const SnackBar(
+                      content: Text('Refreshing companies and warehouses...')),
                 );
               }
               setState(() => _loading = true);
@@ -163,76 +171,106 @@ class _MoveScreenState extends State<MoveScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            children: [
-              // Type
-              DropdownButtonFormField<String>(
-                value: _type,
-                items: const [
-                  DropdownMenuItem(value: 'Material Transfer', child: Text('Material Transfer')),
-                  DropdownMenuItem(value: 'Material Issue', child: Text('Material Issue')),
-                  DropdownMenuItem(value: 'Material Receipt', child: Text('Material Receipt')),
-                ],
-                onChanged: (v) => setState(() => _type = v ?? _type),
-                decoration: const InputDecoration(labelText: 'Type'),
-              ),
-              const SizedBox(height: 12),
-              // Company
-              DropdownButtonFormField<String>(
-                value: _company,
-                items: _companies.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
-                onChanged: _companies.isEmpty
-                    ? null
-                    : (v) => setState(() {
-                          _company = v;
-                          _fromWh = null;
-                          _toWh = null;
-                        }),
-                decoration: const InputDecoration(labelText: 'Company'),
-                validator: (v) => v == null ? 'Company required' : null,
-              ),
-              const SizedBox(height: 12),
-              if (_type != 'Material Receipt')
-                DropdownButtonFormField<String>(
-                  value: _fromWh,
-                  items: whs.map((w) => DropdownMenuItem(value: w, child: Text(w))).toList(),
-                  onChanged: whs.isEmpty ? null : (v) => setState(() => _fromWh = v),
-                  decoration: const InputDecoration(labelText: 'From Warehouse'),
-                  validator: (v) => v == null ? 'From warehouse required' : null,
+              padding: const EdgeInsets.all(16.0),
+              child: Form(
+                key: _formKey,
+                child: ListView(
+                  children: [
+                    // Type
+                    DropdownButtonFormField<String>(
+                      value: _type,
+                      items: const [
+                        DropdownMenuItem(
+                            value: 'Material Transfer',
+                            child: Text('Material Transfer')),
+                        DropdownMenuItem(
+                            value: 'Material Issue',
+                            child: Text('Material Issue')),
+                        DropdownMenuItem(
+                            value: 'Material Receipt',
+                            child: Text('Material Receipt')),
+                      ],
+                      onChanged: (v) => setState(() => _type = v ?? _type),
+                      decoration: const InputDecoration(labelText: 'Type'),
+                    ),
+                    const SizedBox(height: 12),
+                    // Company
+                    DropdownButtonFormField<String>(
+                      value: _company,
+                      items: _companies
+                          .map(
+                              (c) => DropdownMenuItem(value: c, child: Text(c)))
+                          .toList(),
+                      onChanged: _companies.isEmpty
+                          ? null
+                          : (v) => setState(() {
+                                _company = v;
+                                _fromWh = null;
+                                _toWh = null;
+                              }),
+                      decoration: const InputDecoration(labelText: 'Company'),
+                      validator: (v) => v == null ? 'Company required' : null,
+                    ),
+                    const SizedBox(height: 12),
+                    if (_type != 'Material Receipt')
+                      DropdownButtonFormField<String>(
+                        value: _fromWh,
+                        items: whs
+                            .map((w) =>
+                                DropdownMenuItem(value: w, child: Text(w)))
+                            .toList(),
+                        onChanged: whs.isEmpty
+                            ? null
+                            : (v) => setState(() => _fromWh = v),
+                        decoration:
+                            const InputDecoration(labelText: 'From Warehouse'),
+                        validator: (v) =>
+                            v == null ? 'From warehouse required' : null,
+                      ),
+                    if (_type != 'Material Issue')
+                      Padding(
+                        padding: const EdgeInsets.only(top: 12.0),
+                        child: DropdownButtonFormField<String>(
+                          value: _toWh,
+                          items: whs
+                              .map((w) =>
+                                  DropdownMenuItem(value: w, child: Text(w)))
+                              .toList(),
+                          onChanged: whs.isEmpty
+                              ? null
+                              : (v) => setState(() => _toWh = v),
+                          decoration:
+                              const InputDecoration(labelText: 'To Warehouse'),
+                          validator: (v) =>
+                              v == null ? 'To warehouse required' : null,
+                        ),
+                      ),
+                    const Divider(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Lines',
+                            style: TextStyle(fontWeight: FontWeight.bold)),
+                        TextButton.icon(
+                          onPressed: () => setState(() => _lines.add(_Line())),
+                          icon: const Icon(Icons.add),
+                          label: const Text('Add line'),
+                        ),
+                      ],
+                    ),
+                    for (int i = 0; i < _lines.length; i++)
+                      _LineEditor(
+                          line: _lines[i],
+                          onRemove: () => setState(() => _lines.removeAt(i))),
+                    const SizedBox(height: 16),
+                    ElevatedButton.icon(
+                        onPressed: _enqueue,
+                        icon: const Icon(Icons.save),
+                        label: const Text('Queue Movement')),
+                  ],
                 ),
-              if (_type != 'Material Issue')
-                Padding(
-                  padding: const EdgeInsets.only(top: 12.0),
-                  child: DropdownButtonFormField<String>(
-                    value: _toWh,
-                    items: whs.map((w) => DropdownMenuItem(value: w, child: Text(w))).toList(),
-                    onChanged: whs.isEmpty ? null : (v) => setState(() => _toWh = v),
-                    decoration: const InputDecoration(labelText: 'To Warehouse'),
-                    validator: (v) => v == null ? 'To warehouse required' : null,
-                  ),
-                ),
-              const Divider(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Lines', style: TextStyle(fontWeight: FontWeight.bold)),
-                  TextButton.icon(
-                    onPressed: () => setState(() => _lines.add(_Line())),
-                    icon: const Icon(Icons.add),
-                    label: const Text('Add line'),
-                  ),
-                ],
               ),
-              for (int i = 0; i < _lines.length; i++) _LineEditor(line: _lines[i], onRemove: () => setState(() => _lines.removeAt(i))),
-              const SizedBox(height: 16),
-              ElevatedButton.icon(onPressed: _enqueue, icon: const Icon(Icons.save), label: const Text('Queue Movement')),
-            ],
-          ),
-        ),
-      ),
+            ),
     );
   }
 }
@@ -247,7 +285,8 @@ class _Line {
 class _LineEditor extends StatefulWidget {
   final _Line line;
   final VoidCallback onRemove;
-  const _LineEditor({required this.line, required this.onRemove, Key? key}) : super(key: key);
+  const _LineEditor({required this.line, required this.onRemove, Key? key})
+      : super(key: key);
 
   @override
   State<_LineEditor> createState() => _LineEditorState();
@@ -304,13 +343,15 @@ class _LineEditorState extends State<_LineEditor> {
             TextFormField(
               controller: _itemController,
               readOnly: true,
-              decoration: const InputDecoration(labelText: 'Item Code (tap to search)'),
+              decoration:
+                  const InputDecoration(labelText: 'Item Code (tap to search)'),
               onTap: _pickItem,
               onSaved: (v) => widget.line.itemCode = v,
             ),
             TextFormField(
               controller: _barcodeController,
-              decoration: const InputDecoration(labelText: 'Barcode (optional)'),
+              decoration:
+                  const InputDecoration(labelText: 'Barcode (optional)'),
               onSaved: (v) => widget.line.barcode = v,
             ),
             Row(
@@ -319,8 +360,10 @@ class _LineEditorState extends State<_LineEditor> {
                   child: TextFormField(
                     controller: _qtyController,
                     decoration: const InputDecoration(labelText: 'Qty'),
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    onSaved: (v) => widget.line.qty = double.tryParse(v ?? '') ?? 1.0,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    onSaved: (v) =>
+                        widget.line.qty = double.tryParse(v ?? '') ?? 1.0,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -331,7 +374,9 @@ class _LineEditorState extends State<_LineEditor> {
                     onSaved: (v) => widget.line.uom = (v ?? 'Nos').trim(),
                   ),
                 ),
-                IconButton(onPressed: widget.onRemove, icon: const Icon(Icons.delete_outline))
+                IconButton(
+                    onPressed: widget.onRemove,
+                    icon: const Icon(Icons.delete_outline))
               ],
             ),
           ],
@@ -407,7 +452,8 @@ class _ItemPickerSheetState extends State<_ItemPickerSheet> {
                       },
                     ),
                   ),
-                  IconButton(onPressed: _search, icon: const Icon(Icons.refresh)),
+                  IconButton(
+                      onPressed: _search, icon: const Icon(Icons.refresh)),
                 ],
               ),
             ),

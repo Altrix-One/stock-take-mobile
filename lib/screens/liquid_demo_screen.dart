@@ -15,19 +15,20 @@ class LiquidDemoScreen extends StatefulWidget {
 class _LiquidDemoScreenState extends State<LiquidDemoScreen> {
   String _currentWallpaper = 'ios_blue';
   String _currentPalette = 'ocean';
-  
+
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
         // Animated liquid wallpaper background
         Positioned.fill(
-          child: WallpaperManager.fromKey(_currentWallpaper, effectsEnabled: true),
+          child:
+              WallpaperManager.fromKey(_currentWallpaper, effectsEnabled: true),
         ),
-        
+
         Scaffold(
           backgroundColor: Colors.transparent,
-          
+
           // Liquid App Bar
           appBar: LiquidAppBar(
             title: const Text('Liquid Demo'),
@@ -43,7 +44,7 @@ class _LiquidDemoScreenState extends State<LiquidDemoScreen> {
               ),
             ],
           ),
-          
+
           body: SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
@@ -66,9 +67,9 @@ class _LiquidDemoScreenState extends State<LiquidDemoScreen> {
                       ),
                     ),
                   ),
-                  
+
                   const SizedBox(height: 16),
-                  
+
                   // Glass morphism cards
                   Row(
                     children: [
@@ -98,7 +99,8 @@ class _LiquidDemoScreenState extends State<LiquidDemoScreen> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: const [
-                              Icon(Icons.auto_awesome, color: Colors.white, size: 30),
+                              Icon(Icons.auto_awesome,
+                                  color: Colors.white, size: 30),
                               SizedBox(height: 8),
                               Text(
                                 'Animated Card',
@@ -110,9 +112,9 @@ class _LiquidDemoScreenState extends State<LiquidDemoScreen> {
                       ),
                     ],
                   ),
-                  
+
                   const SizedBox(height: 24),
-                  
+
                   // Liquid buttons
                   const Text(
                     'Liquid Buttons',
@@ -123,7 +125,7 @@ class _LiquidDemoScreenState extends State<LiquidDemoScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  
+
                   LiquidButton(
                     liquidPalette: _currentPalette,
                     onPressed: () {
@@ -133,9 +135,9 @@ class _LiquidDemoScreenState extends State<LiquidDemoScreen> {
                     },
                     child: const Text('Primary Liquid Button'),
                   ),
-                  
+
                   const SizedBox(height: 12),
-                  
+
                   Row(
                     children: [
                       Expanded(
@@ -166,9 +168,9 @@ class _LiquidDemoScreenState extends State<LiquidDemoScreen> {
                       ),
                     ],
                   ),
-                  
+
                   const SizedBox(height: 24),
-                  
+
                   // Static gradient containers
                   const Text(
                     'Static Gradient Examples',
@@ -179,11 +181,12 @@ class _LiquidDemoScreenState extends State<LiquidDemoScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  
+
                   Container(
                     height: 80,
                     decoration: BoxDecoration(
-                      gradient: LiquidTheme.staticLiquidGradient(palette: 'roseGold'),
+                      gradient:
+                          LiquidTheme.staticLiquidGradient(palette: 'roseGold'),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: const Center(
@@ -196,9 +199,9 @@ class _LiquidDemoScreenState extends State<LiquidDemoScreen> {
                       ),
                     ),
                   ),
-                  
+
                   const SizedBox(height: 12),
-                  
+
                   Row(
                     children: [
                       Expanded(
@@ -243,9 +246,9 @@ class _LiquidDemoScreenState extends State<LiquidDemoScreen> {
                       ),
                     ],
                   ),
-                  
+
                   const SizedBox(height: 24),
-                  
+
                   // Color information
                   LiquidCard(
                     opacity: 0.25,
@@ -277,13 +280,14 @@ class _LiquidDemoScreenState extends State<LiquidDemoScreen> {
                       ],
                     ),
                   ),
-                  
-                  const SizedBox(height: 100), // Space for floating action button
+
+                  const SizedBox(
+                      height: 100), // Space for floating action button
                 ],
               ),
             ),
           ),
-          
+
           // Liquid Floating Action Button
           floatingActionButton: LiquidFloatingActionButton(
             liquidPalette: _currentPalette,
@@ -298,7 +302,7 @@ class _LiquidDemoScreenState extends State<LiquidDemoScreen> {
       ],
     );
   }
-  
+
   void _showPaletteSelector() {
     showModalBottomSheet(
       context: context,
@@ -345,7 +349,7 @@ class _LiquidDemoScreenState extends State<LiquidDemoScreen> {
       },
     );
   }
-  
+
   void _showWallpaperSelector() {
     showModalBottomSheet(
       context: context,
@@ -378,10 +382,11 @@ class _LiquidDemoScreenState extends State<LiquidDemoScreen> {
                   ),
                   itemCount: WallpaperManager.wallpapers.length,
                   itemBuilder: (context, index) {
-                    final entry = WallpaperManager.wallpapers.entries.elementAt(index);
+                    final entry =
+                        WallpaperManager.wallpapers.entries.elementAt(index);
                     final key = entry.key;
                     final wallpaper = entry.value;
-                    
+
                     return GestureDetector(
                       onTap: () {
                         setState(() {
@@ -393,7 +398,9 @@ class _LiquidDemoScreenState extends State<LiquidDemoScreen> {
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: key == _currentWallpaper ? Colors.blue : Colors.grey[300]!,
+                            color: key == _currentWallpaper
+                                ? Colors.blue
+                                : Colors.grey[300]!,
                             width: key == _currentWallpaper ? 3 : 1,
                           ),
                         ),

@@ -10,7 +10,7 @@ class AppTheme {
   // =============================================================================
   // LEGACY COLOR SUPPORT - For backward compatibility
   // =============================================================================
-  
+
   // Map legacy colors to Cohenix colors
   static const Color primaryColor = CohenixColors.royalBlue;
   static const Color primaryLightColor = CohenixColors.oceanBlue;
@@ -19,7 +19,7 @@ class AppTheme {
   static const Color tealSecondary = CohenixColors.oceanBlue;
   static const Color tealDark = CohenixColors.midnightBlue;
   static const Color secondaryColor = CohenixColors.oceanBlue;
-  
+
   // Status colors
   static const Color successColor = CohenixColors.success;
   static const Color warningColor = CohenixColors.warning;
@@ -27,7 +27,7 @@ class AppTheme {
   static const Color infoColor = CohenixColors.info;
   static const Color greenColor = CohenixColors.success;
   static const Color redColor = CohenixColors.error;
-  
+
   // Light theme colors
   static const Color lightBackground = CohenixColors.lightBackground;
   static const Color lightSurface = CohenixColors.lightSurface;
@@ -40,7 +40,7 @@ class AppTheme {
   static const Color lightDivider = CohenixColors.lightOutline;
   static const Color lightBorder = CohenixColors.lightOutline;
   static const Color lightBorderLight = CohenixColors.lightOutlineVariant;
-  
+
   // Dark theme colors
   static const Color darkBackground = CohenixColors.darkBackground;
   static const Color darkSurface = CohenixColors.darkSurface;
@@ -57,12 +57,12 @@ class AppTheme {
   // =============================================================================
   // COHENIX LIGHT THEME
   // =============================================================================
-  
+
   static ThemeData lightTheme = ThemeData(
     useMaterial3: true,
     brightness: Brightness.light,
     textTheme: CohenixTypography.lightTextTheme,
-    
+
     colorScheme: ColorScheme.light(
       brightness: Brightness.light,
       primary: CohenixColors.royalBlue,
@@ -90,7 +90,7 @@ class AppTheme {
       tertiary: CohenixColors.skyBlue,
       onTertiary: CohenixColors.royalBlue,
     ),
-    
+
     // App Bar Theme - Modern Teal with proper contrast
     appBarTheme: AppBarTheme(
       backgroundColor: Colors.transparent,
@@ -109,7 +109,7 @@ class AppTheme {
         statusBarBrightness: Brightness.light,
       ),
     ),
-    
+
     // Card Theme - Clean and minimal
     cardTheme: CardThemeData(
       color: CohenixColors.lightSurface,
@@ -120,7 +120,7 @@ class AppTheme {
       ),
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
     ),
-    
+
     // Bottom Navigation Theme
     bottomNavigationBarTheme: BottomNavigationBarThemeData(
       backgroundColor: CohenixColors.lightSurface,
@@ -131,7 +131,7 @@ class AppTheme {
       selectedLabelStyle: CohenixTypography.labelSmall,
       unselectedLabelStyle: CohenixTypography.labelSmall,
     ),
-    
+
     // Input Decoration Theme
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
@@ -156,11 +156,13 @@ class AppTheme {
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: CohenixColors.error, width: 2),
       ),
-      labelStyle: CohenixTypography.withSecondaryColor(CohenixTypography.bodyMedium, Brightness.light),
-      hintStyle: CohenixTypography.withSecondaryColor(CohenixTypography.bodySmall, Brightness.light),
+      labelStyle: CohenixTypography.withSecondaryColor(
+          CohenixTypography.bodyMedium, Brightness.light),
+      hintStyle: CohenixTypography.withSecondaryColor(
+          CohenixTypography.bodySmall, Brightness.light),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
     ),
-    
+
     // Elevated Button Theme
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
@@ -175,7 +177,7 @@ class AppTheme {
         textStyle: CohenixTypography.buttonMedium,
       ),
     ),
-    
+
     // Text Button Theme
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
@@ -184,7 +186,7 @@ class AppTheme {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       ),
     ),
-    
+
     // Outlined Button Theme
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
@@ -197,7 +199,7 @@ class AppTheme {
         textStyle: CohenixTypography.buttonMedium,
       ),
     ),
-    
+
     // Floating Action Button Theme
     floatingActionButtonTheme: FloatingActionButtonThemeData(
       backgroundColor: CohenixColors.royalBlue,
@@ -207,7 +209,7 @@ class AppTheme {
         borderRadius: BorderRadius.circular(16),
       ),
     ),
-    
+
     // Chip Theme
     chipTheme: ChipThemeData(
       backgroundColor: CohenixColors.lightSurfaceVariant,
@@ -219,7 +221,7 @@ class AppTheme {
         borderRadius: BorderRadius.circular(8),
       ),
     ),
-    
+
     // List Tile Theme
     listTileTheme: ListTileThemeData(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -229,18 +231,19 @@ class AppTheme {
         borderRadius: BorderRadius.circular(8),
       ),
     ),
-    
+
     // Divider Theme
     dividerTheme: DividerThemeData(
       color: CohenixColors.lightOutline,
       thickness: 1,
       space: 1,
     ),
-    
+
     // Snack Bar Theme
     snackBarTheme: SnackBarThemeData(
       backgroundColor: CohenixColors.darkSurface,
-      contentTextStyle: CohenixTypography.withColor(CohenixTypography.bodyMedium, Colors.white),
+      contentTextStyle: CohenixTypography.withColor(
+          CohenixTypography.bodyMedium, Colors.white),
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
@@ -251,15 +254,15 @@ class AppTheme {
   // =============================================================================
   // COHENIX DARK THEME
   // =============================================================================
-  
+
   static ThemeData darkTheme = ThemeData(
     useMaterial3: true,
     brightness: Brightness.dark,
     textTheme: CohenixTypography.darkTextTheme,
-    
+
     colorScheme: ColorScheme.dark(
       brightness: Brightness.dark,
-      primary: CohenixColors.oceanBlue,  // Brighter Ocean Blue for dark theme
+      primary: CohenixColors.oceanBlue, // Brighter Ocean Blue for dark theme
       onPrimary: Colors.white,
       primaryContainer: CohenixColors.midnightBlue,
       onPrimaryContainer: CohenixColors.skyBlue,
@@ -284,7 +287,7 @@ class AppTheme {
       tertiary: CohenixColors.skyBlue,
       onTertiary: CohenixColors.midnightBlue,
     ),
-    
+
     // App Bar Theme - Dark with modern contrast
     appBarTheme: AppBarTheme(
       backgroundColor: Colors.transparent,
@@ -303,7 +306,7 @@ class AppTheme {
         statusBarBrightness: Brightness.dark,
       ),
     ),
-    
+
     // Card Theme - Dark surfaces
     cardTheme: CardThemeData(
       color: CohenixColors.darkSurface,
@@ -314,7 +317,7 @@ class AppTheme {
       ),
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
     ),
-    
+
     // Bottom Navigation Theme
     bottomNavigationBarTheme: BottomNavigationBarThemeData(
       backgroundColor: CohenixColors.darkSurface,
@@ -325,7 +328,7 @@ class AppTheme {
       selectedLabelStyle: CohenixTypography.labelSmall,
       unselectedLabelStyle: CohenixTypography.labelSmall,
     ),
-    
+
     // Input Decoration Theme
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
@@ -350,11 +353,13 @@ class AppTheme {
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: CohenixColors.error, width: 2),
       ),
-      labelStyle: CohenixTypography.withSecondaryColor(CohenixTypography.bodyMedium, Brightness.dark),
-      hintStyle: CohenixTypography.withSecondaryColor(CohenixTypography.bodySmall, Brightness.dark),
+      labelStyle: CohenixTypography.withSecondaryColor(
+          CohenixTypography.bodyMedium, Brightness.dark),
+      hintStyle: CohenixTypography.withSecondaryColor(
+          CohenixTypography.bodySmall, Brightness.dark),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
     ),
-    
+
     // Elevated Button Theme
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
@@ -369,7 +374,7 @@ class AppTheme {
         textStyle: CohenixTypography.buttonMedium,
       ),
     ),
-    
+
     // Text Button Theme
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
@@ -378,7 +383,7 @@ class AppTheme {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       ),
     ),
-    
+
     // Outlined Button Theme
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
@@ -391,7 +396,7 @@ class AppTheme {
         textStyle: CohenixTypography.buttonMedium,
       ),
     ),
-    
+
     // Floating Action Button Theme
     floatingActionButtonTheme: FloatingActionButtonThemeData(
       backgroundColor: CohenixColors.oceanBlue,
@@ -401,7 +406,7 @@ class AppTheme {
         borderRadius: BorderRadius.circular(16),
       ),
     ),
-    
+
     // Chip Theme
     chipTheme: ChipThemeData(
       backgroundColor: CohenixColors.darkSurfaceVariant,
@@ -413,28 +418,31 @@ class AppTheme {
         borderRadius: BorderRadius.circular(8),
       ),
     ),
-    
+
     // List Tile Theme
     listTileTheme: ListTileThemeData(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      titleTextStyle: CohenixTypography.withPrimaryColor(CohenixTypography.titleMedium, Brightness.dark),
-      subtitleTextStyle: CohenixTypography.withSecondaryColor(CohenixTypography.bodySmall, Brightness.dark),
+      titleTextStyle: CohenixTypography.withPrimaryColor(
+          CohenixTypography.titleMedium, Brightness.dark),
+      subtitleTextStyle: CohenixTypography.withSecondaryColor(
+          CohenixTypography.bodySmall, Brightness.dark),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
       ),
     ),
-    
+
     // Divider Theme
     dividerTheme: DividerThemeData(
       color: CohenixColors.darkOutline,
       thickness: 1,
       space: 1,
     ),
-    
+
     // Snack Bar Theme
     snackBarTheme: SnackBarThemeData(
       backgroundColor: CohenixColors.darkSurfaceVariant,
-      contentTextStyle: CohenixTypography.withColor(CohenixTypography.bodyMedium, Colors.white),
+      contentTextStyle: CohenixTypography.withColor(
+          CohenixTypography.bodyMedium, Colors.white),
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
@@ -444,38 +452,38 @@ class AppTheme {
 
   // Helper methods for getting theme-aware colors
   static Color getBackgroundColor(BuildContext context) {
-    return Theme.of(context).brightness == Brightness.dark 
-        ? darkBackground 
+    return Theme.of(context).brightness == Brightness.dark
+        ? darkBackground
         : lightBackground;
   }
 
   static Color getSurfaceColor(BuildContext context) {
-    return Theme.of(context).brightness == Brightness.dark 
-        ? darkSurface 
+    return Theme.of(context).brightness == Brightness.dark
+        ? darkSurface
         : lightSurface;
   }
 
   static Color getTextColor(BuildContext context) {
-    return Theme.of(context).brightness == Brightness.dark 
-        ? darkTextPrimary 
+    return Theme.of(context).brightness == Brightness.dark
+        ? darkTextPrimary
         : lightTextPrimary;
   }
 
   static Color getSecondaryTextColor(BuildContext context) {
-    return Theme.of(context).brightness == Brightness.dark 
-        ? darkTextSecondary 
+    return Theme.of(context).brightness == Brightness.dark
+        ? darkTextSecondary
         : lightTextSecondary;
   }
 
   static Color getCardColor(BuildContext context) {
-    return Theme.of(context).brightness == Brightness.dark 
-        ? darkCardBackground 
+    return Theme.of(context).brightness == Brightness.dark
+        ? darkCardBackground
         : lightCardBackground;
   }
 
   static Color getBorderColor(BuildContext context) {
-    return Theme.of(context).brightness == Brightness.dark 
-        ? darkBorder 
+    return Theme.of(context).brightness == Brightness.dark
+        ? darkBorder
         : lightBorder;
   }
 }

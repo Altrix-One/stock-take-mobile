@@ -25,7 +25,7 @@ class ModernPrimaryButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
-    
+
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -39,17 +39,9 @@ class ModernPrimaryButton extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-        color: isDisabled 
-            ? ModernDesignSystem.neutralPale
-            : null,
+        color: isDisabled ? ModernDesignSystem.neutralPale : null,
         borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
-        boxShadow: !isDisabled ? [
-          BoxShadow(
-            color: ModernDesignSystem.primaryNavy.withOpacity(0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ] : null,
+        boxShadow: !isDisabled ? AppThemeUnified.buttonShadow : null,
       ),
       child: Material(
         color: Colors.transparent,
@@ -73,7 +65,7 @@ class ModernPrimaryButton extends StatelessWidget {
                 else if (icon != null) ...[
                   Icon(
                     icon!,
-                    color: Colors.white,
+                    color: AppThemeUnified.textPrimary,
                     size: 20,
                   ),
                   ModernDesignSystem.horizontalSpaceXS,
@@ -81,8 +73,11 @@ class ModernPrimaryButton extends StatelessWidget {
                 Text(
                   text,
                   style: ModernDesignSystem.labelLarge.copyWith(
-                    color: isDisabled ? ModernDesignSystem.neutralLight : Colors.white,
+                    color: isDisabled
+                        ? ModernDesignSystem.neutralLight
+                        : AppThemeUnified.textPrimary,
                     fontWeight: FontWeight.w600,
+                    shadows: !isDisabled ? AppThemeUnified.textShadow : null,
                   ),
                 ),
               ],
@@ -114,16 +109,17 @@ class ModernSecondaryButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
-    
+
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: ModernDesignSystem.getSurfaceColor(brightness),
+        color: AppThemeUnified.glassLight,
         border: Border.all(
           color: ModernDesignSystem.primaryTeal,
           width: 1.5,
         ),
         borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
+        boxShadow: AppThemeUnified.buttonShadow,
       ),
       child: Material(
         color: Colors.transparent,
@@ -140,7 +136,8 @@ class ModernSecondaryButton extends StatelessWidget {
                     width: 20,
                     height: 20,
                     child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(ModernDesignSystem.primaryTeal),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                          ModernDesignSystem.primaryTeal),
                       strokeWidth: 2,
                     ),
                   )
@@ -157,6 +154,7 @@ class ModernSecondaryButton extends StatelessWidget {
                   style: ModernDesignSystem.labelLarge.copyWith(
                     color: ModernDesignSystem.primaryTeal,
                     fontWeight: FontWeight.w600,
+                    shadows: AppThemeUnified.textShadow,
                   ),
                 ),
               ],
@@ -190,10 +188,11 @@ class ModernAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
-    
+
     return Container(
       decoration: BoxDecoration(
-        color: backgroundColor ?? ModernDesignSystem.getSurfaceColor(brightness),
+        color:
+            backgroundColor ?? ModernDesignSystem.getSurfaceColor(brightness),
         border: Border(
           bottom: BorderSide(
             color: ModernDesignSystem.getBorderColor(brightness),
@@ -224,7 +223,6 @@ class ModernAppBar extends StatelessWidget implements PreferredSizeWidget {
                 leading!
               else
                 const SizedBox(width: 40),
-              
               if (!centerTitle) ...[
                 ModernDesignSystem.horizontalSpaceSM,
                 Expanded(
@@ -248,7 +246,6 @@ class ModernAppBar extends StatelessWidget implements PreferredSizeWidget {
                   ),
                 ),
               ],
-              
               if (actions != null) ...actions! else const SizedBox(width: 40),
             ],
           ),
@@ -285,12 +282,10 @@ class ModernStatusBadge extends StatelessWidget {
         vertical: ModernDesignSystem.spaceMicro,
       ),
       decoration: BoxDecoration(
-        color: isOutlined 
+        color: isOutlined
             ? ModernDesignSystem.getSurfaceColor(brightness)
             : badgeColor.withOpacity(0.1),
-        border: isOutlined 
-            ? Border.all(color: badgeColor, width: 1)
-            : null,
+        border: isOutlined ? Border.all(color: badgeColor, width: 1) : null,
         borderRadius: BorderRadius.circular(ModernDesignSystem.radiusXS),
       ),
       child: Text(
@@ -341,7 +336,7 @@ class ModernInputField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -351,8 +346,9 @@ class ModernInputField extends StatelessWidget {
               Text(
                 label!,
                 style: ModernDesignSystem.labelLarge.copyWith(
-                  color: ModernDesignSystem.getTextPrimary(brightness),
-                  fontWeight: FontWeight.w500,
+                  color: AppThemeUnified.textPrimary,
+                  fontWeight: FontWeight.w600,
+                  shadows: AppThemeUnified.textShadow,
                 ),
               ),
               if (isRequired) ...[
@@ -368,14 +364,13 @@ class ModernInputField extends StatelessWidget {
           ),
           ModernDesignSystem.verticalSpaceXS,
         ],
-        
         Container(
           decoration: BoxDecoration(
-            color: enabled 
-                ? ModernDesignSystem.getSurfaceColor(brightness)
-                : ModernDesignSystem.getSurfaceVariant(brightness),
+            color: enabled
+                ? AppThemeUnified.glassLight
+                : AppThemeUnified.glassLight.withOpacity(0.5),
             border: Border.all(
-              color: ModernDesignSystem.getBorderColor(brightness),
+              color: AppThemeUnified.glassBorder,
               width: 1,
             ),
             borderRadius: BorderRadius.circular(ModernDesignSystem.radiusSM),
@@ -389,17 +384,17 @@ class ModernInputField extends StatelessWidget {
             maxLines: maxLines,
             enabled: enabled,
             style: ModernDesignSystem.bodyMedium.copyWith(
-              color: ModernDesignSystem.getTextPrimary(brightness),
+              color: AppThemeUnified.textPrimary,
             ),
             decoration: InputDecoration(
               hintText: hint,
               hintStyle: ModernDesignSystem.bodyMedium.copyWith(
-                color: ModernDesignSystem.getTextTertiary(brightness),
+                color: AppThemeUnified.textTertiary,
               ),
               prefixIcon: prefixIcon != null
                   ? Icon(
                       prefixIcon!,
-                      color: ModernDesignSystem.getTextSecondary(brightness),
+                      color: AppThemeUnified.textSecondary,
                       size: 20,
                     )
                   : null,
@@ -408,7 +403,7 @@ class ModernInputField extends StatelessWidget {
                       onTap: onSuffixTap,
                       child: Icon(
                         suffixIcon!,
-                        color: ModernDesignSystem.getTextSecondary(brightness),
+                        color: AppThemeUnified.textSecondary,
                         size: 20,
                       ),
                     )
@@ -441,7 +436,7 @@ class ModernSectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
-    
+
     return Padding(
       padding: const EdgeInsets.only(bottom: ModernDesignSystem.spaceMD),
       child: Row(
@@ -451,7 +446,8 @@ class ModernSectionHeader extends StatelessWidget {
               padding: const EdgeInsets.all(ModernDesignSystem.spaceXS),
               decoration: BoxDecoration(
                 color: ModernDesignSystem.primaryTeal.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(ModernDesignSystem.radiusXS),
+                borderRadius:
+                    BorderRadius.circular(ModernDesignSystem.radiusXS),
               ),
               child: Icon(
                 icon!,
@@ -461,7 +457,6 @@ class ModernSectionHeader extends StatelessWidget {
             ),
             ModernDesignSystem.horizontalSpaceXS,
           ],
-          
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -485,7 +480,6 @@ class ModernSectionHeader extends StatelessWidget {
               ],
             ),
           ),
-          
           if (action != null) action!,
         ],
       ),
@@ -507,12 +501,13 @@ class ModernLoadingIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
-    
+
     Widget content = Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(ModernDesignSystem.primaryTeal),
+          valueColor:
+              AlwaysStoppedAnimation<Color>(ModernDesignSystem.primaryTeal),
           strokeWidth: 3,
         ),
         if (message != null) ...[
@@ -570,11 +565,12 @@ class ModernStatsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
     final cardColor = color ?? AppThemeUnified.primaryRoyalBlue;
-    
+
     return Container(
-      margin: margin ?? const EdgeInsets.symmetric(
-        horizontal: AppThemeUnified.spaceXS,
-      ),
+      margin: margin ??
+          const EdgeInsets.symmetric(
+            horizontal: AppThemeUnified.spaceXS,
+          ),
       child: AppThemeUnified.glassContainer(
         borderRadius: AppThemeUnified.radiusMD,
         child: ClipRRect(
@@ -597,7 +593,9 @@ class ModernStatsCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(AppThemeUnified.radiusMD),
                   child: Padding(
                     padding: EdgeInsets.all(
-                      isCompact ? AppThemeUnified.spaceMD : AppThemeUnified.spaceLG,
+                      isCompact
+                          ? AppThemeUnified.spaceMD
+                          : AppThemeUnified.spaceLG,
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -605,10 +603,12 @@ class ModernStatsCard extends StatelessWidget {
                       children: [
                         if (icon != null) ...[
                           Container(
-                            padding: const EdgeInsets.all(AppThemeUnified.spaceXS),
+                            padding:
+                                const EdgeInsets.all(AppThemeUnified.spaceXS),
                             decoration: BoxDecoration(
                               color: cardColor.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(AppThemeUnified.radiusXS),
+                              borderRadius: BorderRadius.circular(
+                                  AppThemeUnified.radiusXS),
                             ),
                             child: Icon(
                               icon,
@@ -616,11 +616,17 @@ class ModernStatsCard extends StatelessWidget {
                               size: isCompact ? 16 : 20,
                             ),
                           ),
-                          SizedBox(height: isCompact ? AppThemeUnified.spaceXS : AppThemeUnified.spaceSM),
+                          SizedBox(
+                              height: isCompact
+                                  ? AppThemeUnified.spaceXS
+                                  : AppThemeUnified.spaceSM),
                         ],
                         Text(
                           value,
-                          style: (isCompact ? AppThemeUnified.headlineSmall : AppThemeUnified.headlineLarge).copyWith(
+                          style: (isCompact
+                                  ? AppThemeUnified.headlineSmall
+                                  : AppThemeUnified.headlineLarge)
+                              .copyWith(
                             color: cardColor,
                             fontWeight: FontWeight.w700,
                           ),
@@ -628,7 +634,10 @@ class ModernStatsCard extends StatelessWidget {
                         const SizedBox(height: AppThemeUnified.spaceXS),
                         Text(
                           label,
-                          style: (isCompact ? AppThemeUnified.bodySmall : AppThemeUnified.bodyMedium).copyWith(
+                          style: (isCompact
+                                  ? AppThemeUnified.bodySmall
+                                  : AppThemeUnified.bodyMedium)
+                              .copyWith(
                             color: AppThemeUnified.textSecondary,
                           ),
                           maxLines: isCompact ? 1 : 2,
@@ -674,12 +683,13 @@ class ModernActionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
     final cardColor = color ?? AppThemeUnified.primaryRoyalBlue;
-    
+
     return Container(
-      margin: margin ?? const EdgeInsets.symmetric(
-        horizontal: AppThemeUnified.spaceXS,
-        vertical: AppThemeUnified.spaceXS,
-      ),
+      margin: margin ??
+          const EdgeInsets.symmetric(
+            horizontal: AppThemeUnified.spaceXS,
+            vertical: AppThemeUnified.spaceXS,
+          ),
       child: AppThemeUnified.glassContainer(
         borderRadius: AppThemeUnified.radiusMD,
         child: ClipRRect(
@@ -701,15 +711,18 @@ class ModernActionCard extends StatelessWidget {
                   onTap: onTap,
                   borderRadius: BorderRadius.circular(AppThemeUnified.radiusMD),
                   child: Padding(
-                    padding: padding ?? const EdgeInsets.all(AppThemeUnified.spaceMD),
+                    padding: padding ??
+                        const EdgeInsets.all(AppThemeUnified.spaceMD),
                     child: Row(
                       children: [
                         if (icon != null) ...[
                           Container(
-                            padding: const EdgeInsets.all(AppThemeUnified.spaceXS),
+                            padding:
+                                const EdgeInsets.all(AppThemeUnified.spaceXS),
                             decoration: BoxDecoration(
                               color: cardColor.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(AppThemeUnified.radiusXS),
+                              borderRadius: BorderRadius.circular(
+                                  AppThemeUnified.radiusXS),
                             ),
                             child: Icon(
                               icon,
@@ -788,12 +801,13 @@ class ModernHeroCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
     final cardColor = headerColor ?? AppThemeUnified.primaryRoyalBlue;
-    
+
     return Container(
-      margin: margin ?? const EdgeInsets.symmetric(
-        horizontal: AppThemeUnified.spaceMD,
-        vertical: AppThemeUnified.spaceXS,
-      ),
+      margin: margin ??
+          const EdgeInsets.symmetric(
+            horizontal: AppThemeUnified.spaceMD,
+            vertical: AppThemeUnified.spaceXS,
+          ),
       child: AppThemeUnified.glassContainer(
         borderRadius: AppThemeUnified.radiusMD,
         child: ClipRRect(
@@ -814,20 +828,23 @@ class ModernHeroCard extends StatelessWidget {
                 children: [
                   if (title.isNotEmpty) ...[
                     Padding(
-                      padding: padding ?? const EdgeInsets.fromLTRB(
-                        AppThemeUnified.spaceMD,
-                        AppThemeUnified.spaceMD,
-                        AppThemeUnified.spaceMD,
-                        AppThemeUnified.spaceSM,
-                      ),
+                      padding: padding ??
+                          const EdgeInsets.fromLTRB(
+                            AppThemeUnified.spaceMD,
+                            AppThemeUnified.spaceMD,
+                            AppThemeUnified.spaceMD,
+                            AppThemeUnified.spaceSM,
+                          ),
                       child: Row(
                         children: [
                           if (icon != null) ...[
                             Container(
-                              padding: const EdgeInsets.all(AppThemeUnified.spaceXS),
+                              padding:
+                                  const EdgeInsets.all(AppThemeUnified.spaceXS),
                               decoration: BoxDecoration(
                                 color: cardColor.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(AppThemeUnified.radiusXS),
+                                borderRadius: BorderRadius.circular(
+                                    AppThemeUnified.radiusXS),
                               ),
                               child: Icon(
                                 icon,
@@ -911,11 +928,12 @@ class ModernListItemCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
-    
+
     return Container(
-      margin: margin ?? const EdgeInsets.symmetric(
-        vertical: AppThemeUnified.spaceXS,
-      ),
+      margin: margin ??
+          const EdgeInsets.symmetric(
+            vertical: AppThemeUnified.spaceXS,
+          ),
       child: AppThemeUnified.glassContainer(
         borderRadius: AppThemeUnified.radiusSM,
         child: ClipRRect(
@@ -937,20 +955,23 @@ class ModernListItemCard extends StatelessWidget {
                   onTap: onTap,
                   borderRadius: BorderRadius.circular(AppThemeUnified.radiusSM),
                   child: Padding(
-                    padding: padding ?? const EdgeInsets.symmetric(
-                      horizontal: AppThemeUnified.spaceMD,
-                      vertical: AppThemeUnified.spaceSM,
-                    ),
+                    padding: padding ??
+                        const EdgeInsets.symmetric(
+                          horizontal: AppThemeUnified.spaceMD,
+                          vertical: AppThemeUnified.spaceSM,
+                        ),
                     child: Row(
                       children: [
                         if (leadingWidget != null)
                           leadingWidget!
                         else if (leadingIcon != null) ...[
                           Container(
-                            padding: const EdgeInsets.all(AppThemeUnified.spaceXS),
+                            padding:
+                                const EdgeInsets.all(AppThemeUnified.spaceXS),
                             decoration: BoxDecoration(
                               color: AppThemeUnified.glassMedium,
-                              borderRadius: BorderRadius.circular(AppThemeUnified.radiusXS),
+                              borderRadius: BorderRadius.circular(
+                                  AppThemeUnified.radiusXS),
                             ),
                             child: Icon(
                               leadingIcon,
@@ -998,7 +1019,8 @@ class ModernListItemCard extends StatelessWidget {
                             ),
                             decoration: BoxDecoration(
                               color: AppThemeUnified.glassMedium,
-                              borderRadius: BorderRadius.circular(AppThemeUnified.radiusXS),
+                              borderRadius: BorderRadius.circular(
+                                  AppThemeUnified.radiusXS),
                             ),
                             child: Text(
                               trailing!,
@@ -1059,12 +1081,13 @@ class ModernInfoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
     final cardColor = color ?? ModernDesignSystem.primaryTeal;
-    
+
     return Container(
-      margin: margin ?? const EdgeInsets.symmetric(
-        horizontal: ModernDesignSystem.spaceMD,
-        vertical: ModernDesignSystem.spaceXS,
-      ),
+      margin: margin ??
+          const EdgeInsets.symmetric(
+            horizontal: ModernDesignSystem.spaceMD,
+            vertical: ModernDesignSystem.spaceXS,
+          ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -1072,7 +1095,8 @@ class ModernInfoCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
           child: Container(
             decoration: ModernDesignSystem.subtleCardDecoration(brightness),
-            padding: padding ?? const EdgeInsets.all(ModernDesignSystem.spaceMD),
+            padding:
+                padding ?? const EdgeInsets.all(ModernDesignSystem.spaceMD),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1080,10 +1104,12 @@ class ModernInfoCard extends StatelessWidget {
                   children: [
                     if (icon != null) ...[
                       Container(
-                        padding: const EdgeInsets.all(ModernDesignSystem.spaceXS),
+                        padding:
+                            const EdgeInsets.all(ModernDesignSystem.spaceXS),
                         decoration: BoxDecoration(
                           color: cardColor.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(ModernDesignSystem.radiusXS),
+                          borderRadius: BorderRadius.circular(
+                              ModernDesignSystem.radiusXS),
                         ),
                         child: Icon(
                           icon,
@@ -1100,7 +1126,8 @@ class ModernInfoCard extends StatelessWidget {
                           Text(
                             title,
                             style: ModernDesignSystem.headlineSmall.copyWith(
-                              color: ModernDesignSystem.getTextPrimary(brightness),
+                              color:
+                                  ModernDesignSystem.getTextPrimary(brightness),
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -1109,7 +1136,8 @@ class ModernInfoCard extends StatelessWidget {
                             Text(
                               subtitle!,
                               style: ModernDesignSystem.bodyMedium.copyWith(
-                                color: ModernDesignSystem.getTextSecondary(brightness),
+                                color: ModernDesignSystem.getTextSecondary(
+                                    brightness),
                               ),
                             ),
                           ],
@@ -1125,7 +1153,8 @@ class ModernInfoCard extends StatelessWidget {
                         ),
                         decoration: BoxDecoration(
                           color: (badgeColor ?? cardColor).withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(ModernDesignSystem.radiusXS),
+                          borderRadius: BorderRadius.circular(
+                              ModernDesignSystem.radiusXS),
                         ),
                         child: Text(
                           badge!,
@@ -1186,7 +1215,7 @@ class ModernEmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
-    
+
     return Container(
       padding: const EdgeInsets.all(ModernDesignSystem.space2XL),
       child: Column(
@@ -1204,9 +1233,7 @@ class ModernEmptyState extends StatelessWidget {
               color: ModernDesignSystem.neutralPale,
             ),
           ),
-          
           ModernDesignSystem.verticalSpaceLG,
-          
           Text(
             title,
             style: ModernDesignSystem.headlineMedium.copyWith(
@@ -1215,7 +1242,6 @@ class ModernEmptyState extends StatelessWidget {
             ),
             textAlign: TextAlign.center,
           ),
-          
           if (subtitle != null) ...[
             ModernDesignSystem.verticalSpaceXS,
             Text(
@@ -1226,7 +1252,6 @@ class ModernEmptyState extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
           ],
-          
           if (actionText != null && onAction != null) ...[
             ModernDesignSystem.verticalSpaceLG,
             ModernSecondaryButton(

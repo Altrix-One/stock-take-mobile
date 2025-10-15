@@ -105,14 +105,20 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
       _nameController.text = _employeeData!['employee_name']?.toString() ?? '';
       _emailController.text = _employeeData!['company_email']?.toString() ?? '';
       _cellController.text = _employeeData!['cell_number']?.toString() ?? '';
-      _personalEmailController.text = _employeeData!['personal_email']?.toString() ?? '';
-      _currentAddressController.text = _employeeData!['current_address']?.toString() ?? '';
-      _permanentAddressController.text = _employeeData!['permanent_address']?.toString() ?? '';
-      _emergencyNameController.text = _employeeData!['emergency_contact_name']?.toString() ?? '';
-      _emergencyContactController.text = _employeeData!['emergency_contact_number']?.toString() ?? '';
+      _personalEmailController.text =
+          _employeeData!['personal_email']?.toString() ?? '';
+      _currentAddressController.text =
+          _employeeData!['current_address']?.toString() ?? '';
+      _permanentAddressController.text =
+          _employeeData!['permanent_address']?.toString() ?? '';
+      _emergencyNameController.text =
+          _employeeData!['emergency_contact_name']?.toString() ?? '';
+      _emergencyContactController.text =
+          _employeeData!['emergency_contact_number']?.toString() ?? '';
       _panController.text = _employeeData!['pan_number']?.toString() ?? '';
       _bankNameController.text = _employeeData!['bank_name']?.toString() ?? '';
-      _accountNumberController.text = _employeeData!['bank_ac_no']?.toString() ?? '';
+      _accountNumberController.text =
+          _employeeData!['bank_ac_no']?.toString() ?? '';
       _ifscController.text = _employeeData!['ifsc_code']?.toString() ?? '';
 
       _loadProfileImage();
@@ -238,7 +244,7 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
           ],
         ],
       ),
-      body: _loading 
+      body: _loading
           ? const ModernLoadingIndicator(message: 'Loading profile data...')
           : _employeeData == null
               ? Center(
@@ -256,7 +262,10 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
                     color: AppThemeUnified.textPrimary,
                     child: ListView(
                       padding: EdgeInsets.all(AppThemeUnified.spaceMD).copyWith(
-                        top: MediaQuery.of(context).padding.top + kToolbarHeight + AppThemeUnified.spaceSM, // Account for status bar + app bar + spacing
+                        top: MediaQuery.of(context).padding.top +
+                            kToolbarHeight +
+                            AppThemeUnified
+                                .spaceSM, // Account for status bar + app bar + spacing
                         bottom: AppThemeUnified.spaceXL * 4,
                       ),
                       children: [
@@ -304,7 +313,7 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
                 Text(
                   'My Profile',
                   style: ModernDesignSystem.displaySmall.copyWith(
-                    color: ModernDesignSystem.getTextPrimary(Theme.of(context).brightness),
+                    color: AppThemeUnified.textPrimary,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -312,7 +321,7 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
                 Text(
                   'Manage your personal information',
                   style: ModernDesignSystem.bodyMedium.copyWith(
-                    color: ModernDesignSystem.getTextSecondary(Theme.of(context).brightness),
+                    color: AppThemeUnified.textSecondary,
                   ),
                 ),
               ],
@@ -323,7 +332,8 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
               margin: const EdgeInsets.only(left: ModernDesignSystem.spaceSM),
               decoration: BoxDecoration(
                 color: ModernDesignSystem.primaryTeal.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(ModernDesignSystem.radiusSM),
+                borderRadius:
+                    BorderRadius.circular(ModernDesignSystem.radiusSM),
               ),
               child: IconButton(
                 icon: const Icon(Icons.edit_outlined),
@@ -381,7 +391,7 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
       title: Text(
         'My Profile',
         style: ModernDesignSystem.headlineLarge.copyWith(
-          color: ModernDesignSystem.getTextPrimary(Theme.of(context).brightness),
+          color: AppThemeUnified.textPrimary,
         ),
       ),
       actions: [
@@ -475,12 +485,14 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
                           height: 24,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(AppThemeUnified.textPrimary),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                                AppThemeUnified.textPrimary),
                           ),
                         )
                       : _profileImageUrl == null
                           ? Text(
-                              (_employeeData!['employee_name']?.toString() ?? 'U')
+                              (_employeeData!['employee_name']?.toString() ??
+                                      'U')
                                   .substring(0, 1)
                                   .toUpperCase(),
                               style: TextStyle(
@@ -507,9 +519,11 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
                   child: IconButton(
                     icon: const Icon(Icons.camera_alt, size: 18),
                     color: AppThemeUnified.textPrimary,
-                    onPressed: _uploadingImage ? null : () {
-                        _showImagePicker();
-                      },
+                    onPressed: _uploadingImage
+                        ? null
+                        : () {
+                            _showImagePicker();
+                          },
                     iconSize: 18,
                     constraints: const BoxConstraints(
                       minWidth: 36,
@@ -570,11 +584,23 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
   Widget _buildQuickStats() {
     return Row(
       children: [
-        Expanded(child: _buildStatCard('Department', _employeeData!['department']?.toString(), Icons.business_outlined)),
+        Expanded(
+            child: _buildStatCard(
+                'Department',
+                _employeeData!['department']?.toString(),
+                Icons.business_outlined)),
         SizedBox(width: AppThemeUnified.spaceSM),
-        Expanded(child: _buildStatCard('Branch', _employeeData!['branch']?.toString(), Icons.location_on_outlined)),
+        Expanded(
+            child: _buildStatCard(
+                'Branch',
+                _employeeData!['branch']?.toString(),
+                Icons.location_on_outlined)),
         SizedBox(width: AppThemeUnified.spaceSM),
-        Expanded(child: _buildStatCard('Type', _employeeData!['employment_type']?.toString(), Icons.work_outline)),
+        Expanded(
+            child: _buildStatCard(
+                'Type',
+                _employeeData!['employment_type']?.toString(),
+                Icons.work_outline)),
       ],
     );
   }
@@ -614,45 +640,45 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
   }
 
   Widget _buildPersonalInfoCard() {
-    final brightness = Theme.of(context).brightness;
     return _buildModernCard(
-      brightness: brightness,
       title: 'Personal Information',
       icon: Icons.person_outline,
       child: Column(
         children: [
-          _buildInfoRow('Full Name', _employeeData!['employee_name']?.toString(), brightness),
-          _buildInfoRow('Gender', _employeeData!['gender']?.toString(), brightness),
-          _buildInfoRow('Date of Birth', _employeeData!['date_of_birth']?.toString(), brightness),
-          _buildInfoRow('Date of Joining', _employeeData!['date_of_joining']?.toString(), brightness),
-          _buildInfoRow('Blood Group', _employeeData!['blood_group']?.toString(), brightness),
+          _buildInfoRow(
+              'Full Name', _employeeData!['employee_name']?.toString()),
+          _buildInfoRow('Gender', _employeeData!['gender']?.toString()),
+          _buildInfoRow(
+              'Date of Birth', _employeeData!['date_of_birth']?.toString()),
+          _buildInfoRow(
+              'Date of Joining', _employeeData!['date_of_joining']?.toString()),
+          _buildInfoRow(
+              'Blood Group', _employeeData!['blood_group']?.toString()),
         ],
       ),
     );
   }
 
   Widget _buildCompanyInfoCard() {
-    final brightness = Theme.of(context).brightness;
     return _buildModernCard(
-      brightness: brightness,
       title: 'Company Information',
       icon: Icons.business_outlined,
       child: Column(
         children: [
-          _buildInfoRow('Company', _employeeData!['company']?.toString(), brightness),
-          _buildInfoRow('Department', _employeeData!['department']?.toString(), brightness),
-          _buildInfoRow('Designation', _employeeData!['designation']?.toString(), brightness),
-          _buildInfoRow('Branch', _employeeData!['branch']?.toString(), brightness),
-          _buildInfoRow('Employment Type', _employeeData!['employment_type']?.toString(), brightness),
+          _buildInfoRow('Company', _employeeData!['company']?.toString()),
+          _buildInfoRow('Department', _employeeData!['department']?.toString()),
+          _buildInfoRow(
+              'Designation', _employeeData!['designation']?.toString()),
+          _buildInfoRow('Branch', _employeeData!['branch']?.toString()),
+          _buildInfoRow(
+              'Employment Type', _employeeData!['employment_type']?.toString()),
         ],
       ),
     );
   }
 
   Widget _buildContactInfoCard() {
-    final brightness = Theme.of(context).brightness;
     return _buildModernCard(
-      brightness: brightness,
       title: 'Contact Information',
       icon: Icons.contact_phone_outlined,
       child: _editing
@@ -664,7 +690,9 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
                   icon: Icons.email_outlined,
                   keyboardType: TextInputType.emailAddress,
                   validator: (v) {
-                    if (v?.isNotEmpty == true && !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v!)) {
+                    if (v?.isNotEmpty == true &&
+                        !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                            .hasMatch(v!)) {
                       return 'Enter a valid email';
                     }
                     return null;
@@ -687,18 +715,19 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
             )
           : Column(
               children: [
-                _buildInfoRow('Company Email', _employeeData!['company_email']?.toString(), brightness),
-                _buildInfoRow('Personal Email', _employeeData!['personal_email']?.toString(), brightness),
-                _buildInfoRow('Mobile Number', _employeeData!['cell_number']?.toString(), brightness),
+                _buildInfoRow('Company Email',
+                    _employeeData!['company_email']?.toString()),
+                _buildInfoRow('Personal Email',
+                    _employeeData!['personal_email']?.toString()),
+                _buildInfoRow(
+                    'Mobile Number', _employeeData!['cell_number']?.toString()),
               ],
             ),
     );
   }
 
   Widget _buildAddressInfoCard() {
-    final brightness = Theme.of(context).brightness;
     return _buildModernCard(
-      brightness: brightness,
       title: 'Address Information',
       icon: Icons.location_on_outlined,
       child: _editing
@@ -721,17 +750,17 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
             )
           : Column(
               children: [
-                _buildInfoRow('Current Address', _employeeData!['current_address']?.toString(), brightness),
-                _buildInfoRow('Permanent Address', _employeeData!['permanent_address']?.toString(), brightness),
+                _buildInfoRow('Current Address',
+                    _employeeData!['current_address']?.toString()),
+                _buildInfoRow('Permanent Address',
+                    _employeeData!['permanent_address']?.toString()),
               ],
             ),
     );
   }
 
   Widget _buildEmergencyContactCard() {
-    final brightness = Theme.of(context).brightness;
     return _buildModernCard(
-      brightness: brightness,
       title: 'Emergency Contact',
       icon: Icons.emergency_outlined,
       child: _editing
@@ -753,17 +782,17 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
             )
           : Column(
               children: [
-                _buildInfoRow('Contact Name', _employeeData!['emergency_contact_name']?.toString(), brightness),
-                _buildInfoRow('Contact Number', _employeeData!['emergency_contact_number']?.toString(), brightness),
+                _buildInfoRow('Contact Name',
+                    _employeeData!['emergency_contact_name']?.toString()),
+                _buildInfoRow('Contact Number',
+                    _employeeData!['emergency_contact_number']?.toString()),
               ],
             ),
     );
   }
 
   Widget _buildFinancialInfoCard() {
-    final brightness = Theme.of(context).brightness;
     return _buildModernCard(
-      brightness: brightness,
       title: 'Financial Information',
       icon: Icons.account_balance_outlined,
       child: _editing
@@ -796,19 +825,21 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
             )
           : Column(
               children: [
-                _buildInfoRow('PAN Number', _employeeData!['pan_number']?.toString(), brightness),
-                _buildInfoRow('Bank Name', _employeeData!['bank_name']?.toString(), brightness),
-                _buildInfoRow('Account Number', _employeeData!['bank_ac_no']?.toString(), brightness),
-                _buildInfoRow('IFSC Code', _employeeData!['ifsc_code']?.toString(), brightness),
+                _buildInfoRow(
+                    'PAN Number', _employeeData!['pan_number']?.toString()),
+                _buildInfoRow(
+                    'Bank Name', _employeeData!['bank_name']?.toString()),
+                _buildInfoRow(
+                    'Account Number', _employeeData!['bank_ac_no']?.toString()),
+                _buildInfoRow(
+                    'IFSC Code', _employeeData!['ifsc_code']?.toString()),
               ],
             ),
     );
   }
 
   Widget _buildSettingsCard() {
-    final brightness = Theme.of(context).brightness;
     return _buildModernCard(
-      brightness: brightness,
       title: 'Settings',
       icon: Icons.settings_outlined,
       child: Column(
@@ -818,7 +849,6 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
             title: 'Change Wallpaper',
             subtitle: 'Customize app background',
             onTap: () => _showWallpaperSelector(),
-            brightness: brightness,
           ),
           _buildSettingsItem(
             icon: Icons.cloud_sync_outlined,
@@ -827,7 +857,6 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => QueueStatusScreen()),
             ),
-            brightness: brightness,
           ),
           _buildSettingsItem(
             icon: Icons.sync_outlined,
@@ -851,14 +880,12 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
                 );
               }
             },
-            brightness: brightness,
           ),
           _buildSettingsItem(
             icon: Icons.logout,
             title: 'Logout',
             subtitle: 'Sign out of your account',
             onTap: () => _showLogoutDialog(),
-            brightness: brightness,
             isDestructive: true,
           ),
         ],
@@ -867,7 +894,6 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
   }
 
   Widget _buildModernCard({
-    required Brightness brightness,
     required String title,
     required IconData icon,
     required Widget child,
@@ -910,7 +936,7 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
     );
   }
 
-  Widget _buildInfoRow(String label, String? value, Brightness brightness) {
+  Widget _buildInfoRow(String label, String? value) {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: AppThemeUnified.spaceXS),
       child: Row(
@@ -933,7 +959,9 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
                 color: value?.isNotEmpty == true
                     ? AppThemeUnified.textPrimary
                     : AppThemeUnified.textSecondary,
-                fontStyle: value?.isNotEmpty == true ? FontStyle.normal : FontStyle.italic,
+                fontStyle: value?.isNotEmpty == true
+                    ? FontStyle.normal
+                    : FontStyle.italic,
               ),
             ),
           ),
@@ -967,7 +995,8 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(ModernDesignSystem.radiusSM),
-          borderSide: const BorderSide(color: ModernDesignSystem.primaryTeal, width: 2),
+          borderSide:
+              const BorderSide(color: ModernDesignSystem.primaryTeal, width: 2),
         ),
         filled: true,
         fillColor: ModernDesignSystem.primaryTealPale.withOpacity(0.3),
@@ -981,27 +1010,30 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
     required String title,
     required String subtitle,
     required VoidCallback onTap,
-    required Brightness brightness,
     bool isDestructive = false,
   }) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(ModernDesignSystem.radiusSM),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: ModernDesignSystem.spaceXS),
+        padding:
+            const EdgeInsets.symmetric(vertical: ModernDesignSystem.spaceXS),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(ModernDesignSystem.spaceXS),
               decoration: BoxDecoration(
-                color: isDestructive 
-                  ? ModernDesignSystem.error.withOpacity(0.1)
-                  : ModernDesignSystem.primaryTeal.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(ModernDesignSystem.radiusXS),
+                color: isDestructive
+                    ? ModernDesignSystem.error.withOpacity(0.1)
+                    : ModernDesignSystem.primaryTeal.withOpacity(0.1),
+                borderRadius:
+                    BorderRadius.circular(ModernDesignSystem.radiusXS),
               ),
               child: Icon(
                 icon,
-                color: isDestructive ? ModernDesignSystem.error : ModernDesignSystem.primaryTeal,
+                color: isDestructive
+                    ? ModernDesignSystem.error
+                    : ModernDesignSystem.primaryTeal,
                 size: 20,
               ),
             ),
@@ -1015,14 +1047,14 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
                     style: ModernDesignSystem.bodyLarge.copyWith(
                       color: isDestructive
                           ? ModernDesignSystem.error
-                          : ModernDesignSystem.getTextPrimary(brightness),
+                          : AppThemeUnified.textPrimary,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                   Text(
                     subtitle,
                     style: ModernDesignSystem.bodySmall.copyWith(
-                      color: ModernDesignSystem.getTextSecondary(brightness),
+                      color: AppThemeUnified.textSecondary,
                     ),
                   ),
                 ],
@@ -1033,7 +1065,7 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
               size: 16,
               color: isDestructive
                   ? ModernDesignSystem.error
-                  : ModernDesignSystem.getTextSecondary(brightness),
+                  : AppThemeUnified.textSecondary,
             ),
           ],
         ),
@@ -1099,7 +1131,7 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
       );
     }
   }
-  
+
   void _showImagePicker() async {
     final ImagePicker picker = ImagePicker();
     final XFile? image = await picker.pickImage(
@@ -1108,15 +1140,15 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
       maxHeight: 800,
       imageQuality: 80,
     );
-    
+
     if (image != null) {
       setState(() => _uploadingImage = true);
-      
+
       try {
         await OutboxQueue.addOperation('update_employee_image', {
           'image_path': image.path,
         });
-        
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -1142,7 +1174,7 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
       }
     }
   }
-  
+
   void _downloadData() async {
     try {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1151,10 +1183,10 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
           backgroundColor: ModernDesignSystem.primaryTeal,
         ),
       );
-      
+
       // TODO: Implement actual data download
       await Future.delayed(const Duration(seconds: 2));
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -1174,13 +1206,12 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
       }
     }
   }
-  
+
   Future<void> _showWallpaperSelector() async {
     final currentWallpaper = await WallpaperManager.getCurrentWallpaper();
-    final brightness = Theme.of(context).brightness;
-    
+
     if (!context.mounted) return;
-    
+
     await showDialog(
       context: context,
       barrierColor: Colors.black.withOpacity(0.5),
@@ -1192,7 +1223,8 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
         ),
         title: Row(
           children: [
-            Icon(Icons.wallpaper_outlined, color: AppThemeUnified.primaryRoyalBlue),
+            Icon(Icons.wallpaper_outlined,
+                color: AppThemeUnified.primaryRoyalBlue),
             SizedBox(width: AppThemeUnified.spaceSM),
             Text(
               'Choose Wallpaper',
@@ -1214,11 +1246,12 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
             ),
             itemCount: WallpaperManager.wallpapers.length,
             itemBuilder: (context, index) {
-              final entry = WallpaperManager.wallpapers.entries.elementAt(index);
+              final entry =
+                  WallpaperManager.wallpapers.entries.elementAt(index);
               final key = entry.key;
               final wallpaper = entry.value;
               final isSelected = key == currentWallpaper;
-              
+
               return GestureDetector(
                 onTap: () async {
                   await WallpaperManager.setWallpaper(key);
@@ -1242,9 +1275,12 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
                 child: Container(
                   decoration: BoxDecoration(
                     color: AppThemeUnified.glassLight,
-                    borderRadius: BorderRadius.circular(AppThemeUnified.radiusSM),
+                    borderRadius:
+                        BorderRadius.circular(AppThemeUnified.radiusSM),
                     border: Border.all(
-                      color: isSelected ? AppThemeUnified.primaryRoyalBlue : AppThemeUnified.glassBorder,
+                      color: isSelected
+                          ? AppThemeUnified.primaryRoyalBlue
+                          : AppThemeUnified.glassBorder,
                       width: isSelected ? 3 : 1,
                     ),
                     boxShadow: [
@@ -1285,7 +1321,9 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
                           wallpaper.name,
                           style: AppThemeUnified.bodySmall.copyWith(
                             color: AppThemeUnified.textPrimary,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.normal,
                           ),
                           textAlign: TextAlign.center,
                           maxLines: 2,
@@ -1313,7 +1351,7 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
 // Change Password Page
 class ChangePasswordPage extends StatefulWidget {
   const ChangePasswordPage({super.key});
-  
+
   @override
   State<ChangePasswordPage> createState() => _ChangePasswordPageState();
 }
@@ -1323,12 +1361,12 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   final _currentPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  
+
   bool _isSubmitting = false;
   bool _showCurrentPassword = false;
   bool _showNewPassword = false;
   bool _showConfirmPassword = false;
-  
+
   @override
   void dispose() {
     _currentPasswordController.dispose();
@@ -1336,7 +1374,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     _confirmPasswordController.dispose();
     super.dispose();
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1365,7 +1403,9 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
           key: _formKey,
           child: ListView(
             padding: EdgeInsets.all(AppThemeUnified.spaceMD).copyWith(
-              top: kToolbarHeight + MediaQuery.of(context).padding.top + AppThemeUnified.spaceMD,
+              top: kToolbarHeight +
+                  MediaQuery.of(context).padding.top +
+                  AppThemeUnified.spaceMD,
             ),
             children: [
               AppThemeUnified.glassCard(
@@ -1375,37 +1415,40 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                       controller: _currentPasswordController,
                       label: 'Current Password',
                       isPassword: !_showCurrentPassword,
-                      onToggleVisibility: () => setState(() => _showCurrentPassword = !_showCurrentPassword),
-                      validator: (v) => v?.isEmpty == true ? 'Enter current password' : null,
+                      onToggleVisibility: () => setState(
+                          () => _showCurrentPassword = !_showCurrentPassword),
+                      validator: (v) =>
+                          v?.isEmpty == true ? 'Enter current password' : null,
                     ),
                     SizedBox(height: AppThemeUnified.spaceMD),
-                    
                     _buildPasswordField(
                       controller: _newPasswordController,
                       label: 'New Password',
                       isPassword: !_showNewPassword,
-                      onToggleVisibility: () => setState(() => _showNewPassword = !_showNewPassword),
+                      onToggleVisibility: () =>
+                          setState(() => _showNewPassword = !_showNewPassword),
                       validator: (v) {
                         if (v?.isEmpty == true) return 'Enter new password';
-                        if (v!.length < 8) return 'Password must be at least 8 characters';
+                        if (v!.length < 8)
+                          return 'Password must be at least 8 characters';
                         return null;
                       },
                     ),
                     SizedBox(height: AppThemeUnified.spaceMD),
-                    
                     _buildPasswordField(
                       controller: _confirmPasswordController,
                       label: 'Confirm New Password',
                       isPassword: !_showConfirmPassword,
-                      onToggleVisibility: () => setState(() => _showConfirmPassword = !_showConfirmPassword),
+                      onToggleVisibility: () => setState(
+                          () => _showConfirmPassword = !_showConfirmPassword),
                       validator: (v) {
                         if (v?.isEmpty == true) return 'Confirm new password';
-                        if (v != _newPasswordController.text) return 'Passwords do not match';
+                        if (v != _newPasswordController.text)
+                          return 'Passwords do not match';
                         return null;
                       },
                     ),
                     SizedBox(height: AppThemeUnified.spaceXL),
-                    
                     SizedBox(
                       height: 48,
                       child: ElevatedButton(
@@ -1414,7 +1457,8 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                           backgroundColor: AppThemeUnified.primaryRoyalBlue,
                           foregroundColor: AppThemeUnified.textPrimary,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(AppThemeUnified.radiusMD),
+                            borderRadius:
+                                BorderRadius.circular(AppThemeUnified.radiusMD),
                           ),
                         ),
                         child: _isSubmitting
@@ -1423,7 +1467,8 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                                 height: 20,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(AppThemeUnified.textPrimary),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      AppThemeUnified.textPrimary),
                                 ),
                               )
                             : Text(
@@ -1441,7 +1486,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       ),
     );
   }
-  
+
   Widget _buildPasswordField({
     required TextEditingController controller,
     required String label,
@@ -1485,18 +1530,18 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       validator: validator,
     );
   }
-  
+
   Future<void> _changePassword() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     setState(() => _isSubmitting = true);
-    
+
     try {
       await OutboxQueue.addOperation('change_password', {
         'current_password': _currentPasswordController.text,
         'new_password': _newPasswordController.text,
       });
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

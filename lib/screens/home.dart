@@ -355,7 +355,8 @@ class _HomeScreenState extends State<HomeScreen>
                     child: GridView.builder(
                       controller: scrollController,
                       padding: const EdgeInsets.all(16),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
                         childAspectRatio: 0.8,
                         crossAxisSpacing: 12,
@@ -363,11 +364,12 @@ class _HomeScreenState extends State<HomeScreen>
                       ),
                       itemCount: WallpaperManager.wallpapers.length,
                       itemBuilder: (context, index) {
-                        final entry = WallpaperManager.wallpapers.entries.elementAt(index);
+                        final entry = WallpaperManager.wallpapers.entries
+                            .elementAt(index);
                         final key = entry.key;
                         final wallpaper = entry.value;
                         final isSelected = key == _currentWallpaper;
-                        
+
                         return GestureDetector(
                           onTap: () {
                             _setWallpaper(key);
@@ -377,7 +379,9 @@ class _HomeScreenState extends State<HomeScreen>
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: isSelected ? primaryColor : Colors.grey[300]!,
+                                color: isSelected
+                                    ? primaryColor
+                                    : Colors.grey[300]!,
                                 width: isSelected ? 3 : 1,
                               ),
                             ),
@@ -623,7 +627,8 @@ class _HomeScreenState extends State<HomeScreen>
       ListTile(
         leading: const Icon(Icons.wallpaper),
         title: const Text('Choose Wallpaper', style: medium14Black33),
-        subtitle: Text(WallpaperManager.wallpapers[_currentWallpaper]?.name ?? 'Corporate Teal'),
+        subtitle: Text(WallpaperManager.wallpapers[_currentWallpaper]?.name ??
+            'Corporate Teal'),
         onTap: _showWallpaperSelector,
       ),
       SwitchListTile(
@@ -642,7 +647,8 @@ class _HomeScreenState extends State<HomeScreen>
       ListTile(
         leading: const Icon(Icons.wallpaper),
         title: const Text('Choose Wallpaper', style: medium14Black33),
-        subtitle: Text(WallpaperManager.wallpapers[_currentWallpaper]?.name ?? 'Corporate Teal'),
+        subtitle: Text(WallpaperManager.wallpapers[_currentWallpaper]?.name ??
+            'Corporate Teal'),
         onTap: _showWallpaperSelector,
       ),
       SwitchListTile(

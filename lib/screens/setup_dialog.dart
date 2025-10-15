@@ -96,14 +96,16 @@ class _SetupDialogState extends State<SetupDialog> {
           Positioned.fill(
             child: ClipRRect(
               borderRadius: BorderRadius.circular(24),
-              child: WallpaperManager.fromKey('royal_ocean_blue', effectsEnabled: true),
+              child: WallpaperManager.fromKey('royal_ocean_blue',
+                  effectsEnabled: true),
             ),
           ),
           // Content with glass-morphism
           Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: Colors.white.withOpacity(0.2), width: 1.5),
+              border:
+                  Border.all(color: Colors.white.withOpacity(0.2), width: 1.5),
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(24),
@@ -113,7 +115,8 @@ class _SetupDialogState extends State<SetupDialog> {
                   child: _isLoading
                       ? const Center(
                           child: CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white),
                           ),
                         )
                       : Form(
@@ -138,7 +141,7 @@ class _SetupDialogState extends State<SetupDialog> {
                                 ),
                               ),
                               const SizedBox(height: 24),
-                              
+
                               // Title
                               Text(
                                 widget.isFirstLaunch
@@ -152,7 +155,7 @@ class _SetupDialogState extends State<SetupDialog> {
                                 textAlign: TextAlign.center,
                               ),
                               const SizedBox(height: 12),
-                              
+
                               // Subtitle
                               Text(
                                 'Please configure the app to connect to your Cohenix server:',
@@ -170,28 +173,35 @@ class _SetupDialogState extends State<SetupDialog> {
                                 style: const TextStyle(color: Colors.white),
                                 decoration: InputDecoration(
                                   labelText: 'Base URL',
-                                  labelStyle: TextStyle(color: Colors.white.withOpacity(0.9)),
+                                  labelStyle: TextStyle(
+                                      color: Colors.white.withOpacity(0.9)),
                                   hintText: 'https://your-cohenix-server.com',
-                                  hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
+                                  hintStyle: TextStyle(
+                                      color: Colors.white.withOpacity(0.5)),
                                   filled: true,
                                   fillColor: Colors.white.withOpacity(0.15),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                                    borderSide: BorderSide(
+                                        color: Colors.white.withOpacity(0.3)),
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                                    borderSide: BorderSide(
+                                        color: Colors.white.withOpacity(0.3)),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: const BorderSide(color: Colors.white, width: 2),
+                                    borderSide: const BorderSide(
+                                        color: Colors.white, width: 2),
                                   ),
                                   errorBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(color: Colors.red.shade300, width: 2),
+                                    borderSide: BorderSide(
+                                        color: Colors.red.shade300, width: 2),
                                   ),
-                                  prefixIcon: const Icon(Icons.link, color: Colors.white),
+                                  prefixIcon: const Icon(Icons.link,
+                                      color: Colors.white),
                                 ),
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
@@ -211,28 +221,35 @@ class _SetupDialogState extends State<SetupDialog> {
                                 style: const TextStyle(color: Colors.white),
                                 decoration: InputDecoration(
                                   labelText: 'Client ID',
-                                  labelStyle: TextStyle(color: Colors.white.withOpacity(0.9)),
+                                  labelStyle: TextStyle(
+                                      color: Colors.white.withOpacity(0.9)),
                                   hintText: 'Enter OAuth Client ID',
-                                  hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
+                                  hintStyle: TextStyle(
+                                      color: Colors.white.withOpacity(0.5)),
                                   filled: true,
                                   fillColor: Colors.white.withOpacity(0.15),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                                    borderSide: BorderSide(
+                                        color: Colors.white.withOpacity(0.3)),
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                                    borderSide: BorderSide(
+                                        color: Colors.white.withOpacity(0.3)),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: const BorderSide(color: Colors.white, width: 2),
+                                    borderSide: const BorderSide(
+                                        color: Colors.white, width: 2),
                                   ),
                                   errorBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(color: Colors.red.shade300, width: 2),
+                                    borderSide: BorderSide(
+                                        color: Colors.red.shade300, width: 2),
                                   ),
-                                  prefixIcon: const Icon(Icons.vpn_key, color: Colors.white),
+                                  prefixIcon: const Icon(Icons.vpn_key,
+                                      color: Colors.white),
                                 ),
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
@@ -248,7 +265,8 @@ class _SetupDialogState extends State<SetupDialog> {
                                 decoration: BoxDecoration(
                                   color: Colors.white.withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: Colors.white.withOpacity(0.2)),
+                                  border: Border.all(
+                                      color: Colors.white.withOpacity(0.2)),
                                 ),
                                 child: ExpansionTile(
                                   title: const Text(
@@ -264,26 +282,31 @@ class _SetupDialogState extends State<SetupDialog> {
                                     Padding(
                                       padding: const EdgeInsets.all(16.0),
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             '1. Go to your Cohenix server and create a new OAuth Client:',
                                             style: TextStyle(
                                               fontWeight: FontWeight.bold,
-                                              color: Colors.white.withOpacity(0.95),
+                                              color: Colors.white
+                                                  .withOpacity(0.95),
                                             ),
                                           ),
                                           const SizedBox(height: 8),
                                           Text(
                                             '   • Navigate to: Integrations > OAuth Client > New',
-                                            style: TextStyle(color: Colors.white.withOpacity(0.9)),
+                                            style: TextStyle(
+                                                color: Colors.white
+                                                    .withOpacity(0.9)),
                                           ),
                                           const SizedBox(height: 16),
                                           Text(
                                             '2. Fill in the following details:',
                                             style: TextStyle(
                                               fontWeight: FontWeight.bold,
-                                              color: Colors.white.withOpacity(0.95),
+                                              color: Colors.white
+                                                  .withOpacity(0.95),
                                             ),
                                           ),
                                           const SizedBox(height: 8),
@@ -294,23 +317,28 @@ class _SetupDialogState extends State<SetupDialog> {
                                             '   • Default Redirect URI: stockcount://oauth2redirect\n'
                                             '   • Grant Type: Authorization Code\n'
                                             '   • Response Type: Code',
-                                            style: TextStyle(color: Colors.white.withOpacity(0.9)),
+                                            style: TextStyle(
+                                                color: Colors.white
+                                                    .withOpacity(0.9)),
                                           ),
                                           const SizedBox(height: 16),
                                           Text(
                                             '3. Save the OAuth Client and copy the Client ID',
                                             style: TextStyle(
                                               fontWeight: FontWeight.bold,
-                                              color: Colors.white.withOpacity(0.95),
+                                              color: Colors.white
+                                                  .withOpacity(0.95),
                                             ),
                                           ),
                                           const SizedBox(height: 16),
                                           TextButton.icon(
                                             onPressed: _openFrappeOAuthDocs,
-                                            icon: const Icon(Icons.open_in_new, color: Colors.white),
+                                            icon: const Icon(Icons.open_in_new,
+                                                color: Colors.white),
                                             label: const Text(
                                               'Open Cohenix OAuth Documentation',
-                                              style: TextStyle(color: Colors.white),
+                                              style: TextStyle(
+                                                  color: Colors.white),
                                             ),
                                           ),
                                         ],
@@ -319,10 +347,10 @@ class _SetupDialogState extends State<SetupDialog> {
                                   ],
                                 ),
                               ),
-                      const SizedBox(height: 24),
+                              const SizedBox(height: 24),
 
                               const SizedBox(height: 32),
-                              
+
                               // Action buttons
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.end,
@@ -330,7 +358,8 @@ class _SetupDialogState extends State<SetupDialog> {
                                   if (!widget.isFirstLaunch)
                                     Flexible(
                                       child: TextButton(
-                                        onPressed: () => Navigator.of(context).pop(false),
+                                        onPressed: () =>
+                                            Navigator.of(context).pop(false),
                                         style: TextButton.styleFrom(
                                           foregroundColor: Colors.white,
                                           padding: const EdgeInsets.symmetric(
@@ -347,20 +376,23 @@ class _SetupDialogState extends State<SetupDialog> {
                                       onPressed: _saveConfig,
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: Colors.white,
-                                        foregroundColor: const Color(0xFF1436AC),
+                                        foregroundColor:
+                                            const Color(0xFF1436AC),
                                         padding: const EdgeInsets.symmetric(
                                           horizontal: 32,
                                           vertical: 16,
                                         ),
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(12),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
                                         ),
                                         elevation: 0,
                                       ),
                                       child: const Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          Icon(Icons.check_circle_outline, size: 20),
+                                          Icon(Icons.check_circle_outline,
+                                              size: 20),
                                           SizedBox(width: 8),
                                           Text(
                                             'Save Config',

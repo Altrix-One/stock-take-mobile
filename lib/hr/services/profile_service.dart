@@ -29,7 +29,8 @@ class ProfileService {
             return fromProfile;
           }
           // Try common fields
-          final email = (m['email'] ?? m['preferred_username'] ?? m['sub'])?.toString();
+          final email =
+              (m['email'] ?? m['preferred_username'] ?? m['sub'])?.toString();
           if (email != null && email.isNotEmpty) {
             final resolved = await _lookupEmployeeByUserId(email);
             if (resolved != null) {
@@ -67,7 +68,8 @@ class ProfileService {
       final data = res['data'];
       if (data is List && data.isNotEmpty) {
         final first = data.first;
-        if (first is Map && first['name'] != null) return first['name'].toString();
+        if (first is Map && first['name'] != null)
+          return first['name'].toString();
       }
     } catch (_) {}
     return null;
@@ -82,10 +84,11 @@ class ProfileService {
       final res = await HrmsApiClient.getJson(
         '/api/resource/Employee/$employeeId',
         query: {
-          'fields': '["name","employee_name","employee_number","gender","date_of_birth","date_of_joining","blood_group","company","department","designation","branch","employment_type","cell_number","personal_email","company_email","preferred_email","current_address","permanent_address","emergency_contact_name","emergency_contact_number","pan_number","bank_name","bank_ac_no","ifsc_code","image","user_id"]',
+          'fields':
+              '["name","employee_name","employee_number","gender","date_of_birth","date_of_joining","blood_group","company","department","designation","branch","employment_type","cell_number","personal_email","company_email","preferred_email","current_address","permanent_address","emergency_contact_name","emergency_contact_number","pan_number","bank_name","bank_ac_no","ifsc_code","image","user_id"]',
         },
       );
-      
+
       if (res['data'] is Map<String, dynamic>) {
         return res['data'] as Map<String, dynamic>;
       }
@@ -130,16 +133,17 @@ class ProfileService {
 
       // Get base URL
       final baseUrl = await AppConfig.baseUrl;
-      
+
       // Create multipart request for file upload
       final uri = Uri.parse('$baseUrl/api/method/upload_file');
       final request = http.MultipartRequest('POST', uri);
-      
+
       // Add headers
       request.headers['Authorization'] = 'Bearer $token';
-      
+
       // Add file
-      final filename = 'profile_${employeeId}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final filename =
+          'profile_${employeeId}_${DateTime.now().millisecondsSinceEpoch}.jpg';
       request.files.add(
         await http.MultipartFile.fromPath(
           'file',
@@ -147,28 +151,28 @@ class ProfileService {
           filename: filename,
         ),
       );
-      
+
       // Add additional fields
       request.fields['doctype'] = 'Employee';
       request.fields['docname'] = employeeId;
       request.fields['fieldname'] = 'image';
       request.fields['is_private'] = '0'; // Make public so it can be accessed
-      
+
       // Send request
       final response = await request.send();
       final responseBody = await response.stream.bytesToString();
-      
+
       if (response.statusCode >= 200 && response.statusCode < 300) {
         final data = jsonDecode(responseBody) as Map<String, dynamic>;
         final fileUrl = data['message']?['file_url']?.toString();
-        
+
         if (fileUrl != null) {
           // Update employee record with new image URL
           await updateEmployeeDetails({'image': fileUrl});
           return fileUrl;
         }
       }
-      
+
       throw Exception('Upload failed: ${response.statusCode} - $responseBody');
     } catch (e) {
       print('Error uploading profile image: $e');
@@ -179,16 +183,16 @@ class ProfileService {
   // Get full image URL from Frappe
   static Future<String?> getFullImageUrl(String? imagePath) async {
     if (imagePath == null || imagePath.isEmpty) return null;
-    
+
     try {
       final baseUrl = await AppConfig.baseUrl;
-      
+
       // If it's already a full URL, return as is
       if (imagePath.startsWith('http')) return imagePath;
-      
+
       // If it starts with /, prepend base URL
       if (imagePath.startsWith('/')) return '$baseUrl$imagePath';
-      
+
       // Otherwise, assume it's a relative path from files
       return '$baseUrl/files/$imagePath';
     } catch (e) {

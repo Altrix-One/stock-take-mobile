@@ -4,18 +4,18 @@ import 'package:flutter/material.dart';
 class SimpleBlueTheme {
   static const Color royalBlue = Color(0xFF1436AC);
   static const Color oceanBlue = Color(0xFF1483EB);
-  
+
   static ThemeData get theme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
-      
+
       // Force all possible backgrounds to royal blue
       scaffoldBackgroundColor: royalBlue,
       canvasColor: royalBlue,
       cardColor: royalBlue,
       dialogBackgroundColor: royalBlue,
-      
+
       colorScheme: const ColorScheme.light(
         brightness: Brightness.light,
         primary: royalBlue,
@@ -54,7 +54,7 @@ class SimpleBlueTheme {
         inversePrimary: Colors.white,
         surfaceTint: royalBlue,
       ),
-      
+
       // App bar theme
       appBarTheme: const AppBarTheme(
         backgroundColor: royalBlue,
@@ -70,7 +70,7 @@ class SimpleBlueTheme {
         iconTheme: IconThemeData(color: Colors.white),
         actionsIconTheme: IconThemeData(color: Colors.white),
       ),
-      
+
       // Card theme
       cardTheme: const CardThemeData(
         color: royalBlue,
@@ -82,7 +82,7 @@ class SimpleBlueTheme {
           borderRadius: BorderRadius.all(Radius.circular(16)),
         ),
       ),
-      
+
       // Text themes - all white
       textTheme: const TextTheme(
         displayLarge: TextStyle(color: Colors.white),
@@ -101,7 +101,7 @@ class SimpleBlueTheme {
         labelMedium: TextStyle(color: Colors.white),
         labelSmall: TextStyle(color: Colors.white),
       ),
-      
+
       // Button themes
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -115,14 +115,14 @@ class SimpleBlueTheme {
           ),
         ),
       ),
-      
+
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: Colors.white,
           surfaceTintColor: Colors.white,
         ),
       ),
-      
+
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: Colors.white,
@@ -130,7 +130,7 @@ class SimpleBlueTheme {
           surfaceTintColor: Colors.white,
         ),
       ),
-      
+
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           backgroundColor: oceanBlue,
@@ -138,7 +138,7 @@ class SimpleBlueTheme {
           surfaceTintColor: oceanBlue,
         ),
       ),
-      
+
       // Bottom navigation
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: royalBlue,
@@ -147,7 +147,7 @@ class SimpleBlueTheme {
         type: BottomNavigationBarType.fixed,
         elevation: 0,
       ),
-      
+
       // List tile theme
       listTileTheme: const ListTileThemeData(
         tileColor: royalBlue,
@@ -156,7 +156,7 @@ class SimpleBlueTheme {
         selectedTileColor: oceanBlue,
         selectedColor: Colors.white,
       ),
-      
+
       // Input decoration
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
@@ -178,11 +178,11 @@ class SimpleBlueTheme {
         prefixIconColor: Colors.white,
         suffixIconColor: Colors.white,
       ),
-      
+
       // Icon theme
       iconTheme: const IconThemeData(color: Colors.white),
       primaryIconTheme: const IconThemeData(color: Colors.white),
-      
+
       // Floating action button
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
         backgroundColor: oceanBlue,
@@ -192,19 +192,20 @@ class SimpleBlueTheme {
           borderRadius: BorderRadius.all(Radius.circular(16)),
         ),
       ),
-      
+
       // Dialog theme
       dialogTheme: const DialogThemeData(
         backgroundColor: royalBlue,
         surfaceTintColor: royalBlue,
-        titleTextStyle: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w600),
+        titleTextStyle: TextStyle(
+            color: Colors.white, fontSize: 20, fontWeight: FontWeight.w600),
         contentTextStyle: TextStyle(color: Colors.white),
         elevation: 8,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(16)),
         ),
       ),
-      
+
       // Snack bar theme
       snackBarTheme: const SnackBarThemeData(
         backgroundColor: Colors.black87,
@@ -214,14 +215,14 @@ class SimpleBlueTheme {
           borderRadius: BorderRadius.all(Radius.circular(8)),
         ),
       ),
-      
+
       // Progress indicator theme
       progressIndicatorTheme: const ProgressIndicatorThemeData(
         color: Colors.white,
         linearTrackColor: Colors.white24,
         circularTrackColor: Colors.white24,
       ),
-      
+
       // Tab bar theme
       tabBarTheme: const TabBarThemeData(
         labelColor: Colors.white,
@@ -229,14 +230,14 @@ class SimpleBlueTheme {
         indicatorColor: Colors.white,
         tabAlignment: TabAlignment.center,
       ),
-      
+
       // Drawer theme
       drawerTheme: const DrawerThemeData(
         backgroundColor: royalBlue,
         surfaceTintColor: royalBlue,
         elevation: 16,
       ),
-      
+
       // Divider theme
       dividerTheme: const DividerThemeData(
         color: Colors.white24,

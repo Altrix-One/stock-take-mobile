@@ -26,18 +26,19 @@ class ModernCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
-    
+
     Widget cardContent = Container(
-      margin: margin ?? const EdgeInsets.only(bottom: ModernDesignSystem.spaceMD),
+      margin:
+          margin ?? const EdgeInsets.only(bottom: ModernDesignSystem.spaceMD),
       decoration: ModernDesignSystem.modernCardDecoration(brightness).copyWith(
-        color: backgroundColor ?? ModernDesignSystem.getSurfaceColor(brightness),
+        color:
+            backgroundColor ?? ModernDesignSystem.getSurfaceColor(brightness),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (showHeader && (title != null || icon != null))
             _buildHeader(brightness),
-          
           Padding(
             padding: padding ?? ModernDesignSystem.cardPadding,
             child: child,
@@ -74,7 +75,8 @@ class ModernCard extends StatelessWidget {
               padding: const EdgeInsets.all(ModernDesignSystem.spaceXS),
               decoration: BoxDecoration(
                 color: ModernDesignSystem.primaryTeal.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(ModernDesignSystem.radiusXS),
+                borderRadius:
+                    BorderRadius.circular(ModernDesignSystem.radiusXS),
               ),
               child: Icon(
                 icon!,
@@ -121,7 +123,7 @@ class ModernInfoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
-    
+
     return ModernCard(
       onTap: onTap,
       showHeader: false,
@@ -130,7 +132,8 @@ class ModernInfoCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(ModernDesignSystem.spaceMD),
             decoration: BoxDecoration(
-              color: (iconColor ?? ModernDesignSystem.primaryTeal).withOpacity(0.1),
+              color: (iconColor ?? ModernDesignSystem.primaryTeal)
+                  .withOpacity(0.1),
               borderRadius: BorderRadius.circular(ModernDesignSystem.radiusSM),
             ),
             child: Icon(
@@ -206,7 +209,7 @@ class ModernStatsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
     final cardColor = color ?? ModernDesignSystem.primaryTeal;
-    
+
     return ModernCard(
       onTap: onTap,
       showHeader: false,
@@ -270,10 +273,10 @@ class ModernActionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
-    final actionColor = isDestructive 
-        ? ModernDesignSystem.error 
+    final actionColor = isDestructive
+        ? ModernDesignSystem.error
         : (color ?? ModernDesignSystem.primaryTeal);
-    
+
     return ModernCard(
       onTap: onTap,
       showHeader: false,

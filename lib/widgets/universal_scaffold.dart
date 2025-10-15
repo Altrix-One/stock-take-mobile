@@ -146,8 +146,8 @@ class UniversalAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Size get preferredSize => Size.fromHeight(
-    kToolbarHeight + (bottom?.preferredSize.height ?? 0),
-  );
+        kToolbarHeight + (bottom?.preferredSize.height ?? 0),
+      );
 }
 
 /// Universal Card

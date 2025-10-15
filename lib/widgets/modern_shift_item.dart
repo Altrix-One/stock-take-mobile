@@ -77,13 +77,15 @@ class ModernShiftItem extends StatelessWidget {
   IconData _getShiftIcon(String? shiftType) {
     if (shiftType == null) return Icons.work_outline_rounded;
     final type = shiftType.toLowerCase();
-    
-    if (type.contains('morning') || type.contains('day')) return Icons.wb_sunny_rounded;
-    if (type.contains('evening') || type.contains('afternoon')) return Icons.wb_twilight_rounded;
+
+    if (type.contains('morning') || type.contains('day'))
+      return Icons.wb_sunny_rounded;
+    if (type.contains('evening') || type.contains('afternoon'))
+      return Icons.wb_twilight_rounded;
     if (type.contains('night')) return Icons.bedtime_rounded;
     if (type.contains('weekend')) return Icons.weekend_rounded;
     if (type.contains('overtime')) return Icons.access_time_filled_rounded;
-    
+
     return Icons.work_outline_rounded;
   }
 
@@ -99,15 +101,17 @@ class ModernShiftItem extends StatelessWidget {
 
   String _formatDateRange(String? fromDate, String? toDate) {
     if (fromDate == null || toDate == null) return 'N/A';
-    
+
     try {
       final from = DateTime.parse(fromDate);
       final to = DateTime.parse(toDate);
-      
-      if (from.year == to.year && from.month == to.month && from.day == to.day) {
+
+      if (from.year == to.year &&
+          from.month == to.month &&
+          from.day == to.day) {
         return DateFormat('MMM dd, yyyy').format(from);
       }
-      
+
       return '${DateFormat('MMM dd').format(from)} - ${DateFormat('MMM dd, yyyy').format(to)}';
     } catch (_) {
       return '$fromDate - $toDate';
@@ -116,7 +120,7 @@ class ModernShiftItem extends StatelessWidget {
 
   double _calculateDays(String? fromDate, String? toDate) {
     if (fromDate == null || toDate == null) return 0;
-    
+
     try {
       final from = DateTime.parse(fromDate);
       final to = DateTime.parse(toDate);
@@ -135,9 +139,10 @@ class ModernShiftItem extends StatelessWidget {
     final status = _getShiftStatus(shift['status']?.toString());
     final reason = shift['reason']?.toString() ?? '';
     final days = _calculateDays(fromDate, toDate);
-    
+
     final statusColor = _getStatusColor(status, context);
-    final canCancel = status.toLowerCase() == 'pending' || status.toLowerCase() == 'open';
+    final canCancel =
+        status.toLowerCase() == 'pending' || status.toLowerCase() == 'open';
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -204,7 +209,8 @@ class ModernShiftItem extends StatelessWidget {
                   ),
                   // Status badge
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: statusColor.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(20),
@@ -235,9 +241,9 @@ class ModernShiftItem extends StatelessWidget {
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Stats row
               Row(
                 children: [
@@ -271,7 +277,7 @@ class ModernShiftItem extends StatelessWidget {
                     ),
                 ],
               ),
-              
+
               // Reason (if available)
               if (reason.isNotEmpty) ...[
                 const SizedBox(height: 16),
@@ -309,7 +315,8 @@ class ModernShiftItem extends StatelessWidget {
                       Text(
                         reason,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8),
+                          color: theme.colorScheme.onSurfaceVariant
+                              .withOpacity(0.8),
                           height: 1.4,
                         ),
                       ),
@@ -317,7 +324,7 @@ class ModernShiftItem extends StatelessWidget {
                   ),
                 ),
               ],
-              
+
               // Action buttons (if available)
               if (canCancel && onCancel != null) ...[
                 const SizedBox(height: 16),
@@ -330,7 +337,8 @@ class ModernShiftItem extends StatelessWidget {
                       label: const Text('Cancel'),
                       style: TextButton.styleFrom(
                         foregroundColor: theme.colorScheme.error,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
                       ),
                     ),
                   ],
@@ -343,9 +351,10 @@ class ModernShiftItem extends StatelessWidget {
     );
   }
 
-  Widget _statItem(BuildContext context, String label, String value, IconData icon) {
+  Widget _statItem(
+      BuildContext context, String label, String value, IconData icon) {
     final theme = Theme.of(context);
-    
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(

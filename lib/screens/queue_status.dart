@@ -18,15 +18,16 @@ class _QueueStatusScreenState extends State<QueueStatusScreen> {
 
   String _prettyError(String raw, String opType) {
     if (raw.isEmpty) return '';
-    
+
     // Use our error message parser for user-friendly messages
     if (opType == 'leave_application' || opType == 'cancel_leave') {
       return ErrorMessageParser.parseLeaveApplicationError(raw);
     }
-    
-    return ErrorMessageParser.parseGeneralError(raw, operation: opType.replaceAll('_', ' '));
+
+    return ErrorMessageParser.parseGeneralError(raw,
+        operation: opType.replaceAll('_', ' '));
   }
-  
+
   String _getStatusIcon(String status, String opType) {
     switch (status.toLowerCase()) {
       case 'acked':
@@ -39,7 +40,7 @@ class _QueueStatusScreenState extends State<QueueStatusScreen> {
         return '❌';
     }
   }
-  
+
   Color _getStatusColor(String status, BuildContext context) {
     final theme = Theme.of(context);
     switch (status.toLowerCase()) {
@@ -62,26 +63,35 @@ class _QueueStatusScreenState extends State<QueueStatusScreen> {
 
   Future<Database> _db() async {
     final dir = await getDatabasesPath();
-    return openDatabase(p.join(dir, 'stock_count.db'), version: DBSchema.dbVersion, onCreate: DBSchema.initDB, onUpgrade: DBSchema.upgradeDB);
+    return openDatabase(p.join(dir, 'stock_count.db'),
+        version: DBSchema.dbVersion,
+        onCreate: DBSchema.initDB,
+        onUpgrade: DBSchema.upgradeDB);
   }
 
   Future<void> _load() async {
-    setState(() { _loading = true; });
+    setState(() {
+      _loading = true;
+    });
     final db = await _db();
     final rows = await db.query('Outbox', orderBy: 'id desc', limit: 100);
-    setState(() { _rows = rows; _loading = false; });
+    setState(() {
+      _rows = rows;
+      _loading = false;
+    });
   }
 
   Future<void> _retry(int id) async {
     final db = await _db();
-    await db.update('Outbox', {'status': 'queued'}, where: 'id = ?', whereArgs: [id]);
+    await db.update('Outbox', {'status': 'queued'},
+        where: 'id = ?', whereArgs: [id]);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Retrying operation...')),
     );
     await OutboxQueue.processQueue();
     await _load();
   }
-  
+
   Future<void> _showErrorDetails(String error, String opType) async {
     final friendlyMessage = _prettyError(error, opType);
     await ProfessionalErrorDialog.show(
@@ -91,13 +101,14 @@ class _QueueStatusScreenState extends State<QueueStatusScreen> {
       canRetry: false,
     );
   }
-  
+
   Future<void> _deleteOperation(int id) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Operation'),
-        content: const Text('Are you sure you want to delete this operation? This action cannot be undone.'),
+        content: const Text(
+            'Are you sure you want to delete this operation? This action cannot be undone.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -113,7 +124,7 @@ class _QueueStatusScreenState extends State<QueueStatusScreen> {
         ],
       ),
     );
-    
+
     if (confirmed == true) {
       final db = await _db();
       await db.delete('Outbox', where: 'id = ?', whereArgs: [id]);
@@ -137,11 +148,13 @@ class _QueueStatusScreenState extends State<QueueStatusScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.check_circle_outline, size: 64, color: Colors.green),
+                      Icon(Icons.check_circle_outline,
+                          size: 64, color: Colors.green),
                       SizedBox(height: 16),
                       Text(
                         'All operations completed!',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.w600),
                       ),
                       SizedBox(height: 8),
                       Text(
@@ -164,12 +177,14 @@ class _QueueStatusScreenState extends State<QueueStatusScreen> {
                       final hasError = lastError.isNotEmpty;
                       final updatedAt = r['updated_at']?.toString() ?? '';
                       final attempts = r['attempts'] as int? ?? 0;
-                      
+
                       return Card(
                         margin: const EdgeInsets.only(bottom: 12),
                         child: InkWell(
                           borderRadius: BorderRadius.circular(12),
-                          onTap: hasError ? () => _showErrorDetails(lastError, opType) : null,
+                          onTap: hasError
+                              ? () => _showErrorDetails(lastError, opType)
+                              : null,
                           child: Padding(
                             padding: const EdgeInsets.all(16),
                             child: Column(
@@ -180,7 +195,8 @@ class _QueueStatusScreenState extends State<QueueStatusScreen> {
                                     Container(
                                       padding: const EdgeInsets.all(8),
                                       decoration: BoxDecoration(
-                                        color: _getStatusColor(status, context).withOpacity(0.1),
+                                        color: _getStatusColor(status, context)
+                                            .withOpacity(0.1),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: Text(
@@ -191,10 +207,13 @@ class _QueueStatusScreenState extends State<QueueStatusScreen> {
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            opType.replaceAll('_', ' ').toUpperCase(),
+                                            opType
+                                                .replaceAll('_', ' ')
+                                                .toUpperCase(),
                                             style: const TextStyle(
                                               fontWeight: FontWeight.w600,
                                               fontSize: 14,
@@ -203,7 +222,8 @@ class _QueueStatusScreenState extends State<QueueStatusScreen> {
                                           Text(
                                             status.toUpperCase(),
                                             style: TextStyle(
-                                              color: _getStatusColor(status, context),
+                                              color: _getStatusColor(
+                                                  status, context),
                                               fontWeight: FontWeight.w500,
                                               fontSize: 12,
                                             ),
@@ -219,7 +239,8 @@ class _QueueStatusScreenState extends State<QueueStatusScreen> {
                                         ),
                                         decoration: BoxDecoration(
                                           color: Colors.orange.withOpacity(0.1),
-                                          borderRadius: BorderRadius.circular(12),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
                                         ),
                                         child: Text(
                                           'Attempt $attempts',
@@ -237,10 +258,16 @@ class _QueueStatusScreenState extends State<QueueStatusScreen> {
                                   Container(
                                     padding: const EdgeInsets.all(12),
                                     decoration: BoxDecoration(
-                                      color: Theme.of(context).colorScheme.errorContainer.withOpacity(0.1),
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .errorContainer
+                                          .withOpacity(0.1),
                                       borderRadius: BorderRadius.circular(8),
                                       border: Border.all(
-                                        color: Theme.of(context).colorScheme.error.withOpacity(0.2),
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .error
+                                            .withOpacity(0.2),
                                       ),
                                     ),
                                     child: Row(
@@ -248,7 +275,9 @@ class _QueueStatusScreenState extends State<QueueStatusScreen> {
                                         Icon(
                                           Icons.error_outline_rounded,
                                           size: 16,
-                                          color: Theme.of(context).colorScheme.error,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .error,
                                         ),
                                         const SizedBox(width: 8),
                                         Expanded(
@@ -256,7 +285,9 @@ class _QueueStatusScreenState extends State<QueueStatusScreen> {
                                             _prettyError(lastError, opType),
                                             style: TextStyle(
                                               fontSize: 12,
-                                              color: Theme.of(context).colorScheme.onErrorContainer,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onErrorContainer,
                                             ),
                                             maxLines: 2,
                                             overflow: TextOverflow.ellipsis,
@@ -280,7 +311,10 @@ class _QueueStatusScreenState extends State<QueueStatusScreen> {
                                     'Updated: $updatedAt',
                                     style: TextStyle(
                                       fontSize: 12,
-                                      color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.7),
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant
+                                          .withOpacity(0.7),
                                     ),
                                   ),
                                 ],
@@ -290,22 +324,29 @@ class _QueueStatusScreenState extends State<QueueStatusScreen> {
                                   children: [
                                     if (hasError)
                                       TextButton.icon(
-                                        onPressed: () => _deleteOperation(r['id'] as int),
-                                        icon: const Icon(Icons.delete_outline, size: 16),
+                                        onPressed: () =>
+                                            _deleteOperation(r['id'] as int),
+                                        icon: const Icon(Icons.delete_outline,
+                                            size: 16),
                                         label: const Text('Delete'),
                                         style: TextButton.styleFrom(
-                                          foregroundColor: Theme.of(context).colorScheme.error,
-                                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                                          foregroundColor: Theme.of(context)
+                                              .colorScheme
+                                              .error,
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 12),
                                         ),
                                       ),
                                     const SizedBox(width: 8),
                                     if (status != 'acked')
                                       FilledButton.icon(
                                         onPressed: () => _retry(r['id'] as int),
-                                        icon: const Icon(Icons.refresh, size: 16),
+                                        icon:
+                                            const Icon(Icons.refresh, size: 16),
                                         label: const Text('Retry'),
                                         style: FilledButton.styleFrom(
-                                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 16),
                                         ),
                                       ),
                                   ],

@@ -29,27 +29,28 @@ class ModernActionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
-    final actionColor = isDestructive 
-        ? ModernDesignSystem.error 
+    final actionColor = isDestructive
+        ? ModernDesignSystem.error
         : (color ?? ModernDesignSystem.primaryTeal);
-    
+
     return Container(
-      margin: margin ?? const EdgeInsets.only(bottom: ModernDesignSystem.spaceMD),
+      margin:
+          margin ?? const EdgeInsets.only(bottom: ModernDesignSystem.spaceMD),
       decoration: BoxDecoration(
         // Glass morphism effect - much more transparent
-        color: brightness == Brightness.dark 
+        color: brightness == Brightness.dark
             ? Colors.white.withOpacity(0.08)
             : Colors.white.withOpacity(0.25),
         borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
         border: Border.all(
-          color: brightness == Brightness.dark 
+          color: brightness == Brightness.dark
               ? Colors.white.withOpacity(0.4)
               : Colors.white.withOpacity(0.75),
           width: 1.2,
         ),
         boxShadow: [
           BoxShadow(
-            color: brightness == Brightness.dark 
+            color: brightness == Brightness.dark
                 ? Colors.black.withOpacity(0.3)
                 : Colors.black.withOpacity(0.05),
             blurRadius: 10,
@@ -67,18 +68,20 @@ class ModernActionCard extends StatelessWidget {
               onTap: onTap,
               borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
               child: Padding(
-                padding: const EdgeInsets.all(ModernDesignSystem.spaceCompactMD),
+                padding:
+                    const EdgeInsets.all(ModernDesignSystem.spaceCompactMD),
                 child: Row(
                   children: [
                     Container(
                       padding: const EdgeInsets.all(ModernDesignSystem.spaceXS),
                       decoration: BoxDecoration(
-                        color: brightness == Brightness.dark 
+                        color: brightness == Brightness.dark
                             ? Colors.white.withOpacity(0.1)
                             : Colors.black.withOpacity(0.05),
-                        borderRadius: BorderRadius.circular(ModernDesignSystem.radiusSM),
+                        borderRadius:
+                            BorderRadius.circular(ModernDesignSystem.radiusSM),
                         border: Border.all(
-                          color: brightness == Brightness.dark 
+                          color: brightness == Brightness.dark
                               ? Colors.white.withOpacity(0.15)
                               : Colors.black.withOpacity(0.1),
                           width: 0.5,
@@ -90,9 +93,7 @@ class ModernActionCard extends StatelessWidget {
                         size: 20,
                       ),
                     ),
-                    
                     ModernDesignSystem.horizontalSpaceXS,
-                    
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -100,10 +101,12 @@ class ModernActionCard extends StatelessWidget {
                         children: [
                           Text(
                             title,
-                            style: ModernDesignSystem.bodyCompactMedium.copyWith(
+                            style:
+                                ModernDesignSystem.bodyCompactMedium.copyWith(
                               color: isDestructive
                                   ? ModernDesignSystem.error
-                                  : ModernDesignSystem.getTextPrimary(brightness),
+                                  : ModernDesignSystem.getTextPrimary(
+                                      brightness),
                               fontWeight: FontWeight.w600,
                             ),
                             maxLines: 1,
@@ -114,7 +117,8 @@ class ModernActionCard extends StatelessWidget {
                             Text(
                               subtitle!,
                               style: ModernDesignSystem.captionCompact.copyWith(
-                                color: ModernDesignSystem.getTextSecondary(brightness),
+                                color: ModernDesignSystem.getTextSecondary(
+                                    brightness),
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -123,7 +127,6 @@ class ModernActionCard extends StatelessWidget {
                         ],
                       ),
                     ),
-                    
                     if (showArrow && onTap != null)
                       Icon(
                         Icons.arrow_forward_ios,
@@ -166,23 +169,23 @@ class ModernStatsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
     final cardColor = color ?? ModernDesignSystem.primaryTeal;
-    
+
     return Container(
       decoration: BoxDecoration(
         // Glass morphism effect - much more transparent
-        color: brightness == Brightness.dark 
+        color: brightness == Brightness.dark
             ? Colors.white.withOpacity(0.08)
             : Colors.white.withOpacity(0.25),
         borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
         border: Border.all(
-          color: brightness == Brightness.dark 
+          color: brightness == Brightness.dark
               ? Colors.white.withOpacity(0.4)
               : Colors.white.withOpacity(0.75),
           width: 1.2,
         ),
         boxShadow: [
           BoxShadow(
-            color: brightness == Brightness.dark 
+            color: brightness == Brightness.dark
                 ? Colors.black.withOpacity(0.3)
                 : Colors.black.withOpacity(0.05),
             blurRadius: 10,
@@ -200,8 +203,8 @@ class ModernStatsCard extends StatelessWidget {
               onTap: onTap,
               borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
               child: Padding(
-                padding: EdgeInsets.all(isCompact 
-                    ? ModernDesignSystem.spaceCompactMD 
+                padding: EdgeInsets.all(isCompact
+                    ? ModernDesignSystem.spaceCompactMD
                     : ModernDesignSystem.spaceMD),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -210,14 +213,16 @@ class ModernStatsCard extends StatelessWidget {
                     Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(ModernDesignSystem.spaceXS),
+                          padding:
+                              const EdgeInsets.all(ModernDesignSystem.spaceXS),
                           decoration: BoxDecoration(
-                            color: brightness == Brightness.dark 
+                            color: brightness == Brightness.dark
                                 ? Colors.white.withOpacity(0.1)
                                 : Colors.black.withOpacity(0.05),
-                            borderRadius: BorderRadius.circular(ModernDesignSystem.radiusXS),
+                            borderRadius: BorderRadius.circular(
+                                ModernDesignSystem.radiusXS),
                             border: Border.all(
-                              color: brightness == Brightness.dark 
+                              color: brightness == Brightness.dark
                                   ? Colors.white.withOpacity(0.15)
                                   : Colors.black.withOpacity(0.1),
                               width: 0.5,
@@ -229,23 +234,20 @@ class ModernStatsCard extends StatelessWidget {
                             size: isCompact ? 16 : 20,
                           ),
                         ),
-                        
                         const Spacer(),
-                        
                         if (onTap != null)
                           Icon(
                             Icons.more_horiz,
                             size: 16,
-                            color: ModernDesignSystem.getTextTertiary(brightness),
+                            color:
+                                ModernDesignSystem.getTextTertiary(brightness),
                           ),
                       ],
                     ),
-                    
                     ModernDesignSystem.verticalSpaceMD,
-                    
                     Text(
                       value,
-                      style: isCompact 
+                      style: isCompact
                           ? ModernDesignSystem.headlineCompact.copyWith(
                               fontWeight: FontWeight.w700,
                               color: cardColor,
@@ -257,9 +259,7 @@ class ModernStatsCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    
                     ModernDesignSystem.verticalSpaceXS,
-                    
                     Text(
                       label,
                       style: ModernDesignSystem.captionCompact.copyWith(
@@ -269,7 +269,6 @@ class ModernStatsCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    
                     if (subtitle != null) ...[
                       ModernDesignSystem.verticalSpaceMicro,
                       Text(
@@ -321,9 +320,10 @@ class ModernInfoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
     final cardIconColor = iconColor ?? ModernDesignSystem.primaryTeal;
-    
+
     return Container(
-      margin: margin ?? const EdgeInsets.only(bottom: ModernDesignSystem.spaceMD),
+      margin:
+          margin ?? const EdgeInsets.only(bottom: ModernDesignSystem.spaceMD),
       decoration: ModernDesignSystem.modernCardDecoration(brightness),
       child: Material(
         color: Colors.transparent,
@@ -341,7 +341,8 @@ class ModernInfoCard extends StatelessWidget {
                       padding: const EdgeInsets.all(ModernDesignSystem.spaceXS),
                       decoration: BoxDecoration(
                         color: cardIconColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(ModernDesignSystem.radiusSM),
+                        borderRadius:
+                            BorderRadius.circular(ModernDesignSystem.radiusSM),
                       ),
                       child: Icon(
                         icon,
@@ -349,9 +350,7 @@ class ModernInfoCard extends StatelessWidget {
                         size: 20,
                       ),
                     ),
-                    
                     ModernDesignSystem.horizontalSpaceXS,
-                    
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -362,8 +361,10 @@ class ModernInfoCard extends StatelessWidget {
                               Expanded(
                                 child: Text(
                                   title,
-                                  style: ModernDesignSystem.bodyCompactMedium.copyWith(
-                                    color: ModernDesignSystem.getTextPrimary(brightness),
+                                  style: ModernDesignSystem.bodyCompactMedium
+                                      .copyWith(
+                                    color: ModernDesignSystem.getTextPrimary(
+                                        brightness),
                                     fontWeight: FontWeight.w600,
                                   ),
                                   maxLines: 1,
@@ -384,7 +385,8 @@ class ModernInfoCard extends StatelessWidget {
                             Text(
                               subtitle!,
                               style: ModernDesignSystem.captionCompact.copyWith(
-                                color: ModernDesignSystem.getTextSecondary(brightness),
+                                color: ModernDesignSystem.getTextSecondary(
+                                    brightness),
                               ),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
@@ -393,7 +395,6 @@ class ModernInfoCard extends StatelessWidget {
                         ],
                       ),
                     ),
-                    
                     if (value != null) ...[
                       Text(
                         value!,
@@ -403,7 +404,6 @@ class ModernInfoCard extends StatelessWidget {
                         ),
                       ),
                     ],
-                    
                     if (onTap != null) ...[
                       ModernDesignSystem.horizontalSpaceXS,
                       Icon(
@@ -414,7 +414,6 @@ class ModernInfoCard extends StatelessWidget {
                     ],
                   ],
                 ),
-                
                 if (actions != null) ...[
                   ModernDesignSystem.verticalSpaceMD,
                   Divider(
@@ -464,24 +463,25 @@ class ModernHeroCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
-    
+
     return Container(
-      margin: margin ?? const EdgeInsets.only(bottom: ModernDesignSystem.spaceLG),
+      margin:
+          margin ?? const EdgeInsets.only(bottom: ModernDesignSystem.spaceLG),
       decoration: BoxDecoration(
         // Glass morphism effect for hero card
-        color: brightness == Brightness.dark 
+        color: brightness == Brightness.dark
             ? Colors.white.withOpacity(0.08)
             : Colors.white.withOpacity(0.25),
         borderRadius: BorderRadius.circular(ModernDesignSystem.radiusLG),
         border: Border.all(
-          color: brightness == Brightness.dark 
+          color: brightness == Brightness.dark
               ? Colors.white.withOpacity(0.4)
               : Colors.white.withOpacity(0.75),
           width: 1.2,
         ),
         boxShadow: [
           BoxShadow(
-            color: brightness == Brightness.dark 
+            color: brightness == Brightness.dark
                 ? Colors.black.withOpacity(0.3)
                 : Colors.black.withOpacity(0.08),
             blurRadius: 15,
@@ -496,74 +496,79 @@ class ModernHeroCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-          if (title != null || subtitle != null || icon != null) ...[
-            Container(
-              padding: const EdgeInsets.all(ModernDesignSystem.spaceMD),
-              decoration: BoxDecoration(
-                color: (backgroundColor ?? ModernDesignSystem.getSurfaceColor(brightness))
-                    .withOpacity(0.5),
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(ModernDesignSystem.radiusLG),
-                  topRight: Radius.circular(ModernDesignSystem.radiusLG),
-                ),
-                border: Border(
-                  bottom: BorderSide(
-                    color: ModernDesignSystem.getDividerColor(brightness),
-                    width: 0.5,
-                  ),
-                ),
-              ),
-              child: Row(
-                children: [
-                  if (icon != null) ...[
-                    Container(
-                      padding: const EdgeInsets.all(ModernDesignSystem.spaceXS),
-                      decoration: BoxDecoration(
-                        color: ModernDesignSystem.primaryTeal.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(ModernDesignSystem.radiusXS),
-                      ),
-                      child: Icon(
-                        icon!,
-                        color: ModernDesignSystem.primaryTeal,
-                        size: 20,
+              if (title != null || subtitle != null || icon != null) ...[
+                Container(
+                  padding: const EdgeInsets.all(ModernDesignSystem.spaceMD),
+                  decoration: BoxDecoration(
+                    color: (backgroundColor ??
+                            ModernDesignSystem.getSurfaceColor(brightness))
+                        .withOpacity(0.5),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(ModernDesignSystem.radiusLG),
+                      topRight: Radius.circular(ModernDesignSystem.radiusLG),
+                    ),
+                    border: Border(
+                      bottom: BorderSide(
+                        color: ModernDesignSystem.getDividerColor(brightness),
+                        width: 0.5,
                       ),
                     ),
-                    ModernDesignSystem.horizontalSpaceSM,
-                  ],
-                  
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (title != null)
-                          Text(
-                            title!,
-                            style: ModernDesignSystem.headlineMedium.copyWith(
-                              color: ModernDesignSystem.getTextPrimary(brightness),
-                              fontWeight: FontWeight.w600,
-                            ),
+                  ),
+                  child: Row(
+                    children: [
+                      if (icon != null) ...[
+                        Container(
+                          padding:
+                              const EdgeInsets.all(ModernDesignSystem.spaceXS),
+                          decoration: BoxDecoration(
+                            color:
+                                ModernDesignSystem.primaryTeal.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(
+                                ModernDesignSystem.radiusXS),
                           ),
-                        if (subtitle != null) ...[
-                          ModernDesignSystem.verticalSpaceMicro,
-                          Text(
-                            subtitle!,
-                            style: ModernDesignSystem.bodyMedium.copyWith(
-                              color: ModernDesignSystem.getTextSecondary(brightness),
-                            ),
+                          child: Icon(
+                            icon!,
+                            color: ModernDesignSystem.primaryTeal,
+                            size: 20,
                           ),
-                        ],
+                        ),
+                        ModernDesignSystem.horizontalSpaceSM,
                       ],
-                    ),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (title != null)
+                              Text(
+                                title!,
+                                style:
+                                    ModernDesignSystem.headlineMedium.copyWith(
+                                  color: ModernDesignSystem.getTextPrimary(
+                                      brightness),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            if (subtitle != null) ...[
+                              ModernDesignSystem.verticalSpaceMicro,
+                              Text(
+                                subtitle!,
+                                style: ModernDesignSystem.bodyMedium.copyWith(
+                                  color: ModernDesignSystem.getTextSecondary(
+                                      brightness),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      if (actions != null) ...actions!,
+                    ],
                   ),
-                  
-                  if (actions != null) ...actions!,
-                ],
-              ),
-            ),
-          ],
-          
+                ),
+              ],
               Padding(
-                padding: padding ?? const EdgeInsets.all(ModernDesignSystem.spaceMD),
+                padding:
+                    padding ?? const EdgeInsets.all(ModernDesignSystem.spaceMD),
                 child: child,
               ),
             ],
@@ -605,9 +610,10 @@ class ModernListItemCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
     final iconColor = leadingIconColor ?? ModernDesignSystem.primaryTeal;
-    
+
     return Container(
-      margin: margin ?? const EdgeInsets.only(bottom: ModernDesignSystem.spaceXS),
+      margin:
+          margin ?? const EdgeInsets.only(bottom: ModernDesignSystem.spaceXS),
       decoration: ModernDesignSystem.subtleCardDecoration(brightness),
       child: Material(
         color: Colors.transparent,
@@ -624,10 +630,12 @@ class ModernListItemCard extends StatelessWidget {
                       leadingWidget!
                     else if (leadingIcon != null)
                       Container(
-                        padding: const EdgeInsets.all(ModernDesignSystem.spaceXS),
+                        padding:
+                            const EdgeInsets.all(ModernDesignSystem.spaceXS),
                         decoration: BoxDecoration(
                           color: iconColor.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(ModernDesignSystem.radiusXS),
+                          borderRadius: BorderRadius.circular(
+                              ModernDesignSystem.radiusXS),
                         ),
                         child: Icon(
                           leadingIcon!,
@@ -635,18 +643,18 @@ class ModernListItemCard extends StatelessWidget {
                           size: 16,
                         ),
                       ),
-                    
                     if (leadingWidget != null || leadingIcon != null)
                       ModernDesignSystem.horizontalSpaceSM,
-                    
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             title,
-                            style: ModernDesignSystem.bodyCompactMedium.copyWith(
-                              color: ModernDesignSystem.getTextPrimary(brightness),
+                            style:
+                                ModernDesignSystem.bodyCompactMedium.copyWith(
+                              color:
+                                  ModernDesignSystem.getTextPrimary(brightness),
                               fontWeight: FontWeight.w500,
                             ),
                             maxLines: 1,
@@ -657,7 +665,8 @@ class ModernListItemCard extends StatelessWidget {
                             Text(
                               subtitle!,
                               style: ModernDesignSystem.captionCompact.copyWith(
-                                color: ModernDesignSystem.getTextSecondary(brightness),
+                                color: ModernDesignSystem.getTextSecondary(
+                                    brightness),
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -666,19 +675,18 @@ class ModernListItemCard extends StatelessWidget {
                         ],
                       ),
                     ),
-                    
                     if (trailingWidget != null)
                       trailingWidget!
                     else if (trailing != null) ...[
                       Text(
                         trailing!,
                         style: ModernDesignSystem.bodyCompact.copyWith(
-                          color: ModernDesignSystem.getTextSecondary(brightness),
+                          color:
+                              ModernDesignSystem.getTextSecondary(brightness),
                           fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],
-                    
                     if (onTap != null) ...[
                       ModernDesignSystem.horizontalSpaceXS,
                       Icon(
@@ -689,7 +697,6 @@ class ModernListItemCard extends StatelessWidget {
                     ],
                   ],
                 ),
-                
                 if (showDivider) ...[
                   ModernDesignSystem.verticalSpaceXS,
                   Divider(

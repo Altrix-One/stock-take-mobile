@@ -9,7 +9,11 @@ class DoctypeForm extends StatefulWidget {
   final List<FormFieldSpec> fields;
   final void Function(Map<String, dynamic> values) onSubmit;
 
-  const DoctypeForm({super.key, required this.title, required this.fields, required this.onSubmit});
+  const DoctypeForm(
+      {super.key,
+      required this.title,
+      required this.fields,
+      required this.onSubmit});
 
   @override
   State<DoctypeForm> createState() => _DoctypeFormState();
@@ -82,7 +86,9 @@ class _DoctypeFormState extends State<DoctypeForm> {
         return TextFormField(
           decoration: InputDecoration(labelText: f.label),
           initialValue: _values[f.name]?.toString() ?? '',
-          validator: f.required ? (v) => (v == null || v.isEmpty) ? '${f.label} required' : null : null,
+          validator: f.required
+              ? (v) => (v == null || v.isEmpty) ? '${f.label} required' : null
+              : null,
           onSaved: (v) => _values[f.name] = v,
         );
       case FieldType.number:
@@ -90,27 +96,41 @@ class _DoctypeFormState extends State<DoctypeForm> {
           decoration: InputDecoration(labelText: f.label),
           initialValue: _values[f.name]?.toString() ?? '',
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          validator: f.required ? (v) => (v == null || v.isEmpty) ? '${f.label} required' : null : null,
+          validator: f.required
+              ? (v) => (v == null || v.isEmpty) ? '${f.label} required' : null
+              : null,
           onSaved: (v) => _values[f.name] = double.tryParse(v ?? ''),
         );
       case FieldType.select:
         return DropdownButtonFormField<String>(
-          value: (_values[f.name] as String?) ?? (f.options?.isNotEmpty == true ? f.options!.first : null),
-          items: (f.options ?? []).map((o) => DropdownMenuItem(value: o, child: Text(o))).toList(),
+          value: (_values[f.name] as String?) ??
+              (f.options?.isNotEmpty == true ? f.options!.first : null),
+          items: (f.options ?? [])
+              .map((o) => DropdownMenuItem(value: o, child: Text(o)))
+              .toList(),
           onChanged: (v) => setState(() => _values[f.name] = v),
           decoration: InputDecoration(labelText: f.label),
-          validator: f.required ? (v) => (v == null || v.isEmpty) ? '${f.label} required' : null : null,
+          validator: f.required
+              ? (v) => (v == null || v.isEmpty) ? '${f.label} required' : null
+              : null,
         );
       case FieldType.date:
-        final controller = TextEditingController(text: _values[f.name]?.toString() ?? '');
+        final controller =
+            TextEditingController(text: _values[f.name]?.toString() ?? '');
         return TextFormField(
           controller: controller,
           readOnly: true,
           decoration: InputDecoration(labelText: f.label),
-          validator: f.required ? (v) => (v == null || v.isEmpty) ? '${f.label} required' : null : null,
+          validator: f.required
+              ? (v) => (v == null || v.isEmpty) ? '${f.label} required' : null
+              : null,
           onTap: () async {
             final now = DateTime.now();
-            final picked = await showDatePicker(context: context, firstDate: DateTime(now.year - 2), lastDate: DateTime(now.year + 2), initialDate: now);
+            final picked = await showDatePicker(
+                context: context,
+                firstDate: DateTime(now.year - 2),
+                lastDate: DateTime(now.year + 2),
+                initialDate: now);
             if (picked != null) {
               setState(() {
                 controller.text = picked.toIso8601String().substring(0, 10);
@@ -123,14 +143,15 @@ class _DoctypeFormState extends State<DoctypeForm> {
         bool init = (_values[f.name] as bool?) ?? false;
         return CheckboxListTile(
           value: init,
-          onChanged: (v) => setState(()=> _values[f.name] = v ?? false),
+          onChanged: (v) => setState(() => _values[f.name] = v ?? false),
           title: Text(f.label),
           controlAffinity: ListTileControlAffinity.leading,
         );
       case FieldType.section:
         return Padding(
           padding: const EdgeInsets.only(top: 16, bottom: 8),
-          child: Text(f.label, style: const TextStyle(fontWeight: FontWeight.bold)),
+          child: Text(f.label,
+              style: const TextStyle(fontWeight: FontWeight.bold)),
         );
     }
   }
@@ -146,7 +167,15 @@ class FormFieldSpec {
   final String? dependsOn;
   final bool? hidden;
 
-  FormFieldSpec({required this.name, required this.label, required this.type, this.required = false, this.options, this.initialValue, this.dependsOn, this.hidden});
+  FormFieldSpec(
+      {required this.name,
+      required this.label,
+      required this.type,
+      this.required = false,
+      this.options,
+      this.initialValue,
+      this.dependsOn,
+      this.hidden});
 }
 
 enum FieldType { text, number, select, date, check, section }

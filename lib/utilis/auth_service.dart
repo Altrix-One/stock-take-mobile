@@ -12,7 +12,8 @@ class AuthService {
   }
 
   static Future<String> _baseUrl() async => await AppConfig.baseUrl;
-  static Future<String> _tokenEndpoint() async => AppConfig.tokenEndpoint; // path
+  static Future<String> _tokenEndpoint() async =>
+      AppConfig.tokenEndpoint; // path
   static Future<String> _clientId() async => await AppConfig.clientId;
   static String _redirectUri() => AppConfig.redirectUri;
 
@@ -20,10 +21,12 @@ class AuthService {
   static Future<bool> refreshTokenIfNeeded({bool force = false}) async {
     final box = await _box();
     final String? accessToken = box.get('accessToken');
-    final DateTime? tokenExpiry = DateTime.tryParse(box.get('tokenExpiry') ?? '');
+    final DateTime? tokenExpiry =
+        DateTime.tryParse(box.get('tokenExpiry') ?? '');
     final String? refreshToken = box.get('refreshToken');
 
-    final bool isExpired = tokenExpiry == null || DateTime.now().isAfter(tokenExpiry);
+    final bool isExpired =
+        tokenExpiry == null || DateTime.now().isAfter(tokenExpiry);
     if (!force && accessToken != null && !isExpired) {
       return false; // Still valid
     }
@@ -35,7 +38,7 @@ class AuthService {
       final clientId = await _clientId();
       final res = await http.post(
         Uri.parse('$base$tokenPath'),
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: {
           'grant_type': 'refresh_token',
           'refresh_token': refreshToken,
@@ -50,7 +53,8 @@ class AuthService {
         if (newAccess != null && newAccess.isNotEmpty) {
           await box.put('accessToken', newAccess);
           if (expiresIn > 0) {
-            await box.put('tokenExpiry', DateTime.now().add(Duration(seconds: expiresIn)).toString());
+            await box.put('tokenExpiry',
+                DateTime.now().add(Duration(seconds: expiresIn)).toString());
           }
           return true;
         }

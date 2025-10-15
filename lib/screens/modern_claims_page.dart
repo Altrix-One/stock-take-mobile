@@ -17,7 +17,8 @@ class ModernClaimsPage extends StatefulWidget {
   State<ModernClaimsPage> createState() => _ModernClaimsPageState();
 }
 
-class _ModernClaimsPageState extends State<ModernClaimsPage> with TickerProviderStateMixin {
+class _ModernClaimsPageState extends State<ModernClaimsPage>
+    with TickerProviderStateMixin {
   late TabController _tabController;
   bool _isLoading = true;
   List<dynamic> _myClaims = [];
@@ -30,25 +31,25 @@ class _ModernClaimsPageState extends State<ModernClaimsPage> with TickerProvider
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _loadClaimsData();
-    
+
     // Listen to outbox queue changes
     OutboxQueue.events.listen((_) {
       if (mounted) _loadClaimsData();
     });
-    
+
     // Auto-refresh every 30 seconds
     _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
       if (mounted) _loadClaimsData();
     });
   }
-  
+
   @override
   void dispose() {
     _tabController.dispose();
     _refreshTimer?.cancel();
     super.dispose();
   }
-  
+
   Future<void> _loadClaimsData() async {
     try {
       final results = await Future.wait([
@@ -56,7 +57,7 @@ class _ModernClaimsPageState extends State<ModernClaimsPage> with TickerProvider
         ClaimsService.claimCategories(),
         ClaimsService.claimsStats(),
       ]);
-      
+
       if (mounted) {
         setState(() {
           _myClaims = results[0] as List<dynamic>;
@@ -74,7 +75,7 @@ class _ModernClaimsPageState extends State<ModernClaimsPage> with TickerProvider
       }
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return UniversalScaffold(
@@ -94,8 +95,9 @@ class _ModernClaimsPageState extends State<ModernClaimsPage> with TickerProvider
             _buildTabBar(),
             const SizedBox(height: AppThemeUnified.spaceMD),
             Expanded(
-              child: _isLoading 
-                  ? const ModernLoadingIndicator(message: 'Loading claims data...')
+              child: _isLoading
+                  ? const ModernLoadingIndicator(
+                      message: 'Loading claims data...')
                   : TabBarView(
                       controller: _tabController,
                       children: [
@@ -116,8 +118,7 @@ class _ModernClaimsPageState extends State<ModernClaimsPage> with TickerProvider
       ),
     );
   }
-  
-  
+
   Widget _buildTabBar() {
     return AppThemeUnified.glassContainer(
       margin: const EdgeInsets.symmetric(horizontal: AppThemeUnified.spaceMD),
@@ -144,7 +145,7 @@ class _ModernClaimsPageState extends State<ModernClaimsPage> with TickerProvider
       ),
     );
   }
-  
+
   Widget _buildMyClaimsTab() {
     return RefreshIndicator(
       onRefresh: _loadClaimsData,
@@ -158,10 +159,10 @@ class _ModernClaimsPageState extends State<ModernClaimsPage> with TickerProvider
             // Quick Stats
             _buildQuickStats(),
             const SizedBox(height: AppThemeUnified.spaceLG),
-            
+
             // Recent Claims
             _buildRecentClaims(),
-            
+
             // Bottom spacing for FAB
             const SizedBox(height: 80),
           ],
@@ -169,7 +170,7 @@ class _ModernClaimsPageState extends State<ModernClaimsPage> with TickerProvider
       ),
     );
   }
-  
+
   Widget _buildStatsTab() {
     return RefreshIndicator(
       onRefresh: _loadClaimsData,
@@ -183,11 +184,11 @@ class _ModernClaimsPageState extends State<ModernClaimsPage> with TickerProvider
             // Monthly Overview
             _buildMonthlyOverview(),
             const SizedBox(height: AppThemeUnified.spaceLG),
-            
+
             // Category Breakdown
             _buildCategoryBreakdown(),
             const SizedBox(height: AppThemeUnified.spaceLG),
-            
+
             // Status Distribution
             _buildStatusDistribution(),
           ],
@@ -195,7 +196,7 @@ class _ModernClaimsPageState extends State<ModernClaimsPage> with TickerProvider
       ),
     );
   }
-  
+
   Widget _buildCategoriesTab() {
     return RefreshIndicator(
       onRefresh: _loadClaimsData,
@@ -213,12 +214,13 @@ class _ModernClaimsPageState extends State<ModernClaimsPage> with TickerProvider
       ),
     );
   }
-  
+
   Widget _buildQuickStats() {
     final pendingAmount = _claimsStats['pending_amount']?.toString() ?? '0.00';
-    final approvedAmount = _claimsStats['approved_amount']?.toString() ?? '0.00';
+    final approvedAmount =
+        _claimsStats['approved_amount']?.toString() ?? '0.00';
     final totalClaims = _claimsStats['total_claims']?.toString() ?? '0';
-    
+
     return Row(
       children: [
         Expanded(
@@ -253,7 +255,7 @@ class _ModernClaimsPageState extends State<ModernClaimsPage> with TickerProvider
       ],
     );
   }
-  
+
   Widget _buildRecentClaims() {
     if (_myClaims.isEmpty) {
       return ModernEmptyState(
@@ -264,7 +266,7 @@ class _ModernClaimsPageState extends State<ModernClaimsPage> with TickerProvider
         onAction: _showNewClaimForm,
       );
     }
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -273,12 +275,12 @@ class _ModernClaimsPageState extends State<ModernClaimsPage> with TickerProvider
           subtitle: '${_myClaims.length} claims',
           icon: Icons.receipt,
         ),
-        
-        ...(_myClaims.map((claim) => _buildClaimItem(claim as Map<String, dynamic>))),
+        ...(_myClaims
+            .map((claim) => _buildClaimItem(claim as Map<String, dynamic>))),
       ],
     );
   }
-  
+
   Widget _buildClaimItem(Map<String, dynamic> claim) {
     final id = claim['id']?.toString() ?? '';
     final title = claim['title']?.toString() ?? 'Untitled Claim';
@@ -286,10 +288,10 @@ class _ModernClaimsPageState extends State<ModernClaimsPage> with TickerProvider
     final status = claim['status']?.toString() ?? 'Draft';
     final submittedDate = claim['submitted_date']?.toString();
     final category = claim['category']?.toString() ?? '';
-    
+
     Color statusColor = ModernDesignSystem.neutralLight;
-        IconData statusIcon = Icons.edit_document;
-    
+    IconData statusIcon = Icons.edit_document;
+
     switch (status.toLowerCase()) {
       case 'approved':
         statusColor = ModernDesignSystem.success;
@@ -309,33 +311,40 @@ class _ModernClaimsPageState extends State<ModernClaimsPage> with TickerProvider
         statusIcon = Icons.payment;
         break;
     }
-    
+
     return ModernInfoCard(
       title: title,
-      subtitle: category.isNotEmpty ? '$category • \$${double.parse(amount).toStringAsFixed(2)}' : '\$${double.parse(amount).toStringAsFixed(2)}',
+      subtitle: category.isNotEmpty
+          ? '$category • \$${double.parse(amount).toStringAsFixed(2)}'
+          : '\$${double.parse(amount).toStringAsFixed(2)}',
       badge: status.toUpperCase(),
       badgeColor: statusColor,
       icon: statusIcon,
       iconColor: statusColor,
       margin: const EdgeInsets.only(bottom: ModernDesignSystem.spaceSM),
       onTap: () => _showClaimDetails(claim),
-      actions: status.toLowerCase() == 'draft' 
-          ? [IconButton(
-              onPressed: () => _editClaim(claim),
-              icon: const Icon(Icons.edit),
-              iconSize: 20,
-              color: ModernDesignSystem.primaryTeal,
-            )]
+      actions: status.toLowerCase() == 'draft'
+          ? [
+              IconButton(
+                onPressed: () => _editClaim(claim),
+                icon: const Icon(Icons.edit),
+                iconSize: 20,
+                color: ModernDesignSystem.primaryTeal,
+              )
+            ]
           : null,
     );
   }
-  
+
   Widget _buildMonthlyOverview() {
     final thisMonth = DateTime.now();
-    final thisMonthAmount = _claimsStats['this_month_amount']?.toString() ?? '0.00';
-    final lastMonthAmount = _claimsStats['last_month_amount']?.toString() ?? '0.00';
-    final avgMonthlyAmount = _claimsStats['avg_monthly_amount']?.toString() ?? '0.00';
-    
+    final thisMonthAmount =
+        _claimsStats['this_month_amount']?.toString() ?? '0.00';
+    final lastMonthAmount =
+        _claimsStats['last_month_amount']?.toString() ?? '0.00';
+    final avgMonthlyAmount =
+        _claimsStats['avg_monthly_amount']?.toString() ?? '0.00';
+
     return ModernHeroCard(
       title: 'Monthly Overview',
       subtitle: '${thisMonth.month}/${thisMonth.year}',
@@ -343,20 +352,33 @@ class _ModernClaimsPageState extends State<ModernClaimsPage> with TickerProvider
       child: Row(
         children: [
           Expanded(
-            child: _buildOverviewItem('This Month', '\$${double.parse(thisMonthAmount).toStringAsFixed(2)}', Icons.calendar_today, ModernDesignSystem.primaryTeal),
+            child: _buildOverviewItem(
+                'This Month',
+                '\$${double.parse(thisMonthAmount).toStringAsFixed(2)}',
+                Icons.calendar_today,
+                ModernDesignSystem.primaryTeal),
           ),
           Expanded(
-            child: _buildOverviewItem('Last Month', '\$${double.parse(lastMonthAmount).toStringAsFixed(2)}', Icons.history, ModernDesignSystem.info),
+            child: _buildOverviewItem(
+                'Last Month',
+                '\$${double.parse(lastMonthAmount).toStringAsFixed(2)}',
+                Icons.history,
+                ModernDesignSystem.info),
           ),
           Expanded(
-            child: _buildOverviewItem('Avg Monthly', '\$${double.parse(avgMonthlyAmount).toStringAsFixed(2)}', Icons.trending_up, ModernDesignSystem.success),
+            child: _buildOverviewItem(
+                'Avg Monthly',
+                '\$${double.parse(avgMonthlyAmount).toStringAsFixed(2)}',
+                Icons.trending_up,
+                ModernDesignSystem.success),
           ),
         ],
       ),
     );
   }
-  
-  Widget _buildOverviewItem(String label, String value, IconData icon, Color color) {
+
+  Widget _buildOverviewItem(
+      String label, String value, IconData icon, Color color) {
     return Column(
       children: [
         Container(
@@ -372,23 +394,26 @@ class _ModernClaimsPageState extends State<ModernClaimsPage> with TickerProvider
           value,
           style: ModernDesignSystem.headlineSmall.copyWith(
             fontWeight: FontWeight.w700,
-            color: ModernDesignSystem.getTextPrimary(Theme.of(context).brightness),
+            color:
+                ModernDesignSystem.getTextPrimary(Theme.of(context).brightness),
           ),
         ),
         Text(
           label,
           style: ModernDesignSystem.captionLarge.copyWith(
-            color: ModernDesignSystem.getTextSecondary(Theme.of(context).brightness),
+            color: ModernDesignSystem.getTextSecondary(
+                Theme.of(context).brightness),
           ),
           textAlign: TextAlign.center,
         ),
       ],
     );
   }
-  
+
   Widget _buildCategoryBreakdown() {
-    final categoryStats = _claimsStats['category_breakdown'] as List<dynamic>? ?? [];
-    
+    final categoryStats =
+        _claimsStats['category_breakdown'] as List<dynamic>? ?? [];
+
     if (categoryStats.isEmpty) {
       return ModernEmptyState(
         icon: Icons.pie_chart,
@@ -396,7 +421,7 @@ class _ModernClaimsPageState extends State<ModernClaimsPage> with TickerProvider
         subtitle: 'Category breakdown will appear here',
       );
     }
-    
+
     return ModernHeroCard(
       title: 'Category Breakdown',
       subtitle: 'Top spending categories',
@@ -406,7 +431,7 @@ class _ModernClaimsPageState extends State<ModernClaimsPage> with TickerProvider
           final name = category['name']?.toString() ?? '';
           final amount = category['amount']?.toString() ?? '0.00';
           final percentage = category['percentage']?.toString() ?? '0';
-          
+
           return Container(
             margin: const EdgeInsets.only(bottom: ModernDesignSystem.spaceXS),
             child: Row(
@@ -419,13 +444,16 @@ class _ModernClaimsPageState extends State<ModernClaimsPage> with TickerProvider
                         name,
                         style: ModernDesignSystem.labelLarge.copyWith(
                           fontWeight: FontWeight.w500,
-                          color: ModernDesignSystem.getTextPrimary(Theme.of(context).brightness),
+                          color: ModernDesignSystem.getTextPrimary(
+                              Theme.of(context).brightness),
                         ),
                       ),
                       LinearProgressIndicator(
                         value: double.parse(percentage) / 100,
-                        backgroundColor: ModernDesignSystem.getBorderColor(Theme.of(context).brightness),
-                        valueColor: AlwaysStoppedAnimation<Color>(ModernDesignSystem.primaryTeal),
+                        backgroundColor: ModernDesignSystem.getBorderColor(
+                            Theme.of(context).brightness),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                            ModernDesignSystem.primaryTeal),
                         minHeight: 4,
                       ),
                     ],
@@ -439,13 +467,15 @@ class _ModernClaimsPageState extends State<ModernClaimsPage> with TickerProvider
                       '\$${double.parse(amount).toStringAsFixed(2)}',
                       style: ModernDesignSystem.labelLarge.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: ModernDesignSystem.getTextPrimary(Theme.of(context).brightness),
+                        color: ModernDesignSystem.getTextPrimary(
+                            Theme.of(context).brightness),
                       ),
                     ),
                     Text(
                       '$percentage%',
                       style: ModernDesignSystem.captionLarge.copyWith(
-                        color: ModernDesignSystem.getTextSecondary(Theme.of(context).brightness),
+                        color: ModernDesignSystem.getTextSecondary(
+                            Theme.of(context).brightness),
                       ),
                     ),
                   ],
@@ -457,10 +487,11 @@ class _ModernClaimsPageState extends State<ModernClaimsPage> with TickerProvider
       ),
     );
   }
-  
+
   Widget _buildStatusDistribution() {
-    final statusStats = _claimsStats['status_distribution'] as List<dynamic>? ?? [];
-    
+    final statusStats =
+        _claimsStats['status_distribution'] as List<dynamic>? ?? [];
+
     if (statusStats.isEmpty) {
       return ModernEmptyState(
         icon: Icons.donut_small,
@@ -468,7 +499,7 @@ class _ModernClaimsPageState extends State<ModernClaimsPage> with TickerProvider
         subtitle: 'Status distribution will appear here',
       );
     }
-    
+
     return ModernHeroCard(
       title: 'Status Distribution',
       subtitle: 'Claims by status',
@@ -477,7 +508,7 @@ class _ModernClaimsPageState extends State<ModernClaimsPage> with TickerProvider
         children: statusStats.map((status) {
           final name = status['name']?.toString() ?? '';
           final count = status['count']?.toString() ?? '0';
-          
+
           Color statusColor = ModernDesignSystem.neutralLight;
           switch (name.toLowerCase()) {
             case 'approved':
@@ -493,7 +524,7 @@ class _ModernClaimsPageState extends State<ModernClaimsPage> with TickerProvider
               statusColor = ModernDesignSystem.info;
               break;
           }
-          
+
           return Expanded(
             child: _buildStatusItem(name, count, statusColor),
           );
@@ -501,7 +532,7 @@ class _ModernClaimsPageState extends State<ModernClaimsPage> with TickerProvider
       ),
     );
   }
-  
+
   Widget _buildStatusItem(String status, String count, Color color) {
     return Column(
       children: [
@@ -523,7 +554,8 @@ class _ModernClaimsPageState extends State<ModernClaimsPage> with TickerProvider
         Text(
           status,
           style: ModernDesignSystem.captionLarge.copyWith(
-            color: ModernDesignSystem.getTextSecondary(Theme.of(context).brightness),
+            color: ModernDesignSystem.getTextSecondary(
+                Theme.of(context).brightness),
             fontWeight: FontWeight.w500,
           ),
           textAlign: TextAlign.center,
@@ -531,7 +563,7 @@ class _ModernClaimsPageState extends State<ModernClaimsPage> with TickerProvider
       ],
     );
   }
-  
+
   Widget _buildCategoriesList() {
     if (_claimCategories.isEmpty) {
       return ModernEmptyState(
@@ -540,7 +572,7 @@ class _ModernClaimsPageState extends State<ModernClaimsPage> with TickerProvider
         subtitle: 'Expense categories will appear here',
       );
     }
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -549,44 +581,50 @@ class _ModernClaimsPageState extends State<ModernClaimsPage> with TickerProvider
           subtitle: '${_claimCategories.length} categories',
           icon: Icons.category,
         ),
-        
-        ...(_claimCategories.map((category) => _buildCategoryItem(category as Map<String, dynamic>))),
+        ...(_claimCategories.map((category) =>
+            _buildCategoryItem(category as Map<String, dynamic>))),
       ],
     );
   }
-  
+
   Widget _buildCategoryItem(Map<String, dynamic> category) {
     final name = category['name']?.toString() ?? '';
     final description = category['description']?.toString() ?? '';
     final maxAmount = category['max_amount']?.toString();
     final isActive = category['is_active'] ?? true;
-    
+
     return ModernActionCard(
       title: name,
       subtitle: description.isNotEmpty ? description : null,
       icon: Icons.category,
-      color: isActive ? ModernDesignSystem.primaryTeal : ModernDesignSystem.neutralLight,
+      color: isActive
+          ? ModernDesignSystem.primaryTeal
+          : ModernDesignSystem.neutralLight,
       onTap: () => _showCategoryDetails(category),
       margin: const EdgeInsets.only(bottom: ModernDesignSystem.spaceSM),
     );
   }
-  
+
   void _showNewClaimForm() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => const NewClaimFormPage(),
-      ),
-    ).then((_) => _loadClaimsData());
+    Navigator.of(context)
+        .push(
+          MaterialPageRoute(
+            builder: (context) => const NewClaimFormPage(),
+          ),
+        )
+        .then((_) => _loadClaimsData());
   }
-  
+
   void _editClaim(Map<String, dynamic> claim) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => NewClaimFormPage(existingClaim: claim),
-      ),
-    ).then((_) => _loadClaimsData());
+    Navigator.of(context)
+        .push(
+          MaterialPageRoute(
+            builder: (context) => NewClaimFormPage(existingClaim: claim),
+          ),
+        )
+        .then((_) => _loadClaimsData());
   }
-  
+
   void _showClaimDetails(Map<String, dynamic> claim) {
     showModalBottomSheet(
       context: context,
@@ -595,7 +633,7 @@ class _ModernClaimsPageState extends State<ModernClaimsPage> with TickerProvider
       builder: (context) => ClaimDetailsBottomSheet(claim: claim),
     );
   }
-  
+
   void _showCategoryDetails(Map<String, dynamic> category) {
     showModalBottomSheet(
       context: context,
@@ -609,9 +647,9 @@ class _ModernClaimsPageState extends State<ModernClaimsPage> with TickerProvider
 // New Claim Form Page
 class NewClaimFormPage extends StatefulWidget {
   final Map<String, dynamic>? existingClaim;
-  
+
   const NewClaimFormPage({super.key, this.existingClaim});
-  
+
   @override
   State<NewClaimFormPage> createState() => _NewClaimFormPageState();
 }
@@ -621,23 +659,25 @@ class _NewClaimFormPageState extends State<NewClaimFormPage> {
   final _titleController = TextEditingController();
   final _amountController = TextEditingController();
   final _descriptionController = TextEditingController();
-  
+
   DateTime? _expenseDate;
   String? _selectedCategory;
   List<File> _attachedFiles = [];
   bool _isSubmitting = false;
   List<dynamic> _categories = [];
-  
+
   @override
   void initState() {
     super.initState();
     _loadCategories();
-    
+
     // Pre-fill form if editing existing claim
     if (widget.existingClaim != null) {
       _titleController.text = widget.existingClaim!['title']?.toString() ?? '';
-      _amountController.text = widget.existingClaim!['amount']?.toString() ?? '';
-      _descriptionController.text = widget.existingClaim!['description']?.toString() ?? '';
+      _amountController.text =
+          widget.existingClaim!['amount']?.toString() ?? '';
+      _descriptionController.text =
+          widget.existingClaim!['description']?.toString() ?? '';
       _selectedCategory = widget.existingClaim!['category']?.toString();
       final dateStr = widget.existingClaim!['expense_date']?.toString();
       if (dateStr != null) {
@@ -645,7 +685,7 @@ class _NewClaimFormPageState extends State<NewClaimFormPage> {
       }
     }
   }
-  
+
   @override
   void dispose() {
     _titleController.dispose();
@@ -653,7 +693,7 @@ class _NewClaimFormPageState extends State<NewClaimFormPage> {
     _descriptionController.dispose();
     super.dispose();
   }
-  
+
   Future<void> _loadCategories() async {
     try {
       final categories = await ClaimsService.claimCategories();
@@ -664,12 +704,13 @@ class _NewClaimFormPageState extends State<NewClaimFormPage> {
       print('Error loading categories: $e');
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return UniversalScaffold(
       appBar: UniversalAppBar(
-        title: widget.existingClaim != null ? 'Edit Claim' : 'New Expense Claim',
+        title:
+            widget.existingClaim != null ? 'Edit Claim' : 'New Expense Claim',
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -679,13 +720,10 @@ class _NewClaimFormPageState extends State<NewClaimFormPage> {
             children: [
               _buildBasicInfoSection(),
               const SizedBox(height: 16),
-              
               _buildExpenseDetailsSection(),
               const SizedBox(height: 16),
-              
               _buildAttachmentsSection(),
               const SizedBox(height: 32),
-              
               _buildActionButtons(),
             ],
           ),
@@ -693,7 +731,7 @@ class _NewClaimFormPageState extends State<NewClaimFormPage> {
       ),
     );
   }
-  
+
   Widget _buildBasicInfoSection() {
     return ModernHeroCard(
       title: 'Basic Information',
@@ -712,7 +750,6 @@ class _NewClaimFormPageState extends State<NewClaimFormPage> {
             },
           ),
           ModernDesignSystem.verticalSpaceMD,
-          
           DropdownButtonFormField<String>(
             value: _selectedCategory,
             decoration: InputDecoration(
@@ -732,13 +769,14 @@ class _NewClaimFormPageState extends State<NewClaimFormPage> {
               );
             }).toList(),
             onChanged: (value) => setState(() => _selectedCategory = value),
-            validator: (value) => value == null ? 'Please select a category' : null,
+            validator: (value) =>
+                value == null ? 'Please select a category' : null,
           ),
         ],
       ),
     );
   }
-  
+
   Widget _buildExpenseDetailsSection() {
     return ModernHeroCard(
       title: 'Expense Details',
@@ -762,7 +800,6 @@ class _NewClaimFormPageState extends State<NewClaimFormPage> {
             },
           ),
           ModernDesignSystem.verticalSpaceMD,
-          
           InkWell(
             onTap: _selectExpenseDate,
             borderRadius: BorderRadius.circular(8),
@@ -780,11 +817,11 @@ class _NewClaimFormPageState extends State<NewClaimFormPage> {
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    _expenseDate != null 
+                    _expenseDate != null
                         ? '${_expenseDate!.day}/${_expenseDate!.month}/${_expenseDate!.year}'
                         : 'Select expense date',
                     style: AppThemeUnified.bodyMedium.copyWith(
-                      color: _expenseDate != null 
+                      color: _expenseDate != null
                           ? AppThemeUnified.textPrimary
                           : AppThemeUnified.textSecondary,
                     ),
@@ -794,7 +831,6 @@ class _NewClaimFormPageState extends State<NewClaimFormPage> {
             ),
           ),
           ModernDesignSystem.verticalSpaceMD,
-          
           ModernInputField(
             controller: _descriptionController,
             label: 'Description',
@@ -805,7 +841,7 @@ class _NewClaimFormPageState extends State<NewClaimFormPage> {
       ),
     );
   }
-  
+
   Widget _buildAttachmentsSection() {
     return ModernHeroCard(
       title: 'Attachments',
@@ -818,11 +854,15 @@ class _NewClaimFormPageState extends State<NewClaimFormPage> {
               final index = entry.key;
               final file = entry.value;
               return Container(
-                margin: const EdgeInsets.only(bottom: ModernDesignSystem.spaceXS),
+                margin:
+                    const EdgeInsets.only(bottom: ModernDesignSystem.spaceXS),
                 padding: const EdgeInsets.all(ModernDesignSystem.spaceSM),
                 decoration: BoxDecoration(
-                  color: ModernDesignSystem.getBorderColor(Theme.of(context).brightness).withOpacity(0.5),
-                  borderRadius: BorderRadius.circular(ModernDesignSystem.radiusSM),
+                  color: ModernDesignSystem.getBorderColor(
+                          Theme.of(context).brightness)
+                      .withOpacity(0.5),
+                  borderRadius:
+                      BorderRadius.circular(ModernDesignSystem.radiusSM),
                 ),
                 child: Row(
                   children: [
@@ -835,7 +875,9 @@ class _NewClaimFormPageState extends State<NewClaimFormPage> {
                     Expanded(
                       child: Text(
                         file.path.split('/').last,
-                        style: ModernDesignSystem.bodySmall,
+                        style: ModernDesignSystem.bodySmall.copyWith(
+                          color: AppThemeUnified.textPrimary,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -851,7 +893,6 @@ class _NewClaimFormPageState extends State<NewClaimFormPage> {
             }),
             ModernDesignSystem.verticalSpaceSM,
           ],
-          
           Row(
             children: [
               Expanded(
@@ -875,7 +916,7 @@ class _NewClaimFormPageState extends State<NewClaimFormPage> {
       ),
     );
   }
-  
+
   Widget _buildActionButtons() {
     return Column(
       children: [
@@ -885,7 +926,6 @@ class _NewClaimFormPageState extends State<NewClaimFormPage> {
           onPressed: _submitClaim,
           icon: Icons.send,
         ),
-        
         if (widget.existingClaim != null) ...[
           ModernDesignSystem.verticalSpaceSM,
           ModernSecondaryButton(
@@ -897,7 +937,7 @@ class _NewClaimFormPageState extends State<NewClaimFormPage> {
       ],
     );
   }
-  
+
   Future<void> _selectExpenseDate() async {
     final date = await showDatePicker(
       context: context,
@@ -908,39 +948,43 @@ class _NewClaimFormPageState extends State<NewClaimFormPage> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: Theme.of(context).colorScheme.copyWith(
-              primary: AppThemeUnified.primaryRoyalBlue,
-            ),
+                  primary: AppThemeUnified.primaryRoyalBlue,
+                ),
           ),
           child: child!,
         );
       },
     );
-    
+
     if (date != null) {
       setState(() => _expenseDate = date);
     }
   }
-  
+
   void _attachPhoto() {
     // TODO: Implement camera/photo picker
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Photo attachment will be available in a future update.')),
+      const SnackBar(
+          content:
+              Text('Photo attachment will be available in a future update.')),
     );
   }
-  
+
   void _attachFile() {
     // TODO: Implement file picker
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('File attachment will be available in a future update.')),
+      const SnackBar(
+          content:
+              Text('File attachment will be available in a future update.')),
     );
   }
-  
+
   void _removeAttachment(int index) {
     setState(() {
       _attachedFiles.removeAt(index);
     });
   }
-  
+
   Future<void> _submitClaim() async {
     if (!_formKey.currentState!.validate()) return;
     if (_expenseDate == null) {
@@ -949,9 +993,9 @@ class _NewClaimFormPageState extends State<NewClaimFormPage> {
       );
       return;
     }
-    
+
     setState(() => _isSubmitting = true);
-    
+
     try {
       if (widget.existingClaim != null) {
         await ClaimsService.updateClaim({
@@ -973,12 +1017,12 @@ class _NewClaimFormPageState extends State<NewClaimFormPage> {
           'attachments': _attachedFiles.map((f) => f.path).toList(),
         });
       }
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(widget.existingClaim != null 
-                ? '✅ Claim updated successfully' 
+            content: Text(widget.existingClaim != null
+                ? '✅ Claim updated successfully'
                 : '✅ Claim submitted successfully'),
             backgroundColor: Colors.green,
           ),
@@ -995,15 +1039,16 @@ class _NewClaimFormPageState extends State<NewClaimFormPage> {
       setState(() => _isSubmitting = false);
     }
   }
-  
+
   Future<void> _saveDraft() async {
     if (_titleController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a claim title to save as draft')),
+        const SnackBar(
+            content: Text('Please enter a claim title to save as draft')),
       );
       return;
     }
-    
+
     try {
       await ClaimsService.saveDraft({
         'id': widget.existingClaim?['id']?.toString(),
@@ -1014,7 +1059,7 @@ class _NewClaimFormPageState extends State<NewClaimFormPage> {
         'description': _descriptionController.text.trim(),
         'attachments': _attachedFiles.map((f) => f.path).toList(),
       });
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -1037,15 +1082,18 @@ class _NewClaimFormPageState extends State<NewClaimFormPage> {
 // Claim Details Bottom Sheet
 class ClaimDetailsBottomSheet extends StatelessWidget {
   final Map<String, dynamic> claim;
-  
+
   const ClaimDetailsBottomSheet({super.key, required this.claim});
-  
+
   @override
   Widget build(BuildContext context) {
     return Container(
       height: MediaQuery.of(context).size.height * 0.8,
       decoration: BoxDecoration(
-        color: ModernDesignSystem.getSurfaceColor(Theme.of(context).brightness),
+        color: AppThemeUnified.glassLight,
+        border: const Border.fromBorderSide(
+          BorderSide(color: AppThemeUnified.glassBorder, width: 1),
+        ),
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(ModernDesignSystem.radiusLG),
           topRight: Radius.circular(ModernDesignSystem.radiusLG),
@@ -1058,7 +1106,7 @@ class ClaimDetailsBottomSheet extends StatelessWidget {
             decoration: BoxDecoration(
               border: Border(
                 bottom: BorderSide(
-                  color: ModernDesignSystem.getBorderColor(Theme.of(context).brightness),
+                  color: AppThemeUnified.glassBorder,
                   width: 1,
                 ),
               ),
@@ -1070,35 +1118,45 @@ class ClaimDetailsBottomSheet extends StatelessWidget {
                     'Claim Details',
                     style: ModernDesignSystem.headlineMedium.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: ModernDesignSystem.getTextPrimary(Theme.of(context).brightness),
+                      color: AppThemeUnified.textPrimary,
                     ),
                   ),
                 ),
                 IconButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.close),
+                  icon: const Icon(Icons.close,
+                      color: AppThemeUnified.textPrimary),
                 ),
               ],
             ),
           ),
-          
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(ModernDesignSystem.spaceMD),
               child: Column(
                 children: [
-                  _buildDetailItem(context, 'Title', claim['title']?.toString() ?? ''),
-                  _buildDetailItem(context, 'Amount', '\$${double.parse(claim['amount']?.toString() ?? '0').toStringAsFixed(2)}'),
-                  _buildDetailItem(context, 'Category', claim['category']?.toString() ?? ''),
-                  _buildDetailItem(context, 'Status', claim['status']?.toString() ?? ''),
+                  _buildDetailItem(
+                      context, 'Title', claim['title']?.toString() ?? ''),
+                  _buildDetailItem(context, 'Amount',
+                      '\$${double.parse(claim['amount']?.toString() ?? '0').toStringAsFixed(2)}'),
+                  _buildDetailItem(
+                      context, 'Category', claim['category']?.toString() ?? ''),
+                  _buildDetailItem(
+                      context, 'Status', claim['status']?.toString() ?? ''),
                   if (claim['expense_date'] != null)
-                    _buildDetailItem(context, 'Expense Date', claim['expense_date']?.toString() ?? ''),
+                    _buildDetailItem(context, 'Expense Date',
+                        claim['expense_date']?.toString() ?? ''),
                   if (claim['submitted_date'] != null)
-                    _buildDetailItem(context, 'Submitted Date', claim['submitted_date']?.toString() ?? ''),
-                  if (claim['description'] != null && claim['description'].toString().isNotEmpty)
-                    _buildDetailItem(context, 'Description', claim['description']?.toString() ?? ''),
-                  if (claim['attachments'] != null && (claim['attachments'] as List).isNotEmpty)
-                    _buildAttachmentsSection(context, claim['attachments'] as List),
+                    _buildDetailItem(context, 'Submitted Date',
+                        claim['submitted_date']?.toString() ?? ''),
+                  if (claim['description'] != null &&
+                      claim['description'].toString().isNotEmpty)
+                    _buildDetailItem(context, 'Description',
+                        claim['description']?.toString() ?? ''),
+                  if (claim['attachments'] != null &&
+                      (claim['attachments'] as List).isNotEmpty)
+                    _buildAttachmentsSection(
+                        context, claim['attachments'] as List),
                 ],
               ),
             ),
@@ -1107,7 +1165,7 @@ class ClaimDetailsBottomSheet extends StatelessWidget {
       ),
     );
   }
-  
+
   Widget _buildDetailItem(BuildContext context, String label, String value) {
     return Container(
       margin: const EdgeInsets.only(bottom: ModernDesignSystem.spaceMD),
@@ -1120,7 +1178,7 @@ class ClaimDetailsBottomSheet extends StatelessWidget {
               label,
               style: ModernDesignSystem.labelLarge.copyWith(
                 fontWeight: FontWeight.w500,
-                color: ModernDesignSystem.getTextSecondary(Theme.of(context).brightness),
+                color: AppThemeUnified.textSecondary,
               ),
             ),
           ),
@@ -1128,7 +1186,7 @@ class ClaimDetailsBottomSheet extends StatelessWidget {
             child: Text(
               value,
               style: ModernDesignSystem.bodyMedium.copyWith(
-                color: ModernDesignSystem.getTextPrimary(Theme.of(context).brightness),
+                color: AppThemeUnified.textPrimary,
               ),
             ),
           ),
@@ -1136,7 +1194,7 @@ class ClaimDetailsBottomSheet extends StatelessWidget {
       ),
     );
   }
-  
+
   Widget _buildAttachmentsSection(BuildContext context, List attachments) {
     return Container(
       margin: const EdgeInsets.only(bottom: ModernDesignSystem.spaceMD),
@@ -1147,34 +1205,38 @@ class ClaimDetailsBottomSheet extends StatelessWidget {
             'Attachments',
             style: ModernDesignSystem.labelLarge.copyWith(
               fontWeight: FontWeight.w500,
-              color: ModernDesignSystem.getTextSecondary(Theme.of(context).brightness),
+              color: AppThemeUnified.textSecondary,
             ),
           ),
           ModernDesignSystem.verticalSpaceXS,
           ...attachments.map((attachment) => Container(
-            margin: const EdgeInsets.only(bottom: ModernDesignSystem.spaceXS),
-            padding: const EdgeInsets.all(ModernDesignSystem.spaceSM),
-            decoration: BoxDecoration(
-              color: ModernDesignSystem.getBorderColor(Theme.of(context).brightness).withOpacity(0.5),
-              borderRadius: BorderRadius.circular(ModernDesignSystem.radiusSM),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.description,
-                  color: ModernDesignSystem.primaryTeal,
-                  size: 20,
+                margin:
+                    const EdgeInsets.only(bottom: ModernDesignSystem.spaceXS),
+                padding: const EdgeInsets.all(ModernDesignSystem.spaceSM),
+                decoration: BoxDecoration(
+                  color: AppThemeUnified.glassLight,
+                  borderRadius:
+                      BorderRadius.circular(ModernDesignSystem.radiusSM),
                 ),
-                ModernDesignSystem.horizontalSpaceXS,
-                Expanded(
-                  child: Text(
-                    attachment['filename']?.toString() ?? 'Unknown file',
-                    style: ModernDesignSystem.bodySmall,
-                  ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.description,
+                      color: ModernDesignSystem.primaryTeal,
+                      size: 20,
+                    ),
+                    ModernDesignSystem.horizontalSpaceXS,
+                    Expanded(
+                      child: Text(
+                        attachment['filename']?.toString() ?? 'Unknown file',
+                        style: ModernDesignSystem.bodySmall.copyWith(
+                          color: AppThemeUnified.textPrimary,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          )),
+              )),
         ],
       ),
     );
@@ -1184,15 +1246,18 @@ class ClaimDetailsBottomSheet extends StatelessWidget {
 // Category Details Bottom Sheet
 class CategoryDetailsBottomSheet extends StatelessWidget {
   final Map<String, dynamic> category;
-  
+
   const CategoryDetailsBottomSheet({super.key, required this.category});
-  
+
   @override
   Widget build(BuildContext context) {
     return Container(
       height: MediaQuery.of(context).size.height * 0.5,
       decoration: BoxDecoration(
-        color: ModernDesignSystem.getSurfaceColor(Theme.of(context).brightness),
+        color: AppThemeUnified.glassLight,
+        border: const Border.fromBorderSide(
+          BorderSide(color: AppThemeUnified.glassBorder, width: 1),
+        ),
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(ModernDesignSystem.radiusLG),
           topRight: Radius.circular(ModernDesignSystem.radiusLG),
@@ -1205,7 +1270,7 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
             decoration: BoxDecoration(
               border: Border(
                 bottom: BorderSide(
-                  color: ModernDesignSystem.getBorderColor(Theme.of(context).brightness),
+                  color: AppThemeUnified.glassBorder,
                   width: 1,
                 ),
               ),
@@ -1217,29 +1282,33 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
                     'Category Details',
                     style: ModernDesignSystem.headlineMedium.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: ModernDesignSystem.getTextPrimary(Theme.of(context).brightness),
+                      color: AppThemeUnified.textPrimary,
                     ),
                   ),
                 ),
                 IconButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.close),
+                  icon: const Icon(Icons.close,
+                      color: AppThemeUnified.textPrimary),
                 ),
               ],
             ),
           ),
-          
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(ModernDesignSystem.spaceMD),
               child: Column(
                 children: [
-                  _buildDetailItem(context, 'Name', category['name']?.toString() ?? ''),
+                  _buildDetailItem(
+                      context, 'Name', category['name']?.toString() ?? ''),
                   if (category['description'] != null)
-                    _buildDetailItem(context, 'Description', category['description']?.toString() ?? ''),
+                    _buildDetailItem(context, 'Description',
+                        category['description']?.toString() ?? ''),
                   if (category['max_amount'] != null)
-                    _buildDetailItem(context, 'Maximum Amount', '\$${double.parse(category['max_amount']?.toString() ?? '0').toStringAsFixed(2)}'),
-                  _buildDetailItem(context, 'Status', (category['is_active'] ?? true) ? 'Active' : 'Inactive'),
+                    _buildDetailItem(context, 'Maximum Amount',
+                        '\$${double.parse(category['max_amount']?.toString() ?? '0').toStringAsFixed(2)}'),
+                  _buildDetailItem(context, 'Status',
+                      (category['is_active'] ?? true) ? 'Active' : 'Inactive'),
                 ],
               ),
             ),
@@ -1248,7 +1317,7 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
       ),
     );
   }
-  
+
   Widget _buildDetailItem(BuildContext context, String label, String value) {
     return Container(
       margin: const EdgeInsets.only(bottom: ModernDesignSystem.spaceMD),
@@ -1261,7 +1330,7 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
               label,
               style: ModernDesignSystem.labelLarge.copyWith(
                 fontWeight: FontWeight.w500,
-                color: ModernDesignSystem.getTextSecondary(Theme.of(context).brightness),
+                color: AppThemeUnified.textSecondary,
               ),
             ),
           ),
@@ -1269,7 +1338,7 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
             child: Text(
               value,
               style: ModernDesignSystem.bodyMedium.copyWith(
-                color: ModernDesignSystem.getTextPrimary(Theme.of(context).brightness),
+                color: AppThemeUnified.textPrimary,
               ),
             ),
           ),

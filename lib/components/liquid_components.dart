@@ -355,7 +355,8 @@ class LiquidFloatingActionButton extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<LiquidFloatingActionButton> createState() => _LiquidFloatingActionButtonState();
+  State<LiquidFloatingActionButton> createState() =>
+      _LiquidFloatingActionButtonState();
 }
 
 class _LiquidFloatingActionButtonState extends State<LiquidFloatingActionButton>
@@ -614,10 +615,14 @@ class _LiquidBottomNavItemState extends State<_LiquidBottomNavItem>
                     widget.item.label,
                     style: TextStyle(
                       fontSize: 11,
-                      fontWeight: widget.isSelected ? FontWeight.w600 : FontWeight.w500,
+                      fontWeight:
+                          widget.isSelected ? FontWeight.w600 : FontWeight.w500,
                       color: widget.isSelected
                           ? Colors.white
-                          : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.6),
+                          : Theme.of(context)
+                              .colorScheme
+                              .onSurfaceVariant
+                              .withOpacity(0.6),
                     ),
                   ),
                 ],

@@ -45,9 +45,10 @@ class ProfessionalErrorDialog extends StatelessWidget {
     required String rawErrorMessage,
     VoidCallback? onRetry,
   }) {
-    final friendlyMessage = ErrorMessageParser.parseLeaveApplicationError(rawErrorMessage);
+    final friendlyMessage =
+        ErrorMessageParser.parseLeaveApplicationError(rawErrorMessage);
     final icon = ErrorMessageParser.getErrorIcon(rawErrorMessage);
-    
+
     return show(
       context: context,
       title: '$icon Leave Application Failed',
@@ -60,7 +61,7 @@ class ProfessionalErrorDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return AlertDialog(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
@@ -128,7 +129,8 @@ class ProfessionalErrorDialog extends StatelessWidget {
                     'Please review your information and try again. Contact support if the issue persists.',
                     style: TextStyle(
                       fontSize: 12,
-                      color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
+                      color:
+                          theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
                     ),
                   ),
                 ),
@@ -145,7 +147,8 @@ class ProfessionalErrorDialog extends StatelessWidget {
               onPressed: () => Navigator.of(context).pop(),
               style: TextButton.styleFrom(
                 foregroundColor: theme.colorScheme.onSurfaceVariant,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
               child: const Text('Close'),
             ),
@@ -159,7 +162,8 @@ class ProfessionalErrorDialog extends StatelessWidget {
                 style: FilledButton.styleFrom(
                   backgroundColor: theme.colorScheme.primary,
                   foregroundColor: theme.colorScheme.onPrimary,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 ),
                 child: Text(actionText ?? 'Retry'),
               ),
@@ -210,7 +214,7 @@ class ProfessionalSuccessDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return AlertDialog(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),

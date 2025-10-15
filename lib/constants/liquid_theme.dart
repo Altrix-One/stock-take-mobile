@@ -7,7 +7,7 @@ class LiquidTheme {
   // =============================================================================
   // LIQUID COLOR PALETTES - iOS-inspired gradient combinations
   // =============================================================================
-  
+
   static const Map<String, List<Color>> liquidPalettes = {
     // Default - Blue Ocean
     'ocean': [
@@ -15,35 +15,35 @@ class LiquidTheme {
       Color(0xFF764ba2),
       Color(0xFF6B73FF),
     ],
-    
+
     // Sunset - Pink/Orange gradient
     'sunset': [
       Color(0xFFffeaa7),
       Color(0xFFfab1a0),
       Color(0xFFe17055),
     ],
-    
+
     // Forest - Green gradient
     'forest': [
       Color(0xFF56ab2f),
       Color(0xFFa8e6cf),
       Color(0xFF4ecdc4),
     ],
-    
+
     // Purple Dream - Purple gradient
     'purple': [
       Color(0xFF8360c3),
       Color(0xFF2ebf91),
       Color(0xFF6c5ce7),
     ],
-    
+
     // Corporate - Professional teal/blue
     'corporate': [
       Color(0xFF1A365D), // Your existing primaryColor
       Color(0xFF00BFA6), // Your existing accentColor
       Color(0xFF4DD0E1), // Your existing accentLightColor
     ],
-    
+
     // Rose Gold - Elegant pink/gold
     'roseGold': [
       Color(0xFFffeaa7),
@@ -55,7 +55,7 @@ class LiquidTheme {
   // =============================================================================
   // GLASS MORPHISM EFFECTS
   // =============================================================================
-  
+
   /// Creates a glass morphism decoration with blur and transparency
   static BoxDecoration glassDecoration({
     Color? color,
@@ -72,18 +72,19 @@ class LiquidTheme {
         color: Colors.white.withOpacity(borderOpacity),
         width: 1.0,
       ),
-      boxShadow: customShadows ?? [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.1),
-          blurRadius: blur,
-          offset: const Offset(0, 8),
-        ),
-        BoxShadow(
-          color: Colors.white.withOpacity(0.1),
-          blurRadius: blur / 2,
-          offset: const Offset(0, -2),
-        ),
-      ],
+      boxShadow: customShadows ??
+          [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: blur,
+              offset: const Offset(0, 8),
+            ),
+            BoxShadow(
+              color: Colors.white.withOpacity(0.1),
+              blurRadius: blur / 2,
+              offset: const Offset(0, -2),
+            ),
+          ],
     );
   }
 
@@ -118,7 +119,7 @@ class LiquidTheme {
   // =============================================================================
   // LIQUID GRADIENT BUILDERS
   // =============================================================================
-  
+
   /// Creates animated liquid gradient background
   static Widget liquidBackground({
     String palette = 'ocean',
@@ -169,7 +170,7 @@ class LiquidTheme {
   // =============================================================================
   // LIQUID ANIMATIONS
   // =============================================================================
-  
+
   /// Creates a floating liquid animation effect
   static Widget floatingLiquidOrbs({
     required Widget child,
@@ -198,7 +199,7 @@ class LiquidTheme {
   // =============================================================================
   // HELPER METHODS
   // =============================================================================
-  
+
   static List<double> _generateStops(int colorCount) {
     if (colorCount <= 1) return [0.0];
     return List.generate(colorCount, (index) => index / (colorCount - 1));
@@ -236,7 +237,8 @@ class AnimatedLiquidBackground extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<AnimatedLiquidBackground> createState() => _AnimatedLiquidBackgroundState();
+  State<AnimatedLiquidBackground> createState() =>
+      _AnimatedLiquidBackgroundState();
 }
 
 class _AnimatedLiquidBackgroundState extends State<AnimatedLiquidBackground>
@@ -254,7 +256,7 @@ class _AnimatedLiquidBackgroundState extends State<AnimatedLiquidBackground>
   @override
   void initState() {
     super.initState();
-    
+
     _controller = AnimationController(
       duration: Duration(seconds: (1 / widget.animationSpeed).round()),
       vsync: this,
@@ -292,7 +294,8 @@ class _AnimatedLiquidBackgroundState extends State<AnimatedLiquidBackground>
               begin: _alignments[0] + Alignment(_animation.value * 0.1, 0),
               end: _alignments[1] + Alignment(0, _animation.value * 0.1),
               colors: widget.colors,
-              stops: widget.stops ?? LiquidTheme._generateStops(widget.colors.length),
+              stops: widget.stops ??
+                  LiquidTheme._generateStops(widget.colors.length),
             ),
           ),
         );
@@ -323,8 +326,7 @@ class LiquidOrb extends StatefulWidget {
   State<LiquidOrb> createState() => _LiquidOrbState();
 }
 
-class _LiquidOrbState extends State<LiquidOrb>
-    with TickerProviderStateMixin {
+class _LiquidOrbState extends State<LiquidOrb> with TickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _xAnimation;
   late Animation<double> _yAnimation;
@@ -333,7 +335,7 @@ class _LiquidOrbState extends State<LiquidOrb>
   @override
   void initState() {
     super.initState();
-    
+
     _controller = AnimationController(
       duration: widget.animationDuration,
       vsync: this,

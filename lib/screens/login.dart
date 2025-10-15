@@ -58,9 +58,9 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             child: ConstrainedBox(
               constraints: BoxConstraints(
-                minHeight: MediaQuery.of(context).size.height - 
-                    MediaQuery.of(context).padding.top - 
-                    MediaQuery.of(context).padding.bottom - 
+                minHeight: MediaQuery.of(context).size.height -
+                    MediaQuery.of(context).padding.top -
+                    MediaQuery.of(context).padding.bottom -
                     kToolbarHeight,
               ),
               child: Column(
@@ -68,30 +68,31 @@ class _LoginScreenState extends State<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const SizedBox(height: AppThemeUnified.spaceMD),
-                  
+
                   // Logo at top center
                   _buildCenteredLogo(),
-                  
+
                   const SizedBox(height: AppThemeUnified.spaceLG),
-                  
+
                   // App Name
                   _buildAppName(),
-                  
+
                   const SizedBox(height: AppThemeUnified.space2XL),
-                  
+
                   // Features Animation
                   _buildFeaturesSection(context, Theme.of(context).brightness),
-                  
+
                   const SizedBox(height: AppThemeUnified.space2XL),
-                  
+
                   // Description
-                  _buildCallToActionSection(context, Theme.of(context).brightness),
-                  
+                  _buildCallToActionSection(
+                      context, Theme.of(context).brightness),
+
                   const SizedBox(height: AppThemeUnified.space2XL),
-                  
+
                   // Login Button
                   _buildLoginButton(context),
-                  
+
                   const SizedBox(height: AppThemeUnified.spaceLG),
                 ],
               ),
@@ -147,7 +148,7 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
-  
+
   // App Name Section
   Widget _buildAppName() {
     return Text(
@@ -158,7 +159,7 @@ class _LoginScreenState extends State<LoginScreen> {
       textAlign: TextAlign.center,
     );
   }
-  
+
   // Features Section with Animation
   Widget _buildFeaturesSection(BuildContext context, Brightness brightness) {
     return Container(
@@ -174,9 +175,10 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
-  
+
   // Call to Action Section
-  Widget _buildCallToActionSection(BuildContext context, Brightness brightness) {
+  Widget _buildCallToActionSection(
+      BuildContext context, Brightness brightness) {
     return Container(
       constraints: const BoxConstraints(maxWidth: 500),
       child: Column(
@@ -192,22 +194,24 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
-  
+
   // Professional Login Button with Liquid styling
   Widget _buildLoginButton(BuildContext context) {
     return Container(
       constraints: const BoxConstraints(maxWidth: 400),
       width: double.infinity,
       child: FilledButton(
-        onPressed: _isLoggingIn ? null : () async {
-          setState(() {
-            _isLoggingIn = true;
-          });
-          await ApiService.loginWithFrappe(context);
-          setState(() {
-            _isLoggingIn = false;
-          });
-        },
+        onPressed: _isLoggingIn
+            ? null
+            : () async {
+                setState(() {
+                  _isLoggingIn = true;
+                });
+                await ApiService.loginWithFrappe(context);
+                setState(() {
+                  _isLoggingIn = false;
+                });
+              },
         child: _isLoggingIn
             ? const SizedBox(
                 width: 24,
@@ -279,4 +283,3 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 }
-

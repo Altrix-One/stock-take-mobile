@@ -26,51 +26,52 @@ class ModernHRDashboard extends StatefulWidget {
   State<ModernHRDashboard> createState() => _ModernHRDashboardState();
 }
 
-class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProviderStateMixin {
+class _ModernHRDashboardState extends State<ModernHRDashboard>
+    with TickerProviderStateMixin {
   int _selectedIndex = 0;
   late PageController _pageController;
   bool _isLoading = true;
-  
+
   // User data
   Map<String, dynamic>? _userInfo;
   String? _profileImageUrl;
-  
+
   // HR data
   Map<String, dynamic>? _leaveBalance;
   List<dynamic> _recentLeaves = [];
   List<dynamic> _recentClaims = [];
   List<dynamic> _teamApprovals = [];
   int _pendingApprovalsCount = 0;
-  
+
   // Access control
   bool _canApprove = false;
-  
+
   // Leave balance rotation
   Timer? _leaveBalanceTimer;
   int _currentLeaveTypeIndex = 0;
-  
+
   @override
   void initState() {
     super.initState();
     _pageController = PageController();
     _loadDashboardData();
-    
+
     // Listen to outbox queue changes
     OutboxQueue.events.listen((_) {
       if (mounted) _loadDashboardData();
     });
-    
+
     // Start leave balance rotation timer
     _startLeaveBalanceRotation();
   }
-  
+
   @override
   void dispose() {
     _pageController.dispose();
     _leaveBalanceTimer?.cancel();
     super.dispose();
   }
-  
+
   Future<void> _loadDashboardData() async {
     try {
       await Future.wait([
@@ -89,34 +90,42 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
       }
     }
   }
-  
+
   Future<void> _loadUserInfo() async {
     try {
       if (!Hive.isBoxOpen('authBox')) await Hive.openBox('authBox');
       final box = Hive.box('authBox');
       final raw = box.get('userDetails');
-      
+
       if (raw is String && raw.isNotEmpty) {
         final userDetails = jsonDecode(raw) as Map<String, dynamic>;
-        
+
         // Try to get employee details for more complete info
         final employeeDetails = await ProfileService.getEmployeeDetails();
-        
+
         setState(() {
           _userInfo = {
-            'full_name': employeeDetails?['employee_name'] ?? userDetails['full_name'] ?? userDetails['name'] ?? 'User',
-            'email': employeeDetails?['company_email'] ?? userDetails['email'] ?? '',
+            'full_name': employeeDetails?['employee_name'] ??
+                userDetails['full_name'] ??
+                userDetails['name'] ??
+                'User',
+            'email':
+                employeeDetails?['company_email'] ?? userDetails['email'] ?? '',
             'employee_number': employeeDetails?['employee_number'] ?? '',
             'designation': employeeDetails?['designation'] ?? '',
             'department': employeeDetails?['department'] ?? '',
             'company': employeeDetails?['company'] ?? '',
           };
-          
+
           // Check if user has approval rights
-          final roles = (userDetails['roles'] as List?)?.map((e) => e.toString()).toList() ?? [];
-          _canApprove = roles.any((r) => r.contains('HR Manager') || r.contains('Leave Approver'));
+          final roles = (userDetails['roles'] as List?)
+                  ?.map((e) => e.toString())
+                  .toList() ??
+              [];
+          _canApprove = roles.any(
+              (r) => r.contains('HR Manager') || r.contains('Leave Approver'));
         });
-        
+
         // Load profile image
         final imagePath = employeeDetails?['image']?.toString();
         if (imagePath != null && imagePath.isNotEmpty) {
@@ -132,12 +141,12 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
       print('Error loading user info: $e');
     }
   }
-  
+
   Future<void> _loadLeaveData() async {
     try {
       final balance = await LeavesService.leaveBalanceWithPending();
       final recentLeaves = await LeavesService.myLeaves();
-      
+
       setState(() {
         _leaveBalance = balance;
         _recentLeaves = recentLeaves.take(3).toList(); // Show only recent 3
@@ -146,7 +155,7 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
       print('Error loading leave data: $e');
     }
   }
-  
+
   Future<void> _loadClaimsData() async {
     try {
       final recentClaims = await ClaimsService.myClaims();
@@ -157,23 +166,24 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
       print('Error loading claims data: $e');
     }
   }
-  
+
   Future<void> _loadApprovalData() async {
     if (!_canApprove) return;
-    
+
     try {
       final leaveApprovals = await LeavesService.teamLeaves();
-      final attendanceApprovals = await AttendanceService.teamAttendanceRequests();
+      final attendanceApprovals =
+          await AttendanceService.teamAttendanceRequests();
       final shiftApprovals = await AttendanceService.teamShiftRequests();
       final claimApprovals = await ClaimsService.teamClaims();
-      
+
       final allApprovals = [
         ...leaveApprovals,
         ...attendanceApprovals,
         ...shiftApprovals,
         ...claimApprovals,
       ];
-      
+
       setState(() {
         _teamApprovals = allApprovals.take(5).toList(); // Show recent 5
         _pendingApprovalsCount = allApprovals.length;
@@ -182,7 +192,7 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
       print('Error loading approval data: $e');
     }
   }
-  
+
   Future<void> _handleLogout() async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -226,12 +236,12 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
         ],
       ),
     );
-    
+
     if (confirm == true) {
       try {
         var authBox = await Hive.openBox('authBox');
         await authBox.clear();
-        
+
         if (mounted) {
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(builder: (context) => const LoginScreen()),
@@ -243,11 +253,9 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
       }
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
-    final brightness = Theme.of(context).brightness;
-    
     if (_isLoading) {
       return const UniversalScaffold(
         body: UniversalLoading(
@@ -255,7 +263,7 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
         ),
       );
     }
-    
+
     return UniversalScaffold(
       body: PageView(
         controller: _pageController,
@@ -276,19 +284,22 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
       bottomNavigationBar: _buildBottomNavigation(),
     );
   }
-  
+
   Widget _buildBottomNavigation() {
     final navItems = [
       _NavItem(Icons.dashboard_rounded, Icons.dashboard_outlined, 'Dashboard'),
       _NavItem(Icons.event_note_rounded, Icons.event_note_outlined, 'Leaves'),
       _NavItem(Icons.access_time_filled, Icons.access_time, 'Attendance'),
-      _NavItem(Icons.receipt_long_rounded, Icons.receipt_long_outlined, 'Claims'),
-      if (_canApprove) _NavItem(Icons.verified, Icons.verified_outlined, 'Approvals'),
+      _NavItem(
+          Icons.receipt_long_rounded, Icons.receipt_long_outlined, 'Claims'),
+      if (_canApprove)
+        _NavItem(Icons.verified, Icons.verified_outlined, 'Approvals'),
       _NavItem(Icons.person_rounded, Icons.person_outline, 'Profile'),
     ];
-    
+
     return Container(
-      margin: const EdgeInsets.fromLTRB(AppThemeUnified.spaceMD, 0, AppThemeUnified.spaceMD, AppThemeUnified.spaceMD),
+      margin: const EdgeInsets.fromLTRB(AppThemeUnified.spaceMD, 0,
+          AppThemeUnified.spaceMD, AppThemeUnified.spaceMD),
       decoration: BoxDecoration(
         color: AppThemeUnified.glassLight,
         borderRadius: BorderRadius.circular(AppThemeUnified.radiusLG),
@@ -317,8 +328,9 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
                 final index = entry.key;
                 final item = entry.value;
                 final isSelected = _selectedIndex == index;
-                final showBadge = _canApprove && index == 4 && _pendingApprovalsCount > 0;
-                
+                final showBadge =
+                    _canApprove && index == 4 && _pendingApprovalsCount > 0;
+
                 return Expanded(
                   child: GestureDetector(
                     onTap: () {
@@ -334,17 +346,17 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
                       margin: const EdgeInsets.symmetric(horizontal: 2),
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 6),
                       decoration: BoxDecoration(
-                        color: isSelected 
+                        color: isSelected
                             ? AppThemeUnified.glassLight
                             : Colors.transparent,
-                        borderRadius: BorderRadius.circular(AppThemeUnified.radiusMD),
+                        borderRadius:
+                            BorderRadius.circular(AppThemeUnified.radiusMD),
                         border: isSelected
                             ? Border.all(
-                                color: AppThemeUnified.glassBorder, 
-                                width: 1
-                              )
+                                color: AppThemeUnified.glassBorder, width: 1)
                             : null,
                       ),
                       child: Column(
@@ -353,7 +365,9 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
                           Stack(
                             children: [
                               Icon(
-                                isSelected ? item.activeIcon : item.inactiveIcon,
+                                isSelected
+                                    ? item.activeIcon
+                                    : item.inactiveIcon,
                                 color: isSelected
                                     ? AppThemeUnified.textPrimary
                                     : AppThemeUnified.textTertiary,
@@ -370,7 +384,8 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
                                       shape: BoxShape.circle,
                                       boxShadow: [
                                         BoxShadow(
-                                          color: AppThemeUnified.error.withOpacity(0.3),
+                                          color: AppThemeUnified.error
+                                              .withOpacity(0.3),
                                           blurRadius: 4,
                                           offset: const Offset(0, 2),
                                         ),
@@ -381,7 +396,9 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
                                       minHeight: 16,
                                     ),
                                     child: Text(
-                                      _pendingApprovalsCount > 99 ? '99+' : _pendingApprovalsCount.toString(),
+                                      _pendingApprovalsCount > 99
+                                          ? '99+'
+                                          : _pendingApprovalsCount.toString(),
                                       style: const TextStyle(
                                         color: Colors.white,
                                         fontSize: 8,
@@ -397,8 +414,11 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
                           Text(
                             item.label,
                             style: AppThemeUnified.labelSmall.copyWith(
-                              color: AppThemeUnified.textPrimary, // Always white text for visibility
-                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                              color: AppThemeUnified
+                                  .textPrimary, // Always white text for visibility
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.w400,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -414,7 +434,7 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
       ),
     );
   }
-  
+
   Widget _buildDashboardPage() {
     return SafeArea(
       child: RefreshIndicator(
@@ -424,18 +444,18 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
             // Header Section
             _buildHeader(),
             AppThemeUnified.sectionSpacing,
-            
+
             // Quick Stats
             _buildQuickStats(),
             AppThemeUnified.sectionSpacing,
-            
+
             // Quick Actions
             _buildQuickActions(),
             AppThemeUnified.sectionSpacing,
-            
+
             // Recent Activities
             _buildRecentActivities(),
-            
+
             // Bottom spacing for navigation
             const SizedBox(height: 100),
           ],
@@ -443,12 +463,12 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
       ),
     );
   }
-  
+
   Widget _buildHeader() {
     final userName = _userInfo?['full_name']?.toString() ?? 'User';
     final firstName = userName.split(' ').first;
     final designation = _userInfo?['designation']?.toString() ?? '';
-    
+
     return UniversalCard(
       child: Row(
         children: [
@@ -469,14 +489,13 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
                   ? Image.network(
                       _profileImageUrl!,
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => _buildAvatarFallback(firstName),
+                      errorBuilder: (context, error, stackTrace) =>
+                          _buildAvatarFallback(firstName),
                     )
                   : _buildAvatarFallback(firstName),
             ),
           ),
-          
           const SizedBox(width: AppThemeUnified.spaceMD),
-          
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -502,7 +521,6 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
               ],
             ),
           ),
-          
           IconButton(
             onPressed: _handleLogout,
             icon: const Icon(
@@ -521,7 +539,7 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
       ),
     );
   }
-  
+
   Widget _buildAvatarFallback(String firstName) {
     return Container(
       width: double.infinity,
@@ -537,7 +555,7 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
       ),
     );
   }
-  
+
   Widget _buildQuickStats() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -546,7 +564,6 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
           title: 'Quick Overview',
           icon: Icons.analytics_rounded,
         ),
-        
         Row(
           children: [
             Expanded(
@@ -579,7 +596,7 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
       ],
     );
   }
-  
+
   Widget _buildQuickActions() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -588,7 +605,6 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
           title: 'Quick Actions',
           icon: Icons.flash_on,
         ),
-        
         GridView.count(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -626,8 +642,9 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
       ],
     );
   }
-  
-  Widget _buildActionButton(String label, IconData icon, Color color, VoidCallback onTap) {
+
+  Widget _buildActionButton(
+      String label, IconData icon, Color color, VoidCallback onTap) {
     return ModernActionCard(
       title: label,
       icon: icon,
@@ -637,7 +654,7 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
       margin: EdgeInsets.zero,
     );
   }
-  
+
   Widget _buildRecentActivities() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -646,22 +663,23 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
           title: 'Recent Activities',
           icon: Icons.history,
         ),
-        
         if (_recentLeaves.isNotEmpty) ...[
-          _buildActivitySection('Recent Leave Applications', _recentLeaves, Icons.event_note),
+          _buildActivitySection(
+              'Recent Leave Applications', _recentLeaves, Icons.event_note),
           ModernDesignSystem.verticalSpaceSM,
         ],
-        
         if (_recentClaims.isNotEmpty) ...[
-          _buildActivitySection('Recent Claims', _recentClaims, Icons.receipt_long),
+          _buildActivitySection(
+              'Recent Claims', _recentClaims, Icons.receipt_long),
           ModernDesignSystem.verticalSpaceSM,
         ],
-        
         if (_canApprove && _teamApprovals.isNotEmpty) ...[
-          _buildActivitySection('Pending Approvals', _teamApprovals, Icons.verified),
+          _buildActivitySection(
+              'Pending Approvals', _teamApprovals, Icons.verified),
         ],
-        
-        if (_recentLeaves.isEmpty && _recentClaims.isEmpty && _teamApprovals.isEmpty)
+        if (_recentLeaves.isEmpty &&
+            _recentClaims.isEmpty &&
+            _teamApprovals.isEmpty)
           ModernEmptyState(
             icon: Icons.history,
             title: 'No Recent Activities',
@@ -670,41 +688,45 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
       ],
     );
   }
-  
-  Widget _buildActivitySection(String title, List<dynamic> items, IconData icon) {
+
+  Widget _buildActivitySection(
+      String title, List<dynamic> items, IconData icon) {
     return ModernHeroCard(
       title: title,
       icon: icon,
       child: Column(
-        children: items.map((item) {
-          return ModernListItemCard(
-            title: _getItemTitle(item),
-            subtitle: _getItemSubtitle(item),
-            trailing: _getItemStatus(item),
-            onTap: () => _handleItemTap(item),
-            margin: EdgeInsets.only(bottom: ModernDesignSystem.spaceXS),
-          );
-        }).toList().cast<Widget>(),
+        children: items
+            .map((item) {
+              return ModernListItemCard(
+                title: _getItemTitle(item),
+                subtitle: _getItemSubtitle(item),
+                trailing: _getItemStatus(item),
+                onTap: () => _handleItemTap(item),
+                margin: EdgeInsets.only(bottom: ModernDesignSystem.spaceXS),
+              );
+            })
+            .toList()
+            .cast<Widget>(),
       ),
     );
   }
-  
+
   String _getItemTitle(dynamic item) {
     if (item is Map) {
-      return item['leave_type']?.toString() ?? 
-             item['expense_type']?.toString() ?? 
-             item['title']?.toString() ?? 
-             'Item';
+      return item['leave_type']?.toString() ??
+          item['expense_type']?.toString() ??
+          item['title']?.toString() ??
+          'Item';
     }
     return 'Item';
   }
-  
+
   String _getItemSubtitle(dynamic item) {
     if (item is Map) {
       final fromDate = item['from_date']?.toString();
       final toDate = item['to_date']?.toString();
       final postingDate = item['posting_date']?.toString();
-      
+
       if (fromDate != null && toDate != null) {
         return '$fromDate to $toDate';
       } else if (postingDate != null) {
@@ -713,7 +735,7 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
     }
     return '';
   }
-  
+
   String _getItemStatus(dynamic item) {
     if (item is Map) {
       final status = item['status']?.toString().toLowerCase() ?? '';
@@ -721,12 +743,12 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
     }
     return '';
   }
-  
+
   void _handleItemTap(dynamic item) {
     // Handle item tap - navigate to detail screen
     print('Tapped item: $item');
   }
-  
+
   void _navigateToPage(int index) {
     setState(() {
       _selectedIndex = index;
@@ -737,25 +759,27 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
       curve: Curves.easeInOut,
     );
   }
-  
+
   void _startLeaveBalanceRotation() {
     _leaveBalanceTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
       if (mounted && _leaveBalance != null && _leaveBalance!.isNotEmpty) {
         setState(() {
-          _currentLeaveTypeIndex = (_currentLeaveTypeIndex + 1) % _leaveBalance!.length;
+          _currentLeaveTypeIndex =
+              (_currentLeaveTypeIndex + 1) % _leaveBalance!.length;
         });
       }
     });
   }
-  
+
   void _rotateLeaveBalanceManually() {
     if (_leaveBalance != null && _leaveBalance!.isNotEmpty) {
       setState(() {
-        _currentLeaveTypeIndex = (_currentLeaveTypeIndex + 1) % _leaveBalance!.length;
+        _currentLeaveTypeIndex =
+            (_currentLeaveTypeIndex + 1) % _leaveBalance!.length;
       });
     }
   }
-  
+
   Map<String, dynamic> _getCurrentLeaveBalanceData() {
     if (_leaveBalance == null || _leaveBalance!.isEmpty) {
       return {
@@ -764,34 +788,35 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
         'color': ModernDesignSystem.success,
       };
     }
-    
+
     final leaveTypes = _leaveBalance!.keys.toList();
     if (_currentLeaveTypeIndex >= leaveTypes.length) {
       _currentLeaveTypeIndex = 0;
     }
-    
+
     final currentType = leaveTypes[_currentLeaveTypeIndex];
     final balanceData = _leaveBalance![currentType];
-    
+
     String balance = '0';
     if (balanceData is Map) {
       // Try different field names for remaining balance
-      balance = (balanceData['remaining_leaves'] ?? 
-               balanceData['balance_leaves'] ?? 
-               balanceData['available_leaves'] ?? 
-               0).toString();
+      balance = (balanceData['remaining_leaves'] ??
+              balanceData['balance_leaves'] ??
+              balanceData['available_leaves'] ??
+              0)
+          .toString();
     }
-    
+
     return {
       'type': currentType,
       'balance': balance,
       'color': _getLeaveTypeColor(currentType),
     };
   }
-  
+
   Color _getLeaveTypeColor(String leaveType) {
     final lowerType = leaveType.toLowerCase();
-    
+
     // Match colors based on leave type
     if (lowerType.contains('casual') || lowerType.contains('personal')) {
       return ModernDesignSystem.primaryTeal;
@@ -799,13 +824,18 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
       return ModernDesignSystem.error;
     } else if (lowerType.contains('annual') || lowerType.contains('vacation')) {
       return ModernDesignSystem.success;
-    } else if (lowerType.contains('maternity') || lowerType.contains('paternity') || lowerType.contains('parental')) {
+    } else if (lowerType.contains('maternity') ||
+        lowerType.contains('paternity') ||
+        lowerType.contains('parental')) {
       return ModernDesignSystem.primaryNavy;
-    } else if (lowerType.contains('emergency') || lowerType.contains('urgent')) {
+    } else if (lowerType.contains('emergency') ||
+        lowerType.contains('urgent')) {
       return ModernDesignSystem.warning;
-    } else if (lowerType.contains('privilege') || lowerType.contains('earned')) {
+    } else if (lowerType.contains('privilege') ||
+        lowerType.contains('earned')) {
       return ModernDesignSystem.info;
-    } else if (lowerType.contains('compensatory') || lowerType.contains('comp')) {
+    } else if (lowerType.contains('compensatory') ||
+        lowerType.contains('comp')) {
       return const Color(0xFF9C27B0); // Purple
     } else if (lowerType.contains('study') || lowerType.contains('training')) {
       return const Color(0xFF795548); // Brown
@@ -813,7 +843,7 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
       // Default color rotation for unknown types
       final colors = [
         ModernDesignSystem.primaryTeal,
-        ModernDesignSystem.success, 
+        ModernDesignSystem.success,
         ModernDesignSystem.warning,
         ModernDesignSystem.info,
         ModernDesignSystem.error,
@@ -822,12 +852,11 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
       return colors[_currentLeaveTypeIndex % colors.length];
     }
   }
-  
+
   Widget _buildRotatingLeaveBalanceCard() {
     final currentData = _getCurrentLeaveBalanceData();
     final currentColor = currentData['color'] as Color;
-    final brightness = Theme.of(context).brightness;
-    
+
     return AppThemeUnified.glassContainer(
       borderRadius: AppThemeUnified.radiusMD,
       child: ClipRRect(
@@ -853,125 +882,134 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          padding: const EdgeInsets.all(AppThemeUnified.spaceXS),
-                          decoration: BoxDecoration(
-                            color: AppThemeUnified.glassMedium,
-                            borderRadius: BorderRadius.circular(AppThemeUnified.radiusXS),
-                            border: Border.all(
-                              color: AppThemeUnified.glassBorder,
-                              width: 0.5,
-                            ),
-                          ),
-                          child: Stack(
-                            children: [
-                              AnimatedSwitcher(
-                                duration: const Duration(milliseconds: 300),
-                                child: Icon(
-                                  Icons.event_available,
-                                  key: ValueKey(currentColor.value),
-                                  color: currentColor,
-                                  size: 16,
-                                ),
+                    children: [
+                      Row(
+                        children: [
+                          AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            padding:
+                                const EdgeInsets.all(AppThemeUnified.spaceXS),
+                            decoration: BoxDecoration(
+                              color: AppThemeUnified.glassMedium,
+                              borderRadius: BorderRadius.circular(
+                                  AppThemeUnified.radiusXS),
+                              border: Border.all(
+                                color: AppThemeUnified.glassBorder,
+                                width: 0.5,
                               ),
-                              // Stack indicator with dynamic color
-                              if (_leaveBalance != null && _leaveBalance!.length > 1)
-                                Positioned(
-                                  top: -4,
-                                  right: -4,
-                                  child: AnimatedContainer(
-                                    duration: const Duration(milliseconds: 300),
-                                    padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
-                                    decoration: BoxDecoration(
-                                      color: currentColor,
-                                      borderRadius: BorderRadius.circular(4),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: currentColor.withOpacity(0.3),
-                                          blurRadius: 4,
-                                          offset: const Offset(0, 2),
+                            ),
+                            child: Stack(
+                              children: [
+                                AnimatedSwitcher(
+                                  duration: const Duration(milliseconds: 300),
+                                  child: Icon(
+                                    Icons.event_available,
+                                    key: ValueKey(currentColor.value),
+                                    color: currentColor,
+                                    size: 16,
+                                  ),
+                                ),
+                                // Stack indicator with dynamic color
+                                if (_leaveBalance != null &&
+                                    _leaveBalance!.length > 1)
+                                  Positioned(
+                                    top: -4,
+                                    right: -4,
+                                    child: AnimatedContainer(
+                                      duration:
+                                          const Duration(milliseconds: 300),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 3, vertical: 1),
+                                      decoration: BoxDecoration(
+                                        color: currentColor,
+                                        borderRadius: BorderRadius.circular(4),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color:
+                                                currentColor.withOpacity(0.3),
+                                            blurRadius: 4,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Text(
+                                        '${_currentLeaveTypeIndex + 1}/${_leaveBalance!.length}',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 7,
+                                          fontWeight: FontWeight.w600,
                                         ),
-                                      ],
-                                    ),
-                                    child: Text(
-                                      '${_currentLeaveTypeIndex + 1}/${_leaveBalance!.length}',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 7,
-                                        fontWeight: FontWeight.w600,
                                       ),
                                     ),
                                   ),
-                                ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                        const Spacer(),
-                      ],
-                    ),
-                    
-                    const SizedBox(height: AppThemeUnified.spaceMD),
-                    
-                    // Balance value with animation and dynamic color
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 300),
-                      transitionBuilder: (Widget child, Animation<double> animation) {
-                        return SlideTransition(
-                          position: Tween<Offset>(
-                            begin: const Offset(0.0, 0.3),
-                            end: Offset.zero,
-                          ).animate(animation),
-                          child: FadeTransition(
-                            opacity: animation,
-                            child: child,
-                          ),
-                        );
-                      },
-                      child: Text(
-                        currentData['balance']!,
-                        key: ValueKey('${currentData['balance']}-${currentColor.value}'),
-                        style: AppThemeUnified.headlineSmall.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: currentColor,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                          const Spacer(),
+                        ],
                       ),
-                    ),
-                    
-                    const SizedBox(height: AppThemeUnified.spaceXS),
-                    
-                    // Leave type label with animation
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 300),
-                      transitionBuilder: (Widget child, Animation<double> animation) {
-                        return SlideTransition(
-                          position: Tween<Offset>(
-                            begin: const Offset(0.0, -0.3),
-                            end: Offset.zero,
-                          ).animate(animation),
-                          child: FadeTransition(
-                            opacity: animation,
-                            child: child,
+
+                      const SizedBox(height: AppThemeUnified.spaceMD),
+
+                      // Balance value with animation and dynamic color
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 300),
+                        transitionBuilder:
+                            (Widget child, Animation<double> animation) {
+                          return SlideTransition(
+                            position: Tween<Offset>(
+                              begin: const Offset(0.0, 0.3),
+                              end: Offset.zero,
+                            ).animate(animation),
+                            child: FadeTransition(
+                              opacity: animation,
+                              child: child,
+                            ),
+                          );
+                        },
+                        child: Text(
+                          currentData['balance']!,
+                          key: ValueKey(
+                              '${currentData['balance']}-${currentColor.value}'),
+                          style: AppThemeUnified.headlineSmall.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: currentColor,
                           ),
-                        );
-                      },
-                      child: Text(
-                        currentData['type']!,
-                        key: ValueKey(currentData['type']),
-                        style: AppThemeUnified.bodySmall.copyWith(
-                          color: AppThemeUnified.textSecondary,
-                          fontWeight: FontWeight.w500,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                  ],
+
+                      const SizedBox(height: AppThemeUnified.spaceXS),
+
+                      // Leave type label with animation
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 300),
+                        transitionBuilder:
+                            (Widget child, Animation<double> animation) {
+                          return SlideTransition(
+                            position: Tween<Offset>(
+                              begin: const Offset(0.0, -0.3),
+                              end: Offset.zero,
+                            ).animate(animation),
+                            child: FadeTransition(
+                              opacity: animation,
+                              child: child,
+                            ),
+                          );
+                        },
+                        child: Text(
+                          currentData['type']!,
+                          key: ValueKey(currentData['type']),
+                          style: AppThemeUnified.bodySmall.copyWith(
+                            color: AppThemeUnified.textSecondary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -981,33 +1019,37 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
       ),
     );
   }
-  
+
   String _getLeaveBalanceTotal() {
     if (_leaveBalance == null) return '0';
-    
+
     int total = 0;
     _leaveBalance!.forEach((key, value) {
       if (value is Map && value['remaining_leaves'] != null) {
         total += (value['remaining_leaves'] as num).round();
       }
     });
-    
+
     return total.toString();
   }
-  
+
   String _getPendingClaimsCount() {
     if (_recentClaims.isEmpty) return '0';
-    
+
     int pending = 0;
     for (final claim in _recentClaims) {
       if (claim is Map) {
         final status = claim['status']?.toString().toLowerCase() ?? '';
-        if (status == 'draft' || status == 'pending' || status == 'open' || status == 'applied' || status.contains('queued')) {
+        if (status == 'draft' ||
+            status == 'pending' ||
+            status == 'open' ||
+            status == 'applied' ||
+            status.contains('queued')) {
           pending++;
         }
       }
     }
-    
+
     return pending.toString();
   }
 }
@@ -1016,6 +1058,6 @@ class _NavItem {
   final IconData activeIcon;
   final IconData inactiveIcon;
   final String label;
-  
+
   const _NavItem(this.activeIcon, this.inactiveIcon, this.label);
 }

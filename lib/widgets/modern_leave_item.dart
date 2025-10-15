@@ -77,14 +77,16 @@ class ModernLeaveItem extends StatelessWidget {
   IconData _getLeaveIcon(String? leaveType) {
     if (leaveType == null) return Icons.event_available_outlined;
     final type = leaveType.toLowerCase();
-    
+
     if (type.contains('sick')) return Icons.healing_rounded;
-    if (type.contains('annual') || type.contains('vacation')) return Icons.beach_access_rounded;
+    if (type.contains('annual') || type.contains('vacation'))
+      return Icons.beach_access_rounded;
     if (type.contains('casual')) return Icons.weekend_rounded;
     if (type.contains('privilege')) return Icons.star_rounded;
-    if (type.contains('maternity') || type.contains('paternity')) return Icons.child_care_rounded;
+    if (type.contains('maternity') || type.contains('paternity'))
+      return Icons.child_care_rounded;
     if (type.contains('emergency')) return Icons.warning_rounded;
-    
+
     return Icons.event_available_outlined;
   }
 
@@ -100,15 +102,17 @@ class ModernLeaveItem extends StatelessWidget {
 
   String _formatDateRange(String? fromDate, String? toDate) {
     if (fromDate == null || toDate == null) return 'N/A';
-    
+
     try {
       final from = DateTime.parse(fromDate);
       final to = DateTime.parse(toDate);
-      
-      if (from.year == to.year && from.month == to.month && from.day == to.day) {
+
+      if (from.year == to.year &&
+          from.month == to.month &&
+          from.day == to.day) {
         return DateFormat('MMM dd, yyyy').format(from);
       }
-      
+
       return '${DateFormat('MMM dd').format(from)} - ${DateFormat('MMM dd, yyyy').format(to)}';
     } catch (_) {
       return '$fromDate - $toDate';
@@ -117,7 +121,7 @@ class ModernLeaveItem extends StatelessWidget {
 
   double _calculateDays(String? fromDate, String? toDate) {
     if (fromDate == null || toDate == null) return 0;
-    
+
     try {
       final from = DateTime.parse(fromDate);
       final to = DateTime.parse(toDate);
@@ -134,11 +138,13 @@ class ModernLeaveItem extends StatelessWidget {
     final fromDate = leave['from_date']?.toString();
     final toDate = leave['to_date']?.toString();
     final status = _getLeaveStatus(leave['status']?.toString());
-    final reason = leave['description']?.toString() ?? leave['reason']?.toString() ?? '';
+    final reason =
+        leave['description']?.toString() ?? leave['reason']?.toString() ?? '';
     final days = _calculateDays(fromDate, toDate);
-    
+
     final statusColor = _getStatusColor(status, context);
-    final canCancel = status.toLowerCase() == 'pending' || status.toLowerCase() == 'open';
+    final canCancel =
+        status.toLowerCase() == 'pending' || status.toLowerCase() == 'open';
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -205,7 +211,8 @@ class ModernLeaveItem extends StatelessWidget {
                   ),
                   // Status badge
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: statusColor.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(20),
@@ -236,9 +243,9 @@ class ModernLeaveItem extends StatelessWidget {
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Stats row
               Row(
                 children: [
@@ -272,7 +279,7 @@ class ModernLeaveItem extends StatelessWidget {
                     ),
                 ],
               ),
-              
+
               // Reason (if available)
               if (reason.isNotEmpty) ...[
                 const SizedBox(height: 16),
@@ -310,7 +317,8 @@ class ModernLeaveItem extends StatelessWidget {
                       Text(
                         reason,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8),
+                          color: theme.colorScheme.onSurfaceVariant
+                              .withOpacity(0.8),
                           height: 1.4,
                         ),
                       ),
@@ -318,7 +326,7 @@ class ModernLeaveItem extends StatelessWidget {
                   ),
                 ),
               ],
-              
+
               // Action buttons (if available)
               if (canCancel && onCancel != null) ...[
                 const SizedBox(height: 16),
@@ -331,7 +339,8 @@ class ModernLeaveItem extends StatelessWidget {
                       label: const Text('Cancel'),
                       style: TextButton.styleFrom(
                         foregroundColor: theme.colorScheme.error,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
                       ),
                     ),
                   ],
@@ -344,9 +353,10 @@ class ModernLeaveItem extends StatelessWidget {
     );
   }
 
-  Widget _statItem(BuildContext context, String label, String value, IconData icon) {
+  Widget _statItem(
+      BuildContext context, String label, String value, IconData icon) {
     final theme = Theme.of(context);
-    
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(

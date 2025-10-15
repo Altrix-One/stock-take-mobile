@@ -54,7 +54,8 @@ class StatusBadge extends StatelessWidget {
     this.style = BadgeStyle.soft,
     this.icon,
     this.showIcon = true,
-  }) : type = StatusType.approved, customColor = null;
+  })  : type = StatusType.approved,
+        customColor = null;
 
   const StatusBadge.pending({
     super.key,
@@ -63,7 +64,8 @@ class StatusBadge extends StatelessWidget {
     this.style = BadgeStyle.soft,
     this.icon,
     this.showIcon = true,
-  }) : type = StatusType.pending, customColor = null;
+  })  : type = StatusType.pending,
+        customColor = null;
 
   const StatusBadge.rejected({
     super.key,
@@ -72,7 +74,8 @@ class StatusBadge extends StatelessWidget {
     this.style = BadgeStyle.soft,
     this.icon,
     this.showIcon = true,
-  }) : type = StatusType.rejected, customColor = null;
+  })  : type = StatusType.rejected,
+        customColor = null;
 
   const StatusBadge.cancelled({
     super.key,
@@ -81,11 +84,12 @@ class StatusBadge extends StatelessWidget {
     this.style = BadgeStyle.soft,
     this.icon,
     this.showIcon = true,
-  }) : type = StatusType.cancelled, customColor = null;
+  })  : type = StatusType.cancelled,
+        customColor = null;
 
   Color _getStatusColor() {
     if (customColor != null) return customColor!;
-    
+
     switch (type) {
       case StatusType.approved:
       case StatusType.success:
@@ -150,19 +154,22 @@ class StatusBadge extends StatelessWidget {
       case BadgeSize.small:
         fontSize = 10.0;
         iconSize = 12.0;
-        padding = const EdgeInsets.symmetric(horizontal: paddingXS, vertical: 2.0);
+        padding =
+            const EdgeInsets.symmetric(horizontal: paddingXS, vertical: 2.0);
         borderRadius = radiusXS;
         break;
       case BadgeSize.medium:
         fontSize = 12.0;
         iconSize = 14.0;
-        padding = const EdgeInsets.symmetric(horizontal: paddingSM, vertical: paddingXS);
+        padding = const EdgeInsets.symmetric(
+            horizontal: paddingSM, vertical: paddingXS);
         borderRadius = radiusSM;
         break;
       case BadgeSize.large:
         fontSize = 14.0;
         iconSize = 16.0;
-        padding = const EdgeInsets.symmetric(horizontal: paddingMD, vertical: paddingSM);
+        padding = const EdgeInsets.symmetric(
+            horizontal: paddingMD, vertical: paddingSM);
         borderRadius = radiusMD;
         break;
     }
@@ -171,7 +178,7 @@ class StatusBadge extends StatelessWidget {
     Color backgroundColor;
     Color textColor;
     Color? borderColor;
-    
+
     switch (style) {
       case BadgeStyle.filled:
         backgroundColor = statusColor;
@@ -195,7 +202,9 @@ class StatusBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(borderRadius),
-        border: borderColor != null ? Border.all(color: borderColor, width: 1) : null,
+        border: borderColor != null
+            ? Border.all(color: borderColor, width: 1)
+            : null,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -225,21 +234,25 @@ class StatusBadge extends StatelessWidget {
 }
 
 // Helper function to create status badge from status string
-StatusBadge statusBadgeFromString(String status, {BadgeSize size = BadgeSize.medium, BadgeStyle style = BadgeStyle.soft}) {
+StatusBadge statusBadgeFromString(String status,
+    {BadgeSize size = BadgeSize.medium, BadgeStyle style = BadgeStyle.soft}) {
   final statusLower = status.toLowerCase();
-  
+
   if (statusLower.contains('approved') || statusLower.contains('sanctioned')) {
     return StatusBadge.approved(size: size, style: style);
-  } else if (statusLower.contains('pending') || statusLower.contains('applied')) {
+  } else if (statusLower.contains('pending') ||
+      statusLower.contains('applied')) {
     return StatusBadge.pending(size: size, style: style);
   } else if (statusLower.contains('rejected')) {
     return StatusBadge.rejected(size: size, style: style);
   } else if (statusLower.contains('cancelled')) {
     return StatusBadge.cancelled(size: size, style: style);
   } else if (statusLower.contains('draft')) {
-    return StatusBadge(text: 'Draft', type: StatusType.draft, size: size, style: style);
+    return StatusBadge(
+        text: 'Draft', type: StatusType.draft, size: size, style: style);
   } else if (statusLower.contains('open')) {
-    return StatusBadge(text: 'Open', type: StatusType.open, size: size, style: style);
+    return StatusBadge(
+        text: 'Open', type: StatusType.open, size: size, style: style);
   } else {
     return StatusBadge(text: status, size: size, style: style);
   }

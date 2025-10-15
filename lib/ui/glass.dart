@@ -9,7 +9,14 @@ class GlassContainer extends StatelessWidget {
   final BorderRadius borderRadius;
   final Color? tint;
 
-  const GlassContainer({super.key, required this.child, this.blur = 18, this.opacity = 0.15, this.padding = const EdgeInsets.all(12), this.borderRadius = const BorderRadius.all(Radius.circular(16)), this.tint});
+  const GlassContainer(
+      {super.key,
+      required this.child,
+      this.blur = 18,
+      this.opacity = 0.15,
+      this.padding = const EdgeInsets.all(12),
+      this.borderRadius = const BorderRadius.all(Radius.circular(16)),
+      this.tint});
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +33,10 @@ class GlassContainer extends StatelessWidget {
             borderRadius: borderRadius,
             border: Border.all(color: base.withOpacity(opacity + 0.05)),
             boxShadow: [
-              BoxShadow(color: base.withOpacity(0.06), blurRadius: 20, offset: const Offset(0, 12)),
+              BoxShadow(
+                  color: base.withOpacity(0.06),
+                  blurRadius: 20,
+                  offset: const Offset(0, 12)),
             ],
           ),
           child: child,

@@ -5,21 +5,21 @@ import 'package:flutter/material.dart';
 // =============================================================================
 
 // Primary Brand Colors
-const Color primaryColor = Color.fromRGBO(26, 35, 52, 1);  // Deep navy
-const Color primaryLightColor = Color.fromRGBO(43, 57, 85, 1);  // Lighter navy
-const Color accentColor = Color(0xFF00BFA6);  // Professional teal
-const Color accentLightColor = Color(0xFF4DD0E1);  // Light teal
-const Color accentDarkColor = Color(0xFF00A693);  // Dark teal
-const Color accentPale = Color(0xFFE0F7F4);  // Very light teal
+const Color primaryColor = Color.fromRGBO(26, 35, 52, 1); // Deep navy
+const Color primaryLightColor = Color.fromRGBO(43, 57, 85, 1); // Lighter navy
+const Color accentColor = Color(0xFF00BFA6); // Professional teal
+const Color accentLightColor = Color(0xFF4DD0E1); // Light teal
+const Color accentDarkColor = Color(0xFF00A693); // Dark teal
+const Color accentPale = Color(0xFFE0F7F4); // Very light teal
 
 // Semantic Colors
-const Color successColor = Color(0xFF4CAF50);  // Green for approved/success
+const Color successColor = Color(0xFF4CAF50); // Green for approved/success
 const Color successLightColor = Color(0xFF81C784);
-const Color warningColor = Color(0xFFFF9800);  // Orange for pending/warning
+const Color warningColor = Color(0xFFFF9800); // Orange for pending/warning
 const Color warningLightColor = Color(0xFFFFB74D);
-const Color errorColor = Color(0xFFF44336);  // Red for rejected/error
+const Color errorColor = Color(0xFFF44336); // Red for rejected/error
 const Color errorLightColor = Color(0xFFE57373);
-const Color infoColor = Color(0xFF2196F3);  // Blue for info
+const Color infoColor = Color(0xFF2196F3); // Blue for info
 const Color infoLightColor = Color(0xFF64B5F6);
 
 // Neutral Colors
@@ -78,11 +78,11 @@ const Color gradientEndColor = primaryLightColor;
 const double spaceUnit = 8.0;
 
 // Spacing constants
-const double spaceXS = 4.0;   // 0.5 * spaceUnit
-const double spaceSM = 8.0;   // 1 * spaceUnit
-const double spaceMD = 16.0;  // 2 * spaceUnit
-const double spaceLG = 24.0;  // 3 * spaceUnit
-const double spaceXL = 32.0;  // 4 * spaceUnit
+const double spaceXS = 4.0; // 0.5 * spaceUnit
+const double spaceSM = 8.0; // 1 * spaceUnit
+const double spaceMD = 16.0; // 2 * spaceUnit
+const double spaceLG = 24.0; // 3 * spaceUnit
+const double spaceXL = 32.0; // 4 * spaceUnit
 const double space2XL = 40.0; // 5 * spaceUnit
 const double space3XL = 48.0; // 6 * spaceUnit
 
@@ -290,14 +290,23 @@ const TextStyle semibold15White = TextStyle(
     fontWeight: FontWeight.w600,
     fontFamily: fontFamily);
 
-const TextStyle bold18White =
-    TextStyle(color: whiteColor, fontSize: 18.0, fontWeight: FontWeight.w700, fontFamily: fontFamily);
+const TextStyle bold18White = TextStyle(
+    color: whiteColor,
+    fontSize: 18.0,
+    fontWeight: FontWeight.w700,
+    fontFamily: fontFamily);
 
-const TextStyle bold18Primary =
-    TextStyle(color: primaryColor, fontSize: 18.0, fontWeight: FontWeight.w700, fontFamily: fontFamily);
+const TextStyle bold18Primary = TextStyle(
+    color: primaryColor,
+    fontSize: 18.0,
+    fontWeight: FontWeight.w700,
+    fontFamily: fontFamily);
 
-const TextStyle bold17Primary =
-    TextStyle(color: primaryColor, fontSize: 17.0, fontWeight: FontWeight.w700, fontFamily: fontFamily);
+const TextStyle bold17Primary = TextStyle(
+    color: primaryColor,
+    fontSize: 17.0,
+    fontWeight: FontWeight.w700,
+    fontFamily: fontFamily);
 
 const TextStyle semibold28White =
     TextStyle(color: whiteColor, fontSize: 28.0, fontWeight: FontWeight.w600);

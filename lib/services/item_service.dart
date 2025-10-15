@@ -4,7 +4,8 @@ import 'package:hive/hive.dart';
 import 'package:stock_count/config.dart';
 
 class ItemService {
-  static Future<List<Map<String, dynamic>>> searchItems(String query, {int limit = 50}) async {
+  static Future<List<Map<String, dynamic>>> searchItems(String query,
+      {int limit = 50}) async {
     final authBox = Hive.box('authBox');
     final token = authBox.get('accessToken');
     if (token == null) throw Exception('Not authenticated');

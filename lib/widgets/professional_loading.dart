@@ -95,7 +95,8 @@ class _SkeletonLoaderState extends State<SkeletonLoader>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final baseColor = isDark ? const Color(0xFF2A2A2A) : const Color(0xFFE0E0E0);
+    final baseColor =
+        isDark ? const Color(0xFF2A2A2A) : const Color(0xFFE0E0E0);
 
     return AnimatedBuilder(
       animation: _animation,
@@ -137,7 +138,8 @@ class _SkeletonLoaderState extends State<SkeletonLoader>
                           height: 14,
                           width: double.infinity,
                           decoration: BoxDecoration(
-                            color: baseColor.withOpacity(_animation.value + 0.2),
+                            color:
+                                baseColor.withOpacity(_animation.value + 0.2),
                             borderRadius: BorderRadius.circular(radiusXS),
                           ),
                         ),
@@ -146,7 +148,8 @@ class _SkeletonLoaderState extends State<SkeletonLoader>
                           height: 12,
                           width: MediaQuery.of(context).size.width * 0.6,
                           decoration: BoxDecoration(
-                            color: baseColor.withOpacity(_animation.value + 0.1),
+                            color:
+                                baseColor.withOpacity(_animation.value + 0.1),
                             borderRadius: BorderRadius.circular(radiusXS),
                           ),
                         ),
@@ -252,9 +255,8 @@ class ProfessionalTextFormField extends StatelessWidget {
                   vertical: paddingMD,
                 ),
             filled: true,
-            fillColor: isDark
-                ? const Color(0xFF2A2A2A)
-                : const Color(0xFFF8F9FA),
+            fillColor:
+                isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF8F9FA),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(radiusMD),
               borderSide: BorderSide(
@@ -431,7 +433,8 @@ enum ButtonStyle {
 }
 
 // Professional app bar
-class ProfessionalAppBar extends StatelessWidget implements PreferredSizeWidget {
+class ProfessionalAppBar extends StatelessWidget
+    implements PreferredSizeWidget {
   final String title;
   final List<Widget>? actions;
   final Widget? leading;
@@ -464,8 +467,8 @@ class ProfessionalAppBar extends StatelessWidget implements PreferredSizeWidget 
           color: foregroundColor ?? textPrimaryColor,
         ),
       ),
-      backgroundColor: backgroundColor ??
-          (isDark ? const Color(0xFF1A1A1A) : whiteColor),
+      backgroundColor:
+          backgroundColor ?? (isDark ? const Color(0xFF1A1A1A) : whiteColor),
       foregroundColor: foregroundColor ?? textPrimaryColor,
       elevation: elevation,
       surfaceTintColor: Colors.transparent,

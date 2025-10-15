@@ -7,19 +7,20 @@ import 'wallpaper_manager.dart';
 class UnifiedThemeSystem {
   static const String _wallpaperKeyPrefs = 'selected_wallpaper';
   static const String _defaultWallpaper = 'royal_ocean_blue';
-  
+
   // Cache for performance
   static String? _cachedWallpaperKey;
   static ThemeData? _cachedLightTheme;
   static ThemeData? _cachedDarkTheme;
-  
+
   /// Get the current wallpaper key
   static Future<String> getCurrentWallpaperKey() async {
     if (_cachedWallpaperKey != null) return _cachedWallpaperKey!;
-    
+
     try {
       final prefs = await SharedPreferences.getInstance();
-      _cachedWallpaperKey = prefs.getString(_wallpaperKeyPrefs) ?? _defaultWallpaper;
+      _cachedWallpaperKey =
+          prefs.getString(_wallpaperKeyPrefs) ?? _defaultWallpaper;
       return _cachedWallpaperKey!;
     } catch (e) {
       print('Error loading wallpaper preference: $e');
@@ -27,7 +28,7 @@ class UnifiedThemeSystem {
       return _cachedWallpaperKey!;
     }
   }
-  
+
   /// Set wallpaper key and clear cache
   static Future<void> setWallpaperKey(String key) async {
     try {
@@ -40,20 +41,22 @@ class UnifiedThemeSystem {
       print('Error saving wallpaper preference: $e');
     }
   }
-  
+
   /// Get wallpaper-aware light theme
   static Future<ThemeData> getLightTheme() async {
     if (_cachedLightTheme != null) return _cachedLightTheme!;
-    
+
     final wallpaperKey = await getCurrentWallpaperKey();
-    final wallpaperDef = WallpaperManager.wallpapers[wallpaperKey] ?? WallpaperManager.wallpapers['royal_ocean_blue']!;
+    final wallpaperDef = WallpaperManager.wallpapers[wallpaperKey] ??
+        WallpaperManager.wallpapers['royal_ocean_blue']!;
     final primaryColor = wallpaperDef.colors.first;
-    final secondaryColor = wallpaperDef.colors.length > 1 ? wallpaperDef.colors[1] : primaryColor;
-    
+    final secondaryColor =
+        wallpaperDef.colors.length > 1 ? wallpaperDef.colors[1] : primaryColor;
+
     _cachedLightTheme = ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
-      
+
       colorScheme: ColorScheme.light(
         primary: primaryColor,
         onPrimary: Colors.white,
@@ -76,7 +79,7 @@ class UnifiedThemeSystem {
         surfaceVariant: Colors.white.withOpacity(0.05),
         onSurfaceVariant: Colors.white.withOpacity(0.8),
       ),
-      
+
       // App Bar Theme - Transparent with white text
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
@@ -90,7 +93,7 @@ class UnifiedThemeSystem {
         ),
         iconTheme: IconThemeData(color: Colors.white),
       ),
-      
+
       // Card Theme - Glass morphism
       cardTheme: CardThemeData(
         color: Colors.white.withOpacity(0.1),
@@ -105,26 +108,34 @@ class UnifiedThemeSystem {
         ),
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       ),
-      
+
       // Text themes - All white for wallpaper visibility
       textTheme: const TextTheme(
-        displayLarge: TextStyle(color: Colors.white, fontWeight: FontWeight.w300),
-        displayMedium: TextStyle(color: Colors.white, fontWeight: FontWeight.w400),
-        displaySmall: TextStyle(color: Colors.white, fontWeight: FontWeight.w400),
-        headlineLarge: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-        headlineMedium: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-        headlineSmall: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        displayLarge:
+            TextStyle(color: Colors.white, fontWeight: FontWeight.w300),
+        displayMedium:
+            TextStyle(color: Colors.white, fontWeight: FontWeight.w400),
+        displaySmall:
+            TextStyle(color: Colors.white, fontWeight: FontWeight.w400),
+        headlineLarge:
+            TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        headlineMedium:
+            TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        headlineSmall:
+            TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
         titleLarge: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
-        titleMedium: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+        titleMedium:
+            TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
         titleSmall: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
         labelLarge: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
-        labelMedium: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+        labelMedium:
+            TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
         labelSmall: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
         bodyLarge: TextStyle(color: Colors.white),
         bodyMedium: TextStyle(color: Colors.white),
         bodySmall: TextStyle(color: Colors.white70),
       ),
-      
+
       // Button themes with primary wallpaper color
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -138,14 +149,14 @@ class UnifiedThemeSystem {
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         ),
       ),
-      
+
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         ),
       ),
-      
+
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: Colors.white,
@@ -156,14 +167,14 @@ class UnifiedThemeSystem {
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         ),
       ),
-      
+
       // List tile theme
       listTileTheme: const ListTileThemeData(
         textColor: Colors.white,
         iconColor: Colors.white,
         contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       ),
-      
+
       // Input decoration theme
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
@@ -185,11 +196,11 @@ class UnifiedThemeSystem {
         prefixIconColor: Colors.white,
         suffixIconColor: Colors.white,
       ),
-      
+
       // Icon theme
       iconTheme: const IconThemeData(color: Colors.white),
       primaryIconTheme: const IconThemeData(color: Colors.white),
-      
+
       // Floating Action Button
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: primaryColor,
@@ -199,7 +210,7 @@ class UnifiedThemeSystem {
           borderRadius: BorderRadius.circular(16),
         ),
       ),
-      
+
       // Bottom Navigation
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: Colors.black.withOpacity(0.2),
@@ -208,13 +219,13 @@ class UnifiedThemeSystem {
         type: BottomNavigationBarType.fixed,
         elevation: 0,
       ),
-      
+
       // Divider theme
       dividerTheme: DividerThemeData(
         color: Colors.white.withOpacity(0.2),
         thickness: 1,
       ),
-      
+
       // Snackbar theme
       snackBarTheme: SnackBarThemeData(
         backgroundColor: Colors.black.withOpacity(0.8),
@@ -225,23 +236,25 @@ class UnifiedThemeSystem {
         ),
       ),
     );
-    
+
     return _cachedLightTheme!;
   }
-  
+
   /// Get wallpaper-aware dark theme (similar to light but with different opacity values)
   static Future<ThemeData> getDarkTheme() async {
     if (_cachedDarkTheme != null) return _cachedDarkTheme!;
-    
+
     final wallpaperKey = await getCurrentWallpaperKey();
-    final wallpaperDef = WallpaperManager.wallpapers[wallpaperKey] ?? WallpaperManager.wallpapers['royal_ocean_blue']!;
+    final wallpaperDef = WallpaperManager.wallpapers[wallpaperKey] ??
+        WallpaperManager.wallpapers['royal_ocean_blue']!;
     final primaryColor = wallpaperDef.colors.first;
-    final secondaryColor = wallpaperDef.colors.length > 1 ? wallpaperDef.colors[1] : primaryColor;
-    
+    final secondaryColor =
+        wallpaperDef.colors.length > 1 ? wallpaperDef.colors[1] : primaryColor;
+
     _cachedDarkTheme = ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
-      
+
       colorScheme: ColorScheme.dark(
         primary: primaryColor,
         onPrimary: Colors.white,
@@ -264,7 +277,7 @@ class UnifiedThemeSystem {
         surfaceVariant: Colors.black.withOpacity(0.1),
         onSurfaceVariant: Colors.white.withOpacity(0.8),
       ),
-      
+
       // Similar theming as light theme but with darker glass effects
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
@@ -278,7 +291,7 @@ class UnifiedThemeSystem {
         ),
         iconTheme: IconThemeData(color: Colors.white),
       ),
-      
+
       cardTheme: CardThemeData(
         color: Colors.black.withOpacity(0.2),
         elevation: 0,
@@ -292,29 +305,37 @@ class UnifiedThemeSystem {
         ),
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       ),
-      
+
       textTheme: const TextTheme(
-        displayLarge: TextStyle(color: Colors.white, fontWeight: FontWeight.w300),
-        displayMedium: TextStyle(color: Colors.white, fontWeight: FontWeight.w400),
-        displaySmall: TextStyle(color: Colors.white, fontWeight: FontWeight.w400),
-        headlineLarge: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-        headlineMedium: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-        headlineSmall: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        displayLarge:
+            TextStyle(color: Colors.white, fontWeight: FontWeight.w300),
+        displayMedium:
+            TextStyle(color: Colors.white, fontWeight: FontWeight.w400),
+        displaySmall:
+            TextStyle(color: Colors.white, fontWeight: FontWeight.w400),
+        headlineLarge:
+            TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        headlineMedium:
+            TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        headlineSmall:
+            TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
         titleLarge: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
-        titleMedium: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+        titleMedium:
+            TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
         titleSmall: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
         labelLarge: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
-        labelMedium: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+        labelMedium:
+            TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
         labelSmall: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
         bodyLarge: TextStyle(color: Colors.white),
         bodyMedium: TextStyle(color: Colors.white),
         bodySmall: TextStyle(color: Colors.white70),
       ),
     );
-    
+
     return _cachedDarkTheme!;
   }
-  
+
   /// Clear theme cache (call when wallpaper changes)
   static void clearCache() {
     _cachedLightTheme = null;

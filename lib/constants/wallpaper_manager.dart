@@ -11,7 +11,7 @@ class WallpaperManager {
   // =============================================================================
   // iOS-STYLE WALLPAPER DEFINITIONS
   // =============================================================================
-  
+
   static const Map<String, WallpaperDefinition> wallpapers = {
     'default': WallpaperDefinition(
       name: 'Default Ocean',
@@ -19,7 +19,6 @@ class WallpaperManager {
       colors: [Color(0xFF667eea), Color(0xFF764ba2), Color(0xFF6B73FF)],
       animated: true,
     ),
-    
     'royal_ocean_blue': WallpaperDefinition(
       name: 'Royal & Ocean Blue',
       type: WallpaperType.gradient,
@@ -27,7 +26,6 @@ class WallpaperManager {
       animated: true,
       particleEffect: ParticleEffectType.subtle,
     ),
-    
     'ios_blue': WallpaperDefinition(
       name: 'iOS Blue',
       type: WallpaperType.gradient,
@@ -35,7 +33,6 @@ class WallpaperManager {
       animated: true,
       particleEffect: ParticleEffectType.floating,
     ),
-    
     'ios_green': WallpaperDefinition(
       name: 'iOS Green',
       type: WallpaperType.gradient,
@@ -43,7 +40,6 @@ class WallpaperManager {
       animated: true,
       particleEffect: ParticleEffectType.bubbles,
     ),
-    
     'ios_purple': WallpaperDefinition(
       name: 'iOS Purple',
       type: WallpaperType.gradient,
@@ -51,7 +47,6 @@ class WallpaperManager {
       animated: true,
       particleEffect: ParticleEffectType.stars,
     ),
-    
     'aurora': WallpaperDefinition(
       name: 'Aurora',
       type: WallpaperType.aurora,
@@ -64,14 +59,12 @@ class WallpaperManager {
       animated: true,
       particleEffect: ParticleEffectType.floating,
     ),
-    
     'sunset': WallpaperDefinition(
       name: 'Sunset',
       type: WallpaperType.gradient,
       colors: [Color(0xFFFF6B6B), Color(0xFFFFE66D), Color(0xFFFF6B9D)],
       animated: true,
     ),
-    
     'dark_elegance': WallpaperDefinition(
       name: 'Dark Elegance',
       type: WallpaperType.gradient,
@@ -79,7 +72,6 @@ class WallpaperManager {
       animated: false,
       isDark: true,
     ),
-    
     'corporate_teal': WallpaperDefinition(
       name: 'Corporate Teal',
       type: WallpaperType.gradient,
@@ -92,22 +84,22 @@ class WallpaperManager {
   // =============================================================================
   // WALLPAPER MANAGEMENT
   // =============================================================================
-  
+
   static Future<String> getCurrentWallpaper() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_wallpaperKey) ?? 'royal_ocean_blue';
   }
-  
+
   static Future<void> setWallpaper(String wallpaperKey) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_wallpaperKey, wallpaperKey);
   }
-  
+
   static Future<bool> areEffectsEnabled() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_effectsKey) ?? true;
   }
-  
+
   static Future<void> setEffectsEnabled(bool enabled) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_effectsKey, enabled);
@@ -116,9 +108,10 @@ class WallpaperManager {
   // =============================================================================
   // WALLPAPER WIDGET BUILDERS
   // =============================================================================
-  
+
   /// Creates a wallpaper widget from wallpaper definition
-  static Widget createWallpaper(WallpaperDefinition definition, {bool effectsEnabled = true}) {
+  static Widget createWallpaper(WallpaperDefinition definition,
+      {bool effectsEnabled = true}) {
     switch (definition.type) {
       case WallpaperType.gradient:
         return _createGradientWallpaper(definition, effectsEnabled);
@@ -128,22 +121,24 @@ class WallpaperManager {
         return _createMeshWallpaper(definition, effectsEnabled);
     }
   }
-  
+
   /// Creates a wallpaper from key
   static Widget fromKey(String key, {bool effectsEnabled = true}) {
     print('🎨 WallpaperManager: Loading wallpaper key: $key');
     final definition = wallpapers[key] ?? wallpapers['royal_ocean_blue']!;
-    print('🎨 WallpaperManager: Using definition: ${definition.name} with colors: ${definition.colors}');
+    print(
+        '🎨 WallpaperManager: Using definition: ${definition.name} with colors: ${definition.colors}');
     return createWallpaper(definition, effectsEnabled: effectsEnabled);
   }
 
   // =============================================================================
   // PRIVATE WALLPAPER BUILDERS
   // =============================================================================
-  
-  static Widget _createGradientWallpaper(WallpaperDefinition definition, bool effectsEnabled) {
+
+  static Widget _createGradientWallpaper(
+      WallpaperDefinition definition, bool effectsEnabled) {
     Widget wallpaper;
-    
+
     if (definition.animated && effectsEnabled) {
       wallpaper = AnimatedGradientWallpaper(
         colors: definition.colors,
@@ -160,7 +155,7 @@ class WallpaperManager {
         ),
       );
     }
-    
+
     if (definition.particleEffect != null && effectsEnabled) {
       wallpaper = Stack(
         children: [
@@ -172,18 +167,20 @@ class WallpaperManager {
         ],
       );
     }
-    
+
     return wallpaper;
   }
-  
-  static Widget _createAuroraWallpaper(WallpaperDefinition definition, bool effectsEnabled) {
+
+  static Widget _createAuroraWallpaper(
+      WallpaperDefinition definition, bool effectsEnabled) {
     return AuroraWallpaper(
       colors: definition.colors,
       animated: definition.animated && effectsEnabled,
     );
   }
-  
-  static Widget _createMeshWallpaper(WallpaperDefinition definition, bool effectsEnabled) {
+
+  static Widget _createMeshWallpaper(
+      WallpaperDefinition definition, bool effectsEnabled) {
     return MeshGradientWallpaper(
       colors: definition.colors,
       animated: definition.animated && effectsEnabled,
@@ -241,7 +238,8 @@ class AnimatedGradientWallpaper extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<AnimatedGradientWallpaper> createState() => _AnimatedGradientWallpaperState();
+  State<AnimatedGradientWallpaper> createState() =>
+      _AnimatedGradientWallpaperState();
 }
 
 class _AnimatedGradientWallpaperState extends State<AnimatedGradientWallpaper>
@@ -253,7 +251,7 @@ class _AnimatedGradientWallpaperState extends State<AnimatedGradientWallpaper>
   @override
   void initState() {
     super.initState();
-    
+
     _controller = AnimationController(
       duration: Duration(seconds: (1 / widget.animationSpeed * 100).round()),
       vsync: this,
@@ -292,10 +290,12 @@ class _AnimatedGradientWallpaperState extends State<AnimatedGradientWallpaper>
         return Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              begin: Alignment.topLeft + 
-                     Alignment(math.sin(_animation1.value) * 0.3, math.cos(_animation1.value) * 0.2),
-              end: Alignment.bottomRight + 
-                   Alignment(math.cos(_animation2.value) * 0.2, math.sin(_animation2.value) * 0.3),
+              begin: Alignment.topLeft +
+                  Alignment(math.sin(_animation1.value) * 0.3,
+                      math.cos(_animation1.value) * 0.2),
+              end: Alignment.bottomRight +
+                  Alignment(math.cos(_animation2.value) * 0.2,
+                      math.sin(_animation2.value) * 0.3),
               colors: widget.colors,
               stops: _generateStops(widget.colors.length),
             ),
@@ -337,7 +337,7 @@ class _AuroraWallpaperState extends State<AuroraWallpaper>
   @override
   void initState() {
     super.initState();
-    
+
     if (widget.animated) {
       _controller = AnimationController(
         duration: const Duration(seconds: 15),
@@ -425,17 +425,18 @@ class AuroraPainter extends CustomPainter {
       final phase = animations[i].value;
 
       path.moveTo(0, size.height);
-      
+
       for (double x = 0; x <= size.width; x += 5) {
-        final y = size.height * 0.5 + 
-                  amplitude * math.sin((x / size.width) * frequency * math.pi + phase) * 
-                  math.exp(-x / size.width);
+        final y = size.height * 0.5 +
+            amplitude *
+                math.sin((x / size.width) * frequency * math.pi + phase) *
+                math.exp(-x / size.width);
         path.lineTo(x, y);
       }
-      
+
       path.lineTo(size.width, size.height);
       path.close();
-      
+
       canvas.drawPath(path, paint);
     }
   }
@@ -469,7 +470,7 @@ class _MeshGradientWallpaperState extends State<MeshGradientWallpaper>
   @override
   void initState() {
     super.initState();
-    
+
     if (widget.animated) {
       _controller = AnimationController(
         duration: const Duration(seconds: 20),
@@ -532,13 +533,15 @@ class MeshGradientPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
-    
+
     for (int i = 0; i < colors.length; i++) {
       final center = Offset(
-        size.width * 0.5 + math.sin(animationValue * 2 * math.pi + i) * size.width * 0.3,
-        size.height * 0.5 + math.cos(animationValue * 2 * math.pi + i) * size.height * 0.3,
+        size.width * 0.5 +
+            math.sin(animationValue * 2 * math.pi + i) * size.width * 0.3,
+        size.height * 0.5 +
+            math.cos(animationValue * 2 * math.pi + i) * size.height * 0.3,
       );
-      
+
       final gradient = RadialGradient(
         center: Alignment(
           (center.dx / size.width) * 2 - 1,
@@ -550,7 +553,7 @@ class MeshGradientPainter extends CustomPainter {
           colors[i].withOpacity(0.0),
         ],
       );
-      
+
       final paint = Paint()..shader = gradient.createShader(rect);
       canvas.drawRect(rect, paint);
     }
@@ -586,7 +589,7 @@ class _ParticleEffectWidgetState extends State<ParticleEffectWidget>
   @override
   void initState() {
     super.initState();
-    
+
     _controller = AnimationController(
       duration: const Duration(seconds: 30),
       vsync: this,
@@ -734,7 +737,7 @@ class ParticlePainter extends CustomPainter {
   void _drawStar(Canvas canvas, Offset center, double size, Paint paint) {
     final path = Path();
     final angle = (2 * math.pi) / 5;
-    
+
     for (int i = 0; i < 5; i++) {
       final x = center.dx + size * math.cos(i * angle - math.pi / 2);
       final y = center.dy + size * math.sin(i * angle - math.pi / 2);

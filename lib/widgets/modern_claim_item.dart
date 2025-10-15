@@ -83,14 +83,19 @@ class ModernClaimItem extends StatelessWidget {
   IconData _getClaimIcon(String? claimType) {
     if (claimType == null) return Icons.receipt_long_rounded;
     final type = claimType.toLowerCase();
-    
+
     if (type.contains('travel')) return Icons.directions_car_rounded;
-    if (type.contains('meal') || type.contains('food')) return Icons.restaurant_rounded;
-    if (type.contains('hotel') || type.contains('accommodation')) return Icons.hotel_rounded;
-    if (type.contains('medical') || type.contains('health')) return Icons.medical_services_rounded;
-    if (type.contains('fuel') || type.contains('petrol')) return Icons.local_gas_station_rounded;
-    if (type.contains('office') || type.contains('supplies')) return Icons.business_center_rounded;
-    
+    if (type.contains('meal') || type.contains('food'))
+      return Icons.restaurant_rounded;
+    if (type.contains('hotel') || type.contains('accommodation'))
+      return Icons.hotel_rounded;
+    if (type.contains('medical') || type.contains('health'))
+      return Icons.medical_services_rounded;
+    if (type.contains('fuel') || type.contains('petrol'))
+      return Icons.local_gas_station_rounded;
+    if (type.contains('office') || type.contains('supplies'))
+      return Icons.business_center_rounded;
+
     return Icons.receipt_long_rounded;
   }
 
@@ -117,15 +122,22 @@ class ModernClaimItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final claimType = claim['expense_type']?.toString() ?? claim['type']?.toString() ?? 'Expense Claim';
-    final amount = claim['total_sanctioned_amount'] ?? claim['total_amount'] ?? claim['amount'];
+    final claimType = claim['expense_type']?.toString() ??
+        claim['type']?.toString() ??
+        'Expense Claim';
+    final amount = claim['total_sanctioned_amount'] ??
+        claim['total_amount'] ??
+        claim['amount'];
     final status = _getClaimStatus(claim['status']?.toString());
-    final description = claim['description']?.toString() ?? claim['purpose']?.toString() ?? '';
-    final postingDate = claim['posting_date']?.toString() ?? claim['expense_date']?.toString();
+    final description =
+        claim['description']?.toString() ?? claim['purpose']?.toString() ?? '';
+    final postingDate =
+        claim['posting_date']?.toString() ?? claim['expense_date']?.toString();
     final company = claim['company']?.toString() ?? '';
-    
+
     final statusColor = _getStatusColor(status, context);
-    final canCancel = status.toLowerCase() == 'pending' || status.toLowerCase() == 'open';
+    final canCancel =
+        status.toLowerCase() == 'pending' || status.toLowerCase() == 'open';
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -193,7 +205,8 @@ class ModernClaimItem extends StatelessWidget {
                   ),
                   // Status badge
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: statusColor.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(20),
@@ -224,9 +237,9 @@ class ModernClaimItem extends StatelessWidget {
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Amount display - prominent
               Container(
                 width: double.infinity,
@@ -235,15 +248,15 @@ class ModernClaimItem extends StatelessWidget {
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                  colors: [
-                    theme.colorScheme.primaryContainer.withOpacity(0.3),
-                    theme.colorScheme.primaryContainer.withOpacity(0.1),
-                  ],
+                    colors: [
+                      theme.colorScheme.primaryContainer.withOpacity(0.3),
+                      theme.colorScheme.primaryContainer.withOpacity(0.1),
+                    ],
                   ),
                   borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: theme.colorScheme.primary.withOpacity(0.2),
-                ),
+                  border: Border.all(
+                    color: theme.colorScheme.primary.withOpacity(0.2),
+                  ),
                 ),
                 child: Row(
                   children: [
@@ -258,25 +271,25 @@ class ModernClaimItem extends StatelessWidget {
                       children: [
                         Text(
                           'Claim Amount',
-                        style: theme.textTheme.labelMedium?.copyWith(
-                          color: theme.colorScheme.primary.withOpacity(0.8),
-                          fontWeight: FontWeight.w600,
-                        ),
+                          style: theme.textTheme.labelMedium?.copyWith(
+                            color: theme.colorScheme.primary.withOpacity(0.8),
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           _formatCurrency(amount),
-                        style: theme.textTheme.headlineSmall?.copyWith(
-                          color: theme.colorScheme.primary,
-                          fontWeight: FontWeight.w700,
-                        ),
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            color: theme.colorScheme.primary,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ],
                     ),
                   ],
                 ),
               ),
-              
+
               // Additional info
               if (company.isNotEmpty) ...[
                 const SizedBox(height: 16),
@@ -298,7 +311,7 @@ class ModernClaimItem extends StatelessWidget {
                   ],
                 ),
               ],
-              
+
               // Description (if available)
               if (description.isNotEmpty) ...[
                 const SizedBox(height: 16),
@@ -336,7 +349,8 @@ class ModernClaimItem extends StatelessWidget {
                       Text(
                         description,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8),
+                          color: theme.colorScheme.onSurfaceVariant
+                              .withOpacity(0.8),
                           height: 1.4,
                         ),
                       ),
@@ -344,7 +358,7 @@ class ModernClaimItem extends StatelessWidget {
                   ),
                 ),
               ],
-              
+
               // Action buttons (if available)
               if (canCancel && onCancel != null) ...[
                 const SizedBox(height: 16),
@@ -357,7 +371,8 @@ class ModernClaimItem extends StatelessWidget {
                       label: const Text('Cancel'),
                       style: TextButton.styleFrom(
                         foregroundColor: theme.colorScheme.error,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
                       ),
                     ),
                   ],

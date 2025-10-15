@@ -102,17 +102,19 @@ class CleanLeaveBalanceCard extends StatelessWidget {
               itemBuilder: (context, i) {
                 final e = entries[i];
                 final title = e.key.toString();
-                final data = (e.value is Map<String, dynamic>) 
-                    ? e.value as Map<String, dynamic> 
+                final data = (e.value is Map<String, dynamic>)
+                    ? e.value as Map<String, dynamic>
                     : <String, dynamic>{};
-                
+
                 final allocated = _toDouble(data['allocated_leaves']);
                 final balance = _toDouble(data['balance_leaves']);
                 final used = allocated - balance;
-                final pct = allocated > 0 ? (used / allocated).clamp(0.0, 1.0) : 0.0;
-                
+                final pct =
+                    allocated > 0 ? (used / allocated).clamp(0.0, 1.0) : 0.0;
+
                 // Progress color based on remaining balance
-                final remaining = allocated > 0 ? (balance / allocated).clamp(0.0, 1.0) : 1.0;
+                final remaining =
+                    allocated > 0 ? (balance / allocated).clamp(0.0, 1.0) : 1.0;
                 Color progressColor;
                 if (remaining >= 0.5) {
                   progressColor = Colors.green;
@@ -121,7 +123,7 @@ class CleanLeaveBalanceCard extends StatelessWidget {
                 } else {
                   progressColor = Colors.red;
                 }
-                
+
                 return Container(
                   margin: const EdgeInsets.fromLTRB(8, 0, 8, 16),
                   padding: const EdgeInsets.all(16),
@@ -150,7 +152,8 @@ class CleanLeaveBalanceCard extends StatelessWidget {
                             ),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
                               color: progressColor.withOpacity(0.2),
                               borderRadius: BorderRadius.circular(8),
@@ -198,7 +201,8 @@ class CleanLeaveBalanceCard extends StatelessWidget {
                           value: pct,
                           minHeight: 4,
                           backgroundColor: Colors.white.withOpacity(0.2),
-                          valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(progressColor),
                         ),
                       ),
                     ],

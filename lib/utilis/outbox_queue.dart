@@ -13,7 +13,8 @@ class OutboxQueue {
   static const _uuid = Uuid();
 
   // Broadcast simple events to help screens refresh automatically when the queue changes
-  static final StreamController<void> _eventsController = StreamController<void>.broadcast();
+  static final StreamController<void> _eventsController =
+      StreamController<void>.broadcast();
   static Stream<void> get events => _eventsController.stream;
 
   static Future<Database> _db() async {
@@ -27,7 +28,8 @@ class OutboxQueue {
   }
 
   // Add an operation to the Outbox and return idempotency key
-  static Future<String> addOperation(String opType, Map<String, dynamic> payload) async {
+  static Future<String> addOperation(
+      String opType, Map<String, dynamic> payload) async {
     final db = await _db();
     final key = _uuid.v4();
     final now = DateTime.now().toIso8601String();
@@ -51,13 +53,18 @@ class OutboxQueue {
   // Totals of pending leave applications grouped by leave_type
   static Future<Map<String, double>> pendingLeaveByType() async {
     final db = await _db();
-    final rows = await db.query('Outbox', where: "op_type = ? AND status IN ('queued','sending')", whereArgs: ['leave_application']);
+    final rows = await db.query('Outbox',
+        where: "op_type = ? AND status IN ('queued','sending')",
+        whereArgs: ['leave_application']);
     final totals = <String, double>{};
     for (final r in rows) {
       try {
-        final payload = jsonDecode(r['payload'] as String) as Map<String, dynamic>;
+        final payload =
+            jsonDecode(r['payload'] as String) as Map<String, dynamic>;
         final lt = payload['leave_type']?.toString();
-        final days = (payload['days'] is num) ? (payload['days'] as num).toDouble() : double.tryParse('${payload['days']}') ?? 0;
+        final days = (payload['days'] is num)
+            ? (payload['days'] as num).toDouble()
+            : double.tryParse('${payload['days']}') ?? 0;
         if (lt != null && lt.isNotEmpty && days > 0) {
           totals[lt] = (totals[lt] ?? 0) + days;
         }
@@ -74,28 +81,45 @@ class OutboxQueue {
     final authBox = await Hive.openBox('authBox');
     final accessToken = authBox.get('accessToken');
     final tokenExpiry = DateTime.tryParse(authBox.get('tokenExpiry') ?? '');
-    if (accessToken == null || tokenExpiry == null || DateTime.now().isAfter(tokenExpiry)) {
+    if (accessToken == null ||
+        tokenExpiry == null ||
+        DateTime.now().isAfter(tokenExpiry)) {
       return; // Skip until user is authenticated
     }
 
-    final rows = await db.query('Outbox', where: 'status = ?', whereArgs: ['queued'], orderBy: 'id asc', limit: 50);
+    final rows = await db.query('Outbox',
+        where: 'status = ?',
+        whereArgs: ['queued'],
+        orderBy: 'id asc',
+        limit: 50);
     final now = DateTime.now();
     for (final row in rows) {
       final id = row['id'] as int;
       final opType = row['op_type'] as String;
-      final payload = jsonDecode(row['payload'] as String) as Map<String, dynamic>;
+      final payload =
+          jsonDecode(row['payload'] as String) as Map<String, dynamic>;
       final attempts = (row['attempts'] as int?) ?? 0;
       // simple exponential backoff: 0s, 30s, 2m, 6m, 30m, 60m cap
       final delays = [0, 30, 120, 360, 1800, 3600];
       final delay = delays[attempts.clamp(0, delays.length - 1)];
-      final updatedAt = DateTime.tryParse(row['updated_at']?.toString() ?? row['created_at']?.toString() ?? '') ?? now;
+      final updatedAt = DateTime.tryParse(row['updated_at']?.toString() ??
+              row['created_at']?.toString() ??
+              '') ??
+          now;
       if (now.difference(updatedAt).inSeconds < delay) {
         // Skip until backoff window expires
         continue;
       }
 
       try {
-        await db.update('Outbox', {'status': 'sending', 'updated_at': DateTime.now().toIso8601String()}, where: 'id = ?', whereArgs: [id]);
+        await db.update(
+            'Outbox',
+            {
+              'status': 'sending',
+              'updated_at': DateTime.now().toIso8601String()
+            },
+            where: 'id = ?',
+            whereArgs: [id]);
 
         switch (opType) {
           case 'stock_entry':
@@ -126,14 +150,17 @@ class OutboxQueue {
             throw Exception('Unsupported operation: $opType');
         }
 
-        await db.update('Outbox', {'status': 'acked', 'updated_at': DateTime.now().toIso8601String()}, where: 'id = ?', whereArgs: [id]);
+        await db.update('Outbox',
+            {'status': 'acked', 'updated_at': DateTime.now().toIso8601String()},
+            where: 'id = ?', whereArgs: [id]);
         _eventsController.add(null);
       } catch (e) {
         final attempts = (row['attempts'] as int) + 1;
         await db.update(
           'Outbox',
           {
-            'status': 'queued', // keep queued with backoff controlled by caller schedule
+            'status':
+                'queued', // keep queued with backoff controlled by caller schedule
             'attempts': attempts,
             'last_error': e.toString(),
             'updated_at': DateTime.now().toIso8601String(),
@@ -149,11 +176,14 @@ class OutboxQueue {
   // Expose pending leave rows for optimistic UI in lists
   static Future<List<Map<String, dynamic>>> pendingLeaveRows() async {
     final db = await _db();
-    final rows = await db.query('Outbox', where: "op_type = ? AND status IN ('queued','sending')", whereArgs: ['leave_application']);
+    final rows = await db.query('Outbox',
+        where: "op_type = ? AND status IN ('queued','sending')",
+        whereArgs: ['leave_application']);
     final list = <Map<String, dynamic>>[];
     for (final r in rows) {
       try {
-        final payload = jsonDecode(r['payload'] as String) as Map<String, dynamic>;
+        final payload =
+            jsonDecode(r['payload'] as String) as Map<String, dynamic>;
         list.add({
           'name': null,
           'leave_type': payload['leave_type'],
@@ -165,11 +195,14 @@ class OutboxQueue {
     }
     return list;
   }
-  static Future<void> _handleLeaveApplication(Map<String, dynamic> payload) async {
+
+  static Future<void> _handleLeaveApplication(
+      Map<String, dynamic> payload) async {
     await LeavesService.submitLeaveApplication(payload);
   }
 
-  static Future<void> _handleAttendanceRequest(Map<String, dynamic> payload) async {
+  static Future<void> _handleAttendanceRequest(
+      Map<String, dynamic> payload) async {
     await AttendanceService.submitAttendanceRequest(payload);
   }
 
@@ -181,7 +214,8 @@ class OutboxQueue {
     await ClaimsService.submitExpenseClaim(payload);
   }
 
-  static Future<void> _handleApprovalAction(Map<String, dynamic> payload) async {
+  static Future<void> _handleApprovalAction(
+      Map<String, dynamic> payload) async {
     await AttendanceService.approvalAction(
       doctype: payload['doctype'] as String,
       name: payload['name'] as String,
@@ -193,7 +227,8 @@ class OutboxQueue {
   static Future<void> _handleCancelLeave(Map<String, dynamic> payload) async {
     final name = payload['name']?.toString();
     final reason = payload['reason']?.toString();
-    if (name == null || name.isEmpty) throw Exception('Missing leave application name');
+    if (name == null || name.isEmpty)
+      throw Exception('Missing leave application name');
     await LeavesService.cancelLeaveApplication(name, reason: reason);
   }
 }

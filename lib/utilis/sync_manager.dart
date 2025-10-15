@@ -418,7 +418,8 @@ class SyncManager {
           await authBox.put('assigned_items', jsonEncode(assignedItems));
           print("Assigned items stored in Hive.");
         } else {
-          print("Assigned items not found or empty. Cleared assigned_items from Hive.");
+          print(
+              "Assigned items not found or empty. Cleared assigned_items from Hive.");
         }
       } else {
         print("Failed to fetch assigned items: ${response.body}");

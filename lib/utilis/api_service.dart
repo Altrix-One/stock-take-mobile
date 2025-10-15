@@ -84,7 +84,8 @@ class ApiService {
             // HR app - navigate to modern dashboard
             Navigator.pushAndRemoveUntil(
               context,
-              MaterialPageRoute(builder: (context) => const ModernHRDashboard()),
+              MaterialPageRoute(
+                  builder: (context) => const ModernHRDashboard()),
               (Route<dynamic> route) => false,
             );
           } else {
@@ -103,7 +104,6 @@ class ApiService {
       showErrorDialog(context, "An error occurred: $e");
     }
   }
-
 
   static Future<void> _logout(BuildContext context) async {
     var authBox = Hive.box('authBox');

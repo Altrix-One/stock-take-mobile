@@ -42,53 +42,58 @@ class ProfessionalCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    
+
     // Calculate colors based on style
     Color bgColor;
     Color? bColor;
     List<BoxShadow>? shadows;
-    
+
     switch (style) {
       case CardStyle.elevated:
-        bgColor = backgroundColor ?? (isDark ? const Color(0xFF1E1E1E) : whiteColor);
-        shadows = customShadows ?? [
-          BoxShadow(
-            color: shadowMediumColor,
-            blurRadius: elevationLG,
-            offset: const Offset(0, elevationSM),
-            spreadRadius: 0,
-          ),
-          BoxShadow(
-            color: shadowLightColor,
-            blurRadius: elevationMD,
-            offset: const Offset(0, 1),
-            spreadRadius: 0,
-          ),
-        ];
+        bgColor =
+            backgroundColor ?? (isDark ? const Color(0xFF1E1E1E) : whiteColor);
+        shadows = customShadows ??
+            [
+              BoxShadow(
+                color: shadowMediumColor,
+                blurRadius: elevationLG,
+                offset: const Offset(0, elevationSM),
+                spreadRadius: 0,
+              ),
+              BoxShadow(
+                color: shadowLightColor,
+                blurRadius: elevationMD,
+                offset: const Offset(0, 1),
+                spreadRadius: 0,
+              ),
+            ];
         break;
-        
+
       case CardStyle.outlined:
-        bgColor = backgroundColor ?? (isDark ? const Color(0xFF1A1A1A) : whiteColor);
+        bgColor =
+            backgroundColor ?? (isDark ? const Color(0xFF1A1A1A) : whiteColor);
         bColor = borderColor ?? (isDark ? borderMediumColor : borderLightColor);
         shadows = null;
         break;
-        
+
       case CardStyle.filled:
-        bgColor = backgroundColor ?? (isDark ? const Color(0xFF2A2A2A) : surfaceColor);
+        bgColor = backgroundColor ??
+            (isDark ? const Color(0xFF2A2A2A) : surfaceColor);
         shadows = null;
         break;
-        
+
       case CardStyle.glass:
         bgColor = backgroundColor ?? glassColor;
         bColor = borderColor ?? glassBorderColor;
-        shadows = customShadows ?? [
-          BoxShadow(
-            color: shadowLightColor,
-            blurRadius: elevationMD,
-            offset: const Offset(0, 2),
-            spreadRadius: 0,
-          ),
-        ];
+        shadows = customShadows ??
+            [
+              BoxShadow(
+                color: shadowLightColor,
+                blurRadius: elevationMD,
+                offset: const Offset(0, 2),
+                spreadRadius: 0,
+              ),
+            ];
         break;
     }
 
@@ -170,7 +175,8 @@ class StatusCard extends ProfessionalCard {
           style: CardStyle.outlined,
           borderColor: statusColor,
           header: Container(
-            padding: const EdgeInsets.symmetric(horizontal: paddingSM, vertical: paddingXS),
+            padding: const EdgeInsets.symmetric(
+                horizontal: paddingSM, vertical: paddingXS),
             decoration: BoxDecoration(
               color: (statusColor ?? accentColor).withOpacity(0.1),
               borderRadius: const BorderRadius.only(

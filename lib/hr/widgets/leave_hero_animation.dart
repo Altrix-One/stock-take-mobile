@@ -9,10 +9,10 @@ enum LeaveHeroMode { calendar, box }
 
 class LeaveHeroAnimation extends StatefulWidget {
   final int allocated; // total allocation in days (used only to compute ratios)
-  final double used;   // used days
-  final int tiles;     // number of tiles to display (e.g., 12 or 16)
-  final int columns;   // grid columns (3, 4)
-  final Color accent;  // brand accent color
+  final double used; // used days
+  final int tiles; // number of tiles to display (e.g., 12 or 16)
+  final int columns; // grid columns (3, 4)
+  final Color accent; // brand accent color
   final Duration duration; // total duration for one reveal cycle
   final LeaveHeroMode mode; // visual silhouette to resolve into
   final List<IconData>? icons; // optional icon set to cycle on tiles
@@ -41,7 +41,9 @@ class _LeaveHeroAnimationState extends State<LeaveHeroAnimation>
 
   int get _filledTiles {
     final remaining = max(0.0, widget.allocated - widget.used);
-    final ratio = widget.allocated <= 0 ? 0.0 : (remaining / widget.allocated).clamp(0.0, 1.0);
+    final ratio = widget.allocated <= 0
+        ? 0.0
+        : (remaining / widget.allocated).clamp(0.0, 1.0);
     return (ratio * widget.tiles).round();
   }
 
@@ -55,8 +57,10 @@ class _LeaveHeroAnimationState extends State<LeaveHeroAnimation>
   @override
   void didUpdateWidget(covariant LeaveHeroAnimation oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.used != widget.used || oldWidget.allocated != widget.allocated ||
-        oldWidget.tiles != widget.tiles || oldWidget.columns != widget.columns) {
+    if (oldWidget.used != widget.used ||
+        oldWidget.allocated != widget.allocated ||
+        oldWidget.tiles != widget.tiles ||
+        oldWidget.columns != widget.columns) {
       _controller
         ..stop()
         ..reset()
@@ -81,9 +85,18 @@ class _LeaveHeroAnimationState extends State<LeaveHeroAnimation>
     final header = Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(widget.mode == LeaveHeroMode.calendar ? Icons.calendar_month_rounded : Icons.inventory_2_outlined, color: accent, size: 22),
+        Icon(
+            widget.mode == LeaveHeroMode.calendar
+                ? Icons.calendar_month_rounded
+                : Icons.inventory_2_outlined,
+            color: accent,
+            size: 22),
         const SizedBox(width: 8),
-        Text('Leave Balance', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+        Text('Leave Balance',
+            style: Theme.of(context)
+                .textTheme
+                .titleMedium
+                ?.copyWith(fontWeight: FontWeight.w600)),
       ],
     );
 
@@ -107,11 +120,14 @@ class _LeaveHeroAnimationState extends State<LeaveHeroAnimation>
               }
             }
 
-            const dropDur = 0.35;   // portion of cycle spent on drop per tile
-            const holdDur = 0.45;   // hold visible longer for better shape formation
-            const fadeDur = 0.15;   // quick fade away before next cycle
-            final cycle = dropDur + holdDur + fadeDur; // < 1.0 leaves some idle per tile
-            final stagger = 0.08; // more dramatic staggered timing for better cascading effect
+            const dropDur = 0.35; // portion of cycle spent on drop per tile
+            const holdDur =
+                0.45; // hold visible longer for better shape formation
+            const fadeDur = 0.15; // quick fade away before next cycle
+            final cycle =
+                dropDur + holdDur + fadeDur; // < 1.0 leaves some idle per tile
+            final stagger =
+                0.08; // more dramatic staggered timing for better cascading effect
 
             // Icon set to cycle
             final defaultIcons = <IconData>[
@@ -128,7 +144,9 @@ class _LeaveHeroAnimationState extends State<LeaveHeroAnimation>
               Icons.co_present_outlined,
               Icons.beenhere_outlined,
             ];
-            final iconPool = (widget.icons != null && widget.icons!.isNotEmpty) ? widget.icons! : defaultIcons;
+            final iconPool = (widget.icons != null && widget.icons!.isNotEmpty)
+                ? widget.icons!
+                : defaultIcons;
 
             return Wrap(
               spacing: gap,
@@ -137,19 +155,23 @@ class _LeaveHeroAnimationState extends State<LeaveHeroAnimation>
                 final i = order[renderIndex];
                 // local time for this tile within the looping controller value [0,1)
                 final g = _controller.value; // 0..1
-                final delay = renderIndex * stagger; // increasing delay so tiles stack
+                final delay =
+                    renderIndex * stagger; // increasing delay so tiles stack
                 double t = g - delay;
                 if (t < 0) t += 1.0; // wrap around
 
                 double opacity = 0.0;
-                double translateY = -size * 2.5; // start higher for more dramatic drop
+                double translateY =
+                    -size * 2.5; // start higher for more dramatic drop
                 double scale = 0.75;
 
                 if (t < dropDur) {
                   // Drop-in with a bigger bounce and more dramatic curve
-                  final p = Curves.elasticOut.transform((t / dropDur).clamp(0.0, 1.0));
+                  final p = Curves.elasticOut
+                      .transform((t / dropDur).clamp(0.0, 1.0));
                   translateY = lerpDouble(-size * 2.5, 0.0, p)!;
-                  opacity = lerpDouble(0.0, 1.0, Curves.easeIn.transform((t / dropDur).clamp(0.0, 1.0)))!;
+                  opacity = lerpDouble(0.0, 1.0,
+                      Curves.easeIn.transform((t / dropDur).clamp(0.0, 1.0)))!;
                   scale = lerpDouble(0.75, 1.05, p)!;
                 } else if (t < dropDur + holdDur) {
                   opacity = 1.0;
@@ -166,19 +188,29 @@ class _LeaveHeroAnimationState extends State<LeaveHeroAnimation>
                 // Ensure valid opacity range
                 opacity = opacity.clamp(0.0, 1.0);
 
-                final isRemaining = i < _filledTiles; // color mapping (remaining vs used)
-                final color = isRemaining ? accent.withOpacity(0.85) : accent.withOpacity(0.18);
-                final border = isRemaining ? accent.withOpacity(0.55) : accent.withOpacity(0.35);
+                final isRemaining =
+                    i < _filledTiles; // color mapping (remaining vs used)
+                final color = isRemaining
+                    ? accent.withOpacity(0.85)
+                    : accent.withOpacity(0.18);
+                final border = isRemaining
+                    ? accent.withOpacity(0.55)
+                    : accent.withOpacity(0.35);
 
                 // Per-tile icon and rotation for character
                 final icon = iconPool[renderIndex % iconPool.length];
                 double rot = 0.0;
                 if (t < dropDur) {
-                  rot = lerpDouble(-0.35, 0.0, Curves.easeOutBack.transform((t / dropDur).clamp(0.0, 1.0)))!;
+                  rot = lerpDouble(
+                      -0.35,
+                      0.0,
+                      Curves.easeOutBack
+                          .transform((t / dropDur).clamp(0.0, 1.0)))!;
                 } else if (t < dropDur + holdDur) {
                   rot = 0.0;
                 } else if (t < dropDur + holdDur + fadeDur) {
-                  rot = lerpDouble(0.0, 0.1, ((t - dropDur - holdDur) / fadeDur).clamp(0.0, 1.0))!;
+                  rot = lerpDouble(0.0, 0.1,
+                      ((t - dropDur - holdDur) / fadeDur).clamp(0.0, 1.0))!;
                 }
 
                 return Opacity(
@@ -195,14 +227,24 @@ class _LeaveHeroAnimationState extends State<LeaveHeroAnimation>
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(color: border, width: 1),
                           boxShadow: [
-                            BoxShadow(color: accent.withOpacity(0.1), blurRadius: 10, spreadRadius: 0, offset: const Offset(0, 6)),
+                            BoxShadow(
+                                color: accent.withOpacity(0.1),
+                                blurRadius: 10,
+                                spreadRadius: 0,
+                                offset: const Offset(0, 6)),
                           ],
                         ),
                         child: Stack(children: [
                           // Calendar nubs
                           if (widget.mode == LeaveHeroMode.calendar) ...[
-                            Positioned(top: 6, left: 8, child: _nub(isRemaining ? Colors.white : onBg)),
-                            Positioned(top: 6, right: 8, child: _nub(isRemaining ? Colors.white : onBg)),
+                            Positioned(
+                                top: 6,
+                                left: 8,
+                                child: _nub(isRemaining ? Colors.white : onBg)),
+                            Positioned(
+                                top: 6,
+                                right: 8,
+                                child: _nub(isRemaining ? Colors.white : onBg)),
                           ],
                           // Icon in the tile
                           Center(
@@ -248,7 +290,8 @@ class _LeaveHeroAnimationState extends State<LeaveHeroAnimation>
             opacity: overlayOpacity,
             child: CustomPaint(
               size: Size(double.infinity, gridHeight),
-              painter: _SilhouettePainter(mode: widget.mode, color: accent.withOpacity(0.75)),
+              painter: _SilhouettePainter(
+                  mode: widget.mode, color: accent.withOpacity(0.75)),
             ),
           ),
         ),
@@ -266,7 +309,8 @@ class _LeaveHeroAnimationState extends State<LeaveHeroAnimation>
           if (widget.showLabels)
             Text(
               '${(widget.allocated - widget.used).clamp(0, widget.allocated).toStringAsFixed(1)} remaining of ${widget.allocated}',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: onBg),
+              style:
+                  Theme.of(context).textTheme.bodySmall?.copyWith(color: onBg),
             )
         ],
       ),
@@ -274,7 +318,10 @@ class _LeaveHeroAnimationState extends State<LeaveHeroAnimation>
   }
 
   Widget _nub(Color color) {
-    return Container(width: 6, height: 6, decoration: BoxDecoration(color: color, shape: BoxShape.circle));
+    return Container(
+        width: 6,
+        height: 6,
+        decoration: BoxDecoration(color: color, shape: BoxShape.circle));
   }
 }
 
@@ -295,10 +342,13 @@ class _SilhouettePainter extends CustomPainter {
     final h = rect.height;
 
     if (mode == LeaveHeroMode.calendar) {
-      final r = RRect.fromRectAndRadius(Rect.fromLTWH(w * 0.02, h * 0.02, w * 0.96, h * 0.96), const Radius.circular(16));
+      final r = RRect.fromRectAndRadius(
+          Rect.fromLTWH(w * 0.02, h * 0.02, w * 0.96, h * 0.96),
+          const Radius.circular(16));
       canvas.drawRRect(r, paint);
       // Header bar
-      canvas.drawLine(Offset(w * 0.02, h * 0.20), Offset(w * 0.98, h * 0.20), paint);
+      canvas.drawLine(
+          Offset(w * 0.02, h * 0.20), Offset(w * 0.98, h * 0.20), paint);
       // Binder rings
       final ringPaint = Paint()
         ..color = color

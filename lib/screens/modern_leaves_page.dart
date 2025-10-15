@@ -15,7 +15,8 @@ class ModernLeavesPage extends StatefulWidget {
   State<ModernLeavesPage> createState() => _ModernLeavesPageState();
 }
 
-class _ModernLeavesPageState extends State<ModernLeavesPage> with TickerProviderStateMixin {
+class _ModernLeavesPageState extends State<ModernLeavesPage>
+    with TickerProviderStateMixin {
   late TabController _tabController;
   bool _isLoading = true;
   Map<String, dynamic>? _leaveBalance;
@@ -30,25 +31,25 @@ class _ModernLeavesPageState extends State<ModernLeavesPage> with TickerProvider
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _loadLeavesData();
-    
+
     // Listen to outbox queue changes
     OutboxQueue.events.listen((_) {
       if (mounted) _loadLeavesData();
     });
-    
+
     // Auto-refresh every 30 seconds
     _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
       if (mounted) _loadLeavesData();
     });
   }
-  
+
   @override
   void dispose() {
     _tabController.dispose();
     _refreshTimer?.cancel();
     super.dispose();
   }
-  
+
   Future<void> _loadLeavesData() async {
     try {
       final results = await Future.wait([
@@ -57,7 +58,7 @@ class _ModernLeavesPageState extends State<ModernLeavesPage> with TickerProvider
         LeavesService.leaveTypes(),
         _checkApprovalRights(),
       ]);
-      
+
       if (mounted) {
         setState(() {
           _leaveBalance = results[0] as Map<String, dynamic>?;
@@ -66,7 +67,7 @@ class _ModernLeavesPageState extends State<ModernLeavesPage> with TickerProvider
           _isLoading = false;
         });
       }
-      
+
       if (_canApprove) {
         final teamLeaves = await LeavesService.teamLeaves();
         if (mounted) {
@@ -84,7 +85,7 @@ class _ModernLeavesPageState extends State<ModernLeavesPage> with TickerProvider
       }
     }
   }
-  
+
   Future<bool> _checkApprovalRights() async {
     try {
       // You can implement role checking logic here
@@ -94,7 +95,7 @@ class _ModernLeavesPageState extends State<ModernLeavesPage> with TickerProvider
       return false;
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return UniversalScaffold(
@@ -116,7 +117,7 @@ class _ModernLeavesPageState extends State<ModernLeavesPage> with TickerProvider
           ),
         ],
       ),
-      body: _isLoading 
+      body: _isLoading
           ? const UniversalLoading(message: 'Loading leaves data...')
           : SafeArea(
               child: Column(
@@ -143,8 +144,7 @@ class _ModernLeavesPageState extends State<ModernLeavesPage> with TickerProvider
       ),
     );
   }
-  
-  
+
   Widget _buildTabBar() {
     return AppThemeUnified.glassContainer(
       margin: const EdgeInsets.symmetric(horizontal: AppThemeUnified.spaceMD),
@@ -170,7 +170,7 @@ class _ModernLeavesPageState extends State<ModernLeavesPage> with TickerProvider
       ),
     );
   }
-  
+
   Widget _buildMyLeavesTab() {
     return RefreshIndicator(
       onRefresh: _loadLeavesData,
@@ -185,10 +185,10 @@ class _ModernLeavesPageState extends State<ModernLeavesPage> with TickerProvider
             // Quick Stats
             _buildQuickStats(),
             ModernDesignSystem.verticalSpaceLG,
-            
+
             // Leave Applications
             _buildLeaveApplications(),
-            
+
             // Bottom spacing for FAB
             const SizedBox(height: 80),
           ],
@@ -196,7 +196,7 @@ class _ModernLeavesPageState extends State<ModernLeavesPage> with TickerProvider
       ),
     );
   }
-  
+
   Widget _buildLeaveBalanceTab() {
     return RefreshIndicator(
       onRefresh: _loadLeavesData,
@@ -210,12 +210,12 @@ class _ModernLeavesPageState extends State<ModernLeavesPage> with TickerProvider
             // Leave Balance Cards
             if (_leaveBalance != null)
               LeaveBalanceCard(balances: _leaveBalance),
-            
+
             ModernDesignSystem.verticalSpaceLG,
-            
+
             // Leave Policy Info
             _buildLeavePolicyInfo(),
-            
+
             // Bottom spacing for FAB
             const SizedBox(height: 80),
           ],
@@ -223,7 +223,7 @@ class _ModernLeavesPageState extends State<ModernLeavesPage> with TickerProvider
       ),
     );
   }
-  
+
   Widget _buildQuickStats() {
     final pendingCount = _myLeaves.where((leave) {
       if (leave is Map) {
@@ -232,7 +232,7 @@ class _ModernLeavesPageState extends State<ModernLeavesPage> with TickerProvider
       }
       return false;
     }).length;
-    
+
     final approvedCount = _myLeaves.where((leave) {
       if (leave is Map) {
         final status = (leave['status']?.toString() ?? '').toLowerCase();
@@ -240,58 +240,60 @@ class _ModernLeavesPageState extends State<ModernLeavesPage> with TickerProvider
       }
       return false;
     }).length;
-    
+
     final totalLeaves = _getTotalLeaveBalance();
-    
+
     return ModernHeroCard(
       title: 'Leave Summary',
       icon: Icons.analytics,
       child: Row(
         children: [
           Expanded(
-            child: _buildStatCard('Total Balance', totalLeaves, Icons.event_available, ModernDesignSystem.success),
+            child: _buildStatCard('Total Balance', totalLeaves,
+                Icons.event_available, ModernDesignSystem.success),
           ),
           SizedBox(width: AppThemeUnified.spaceXS),
           Expanded(
-            child: _buildStatCard('Pending', pendingCount.toString(), Icons.hourglass_empty, ModernDesignSystem.warning),
+            child: _buildStatCard('Pending', pendingCount.toString(),
+                Icons.hourglass_empty, ModernDesignSystem.warning),
           ),
           SizedBox(width: AppThemeUnified.spaceXS),
           Expanded(
-            child: _buildStatCard('Approved', approvedCount.toString(), Icons.check_circle, ModernDesignSystem.success),
+            child: _buildStatCard('Approved', approvedCount.toString(),
+                Icons.check_circle, ModernDesignSystem.success),
           ),
         ],
       ),
     );
   }
-  
-  Widget _buildStatCard(String label, String value, IconData icon, Color color) {
+
+  Widget _buildStatCard(
+      String label, String value, IconData icon, Color color) {
     return AppThemeUnified.glassContainer(
       padding: EdgeInsets.all(AppThemeUnified.spaceMD),
-      color: Colors.white,
-      opacity: 0.9,
       child: Column(
         children: [
           Container(
             padding: EdgeInsets.all(AppThemeUnified.spaceXS),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withOpacity(0.2),
               borderRadius: BorderRadius.circular(AppThemeUnified.radiusXS),
             ),
-            child: Icon(icon, color: color, size: 20),
+            child: Icon(icon, color: AppThemeUnified.textPrimary, size: 20),
           ),
           SizedBox(height: AppThemeUnified.spaceXS),
           Text(
             value,
             style: AppThemeUnified.headlineSmall.copyWith(
               fontWeight: FontWeight.w700,
-              color: color,
+              color: AppThemeUnified.textPrimary,
             ),
           ),
           SizedBox(height: AppThemeUnified.spaceXS / 2),
           Text(
             label,
             style: AppThemeUnified.labelMedium.copyWith(
-              color: AppThemeUnified.textSecondary.withOpacity(0.8),
+              color: AppThemeUnified.textSecondary,
               fontWeight: FontWeight.w500,
             ),
             textAlign: TextAlign.center,
@@ -300,7 +302,7 @@ class _ModernLeavesPageState extends State<ModernLeavesPage> with TickerProvider
       ),
     );
   }
-  
+
   Widget _buildLeaveApplications() {
     if (_myLeaves.isEmpty) {
       return ModernEmptyState(
@@ -311,7 +313,7 @@ class _ModernLeavesPageState extends State<ModernLeavesPage> with TickerProvider
         onAction: _showApplyLeaveForm,
       );
     }
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -320,12 +322,12 @@ class _ModernLeavesPageState extends State<ModernLeavesPage> with TickerProvider
           subtitle: '${_myLeaves.length} applications',
           icon: Icons.list_alt,
         ),
-        
-        ..._myLeaves.map((leave) => _buildLeaveItem(leave as Map<String, dynamic>)),
+        ..._myLeaves
+            .map((leave) => _buildLeaveItem(leave as Map<String, dynamic>)),
       ],
     );
   }
-  
+
   Widget _buildLeaveItem(Map<String, dynamic> leave) {
     final status = leave['status']?.toString() ?? '';
     final leaveType = leave['leave_type']?.toString() ?? '';
@@ -333,10 +335,10 @@ class _ModernLeavesPageState extends State<ModernLeavesPage> with TickerProvider
     final toDate = leave['to_date']?.toString() ?? '';
     final totalDays = leave['total_leave_days']?.toString() ?? '0';
     final reason = leave['description']?.toString() ?? '';
-    
+
     Color statusColor = ModernDesignSystem.neutralMedium;
     IconData statusIcon = Icons.info;
-    
+
     switch (status.toLowerCase()) {
       case 'approved':
       case 'sanctioned':
@@ -355,7 +357,7 @@ class _ModernLeavesPageState extends State<ModernLeavesPage> with TickerProvider
         statusIcon = Icons.hourglass_empty;
         break;
     }
-    
+
     return ModernInfoCard(
       title: leaveType,
       subtitle: '$fromDate to $toDate ($totalDays days)',
@@ -364,21 +366,24 @@ class _ModernLeavesPageState extends State<ModernLeavesPage> with TickerProvider
       icon: Icons.event_note,
       iconColor: statusColor,
       margin: const EdgeInsets.only(bottom: ModernDesignSystem.spaceSM),
-      actions: status.toLowerCase() == 'draft' || status.toLowerCase() == 'open' ? [
-        TextButton.icon(
-          onPressed: () => _cancelLeave(leave),
-          icon: const Icon(Icons.cancel, size: 16),
-          label: const Text('Cancel'),
-          style: TextButton.styleFrom(
-            foregroundColor: ModernDesignSystem.error,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-          ),
-        ),
-      ] : null,
+      actions: status.toLowerCase() == 'draft' || status.toLowerCase() == 'open'
+          ? [
+              TextButton.icon(
+                onPressed: () => _cancelLeave(leave),
+                icon: const Icon(Icons.cancel, size: 16),
+                label: const Text('Cancel'),
+                style: TextButton.styleFrom(
+                  foregroundColor: ModernDesignSystem.error,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                ),
+              ),
+            ]
+          : null,
       onTap: () => _showLeaveDetails(leave),
     );
   }
-  
+
   Widget _buildLeavePolicyInfo() {
     if (_leaveTypes.isEmpty) {
       return ModernEmptyState(
@@ -387,7 +392,7 @@ class _ModernLeavesPageState extends State<ModernLeavesPage> with TickerProvider
         subtitle: 'Leave type information will appear here',
       );
     }
-    
+
     return ModernHeroCard(
       title: 'Leave Types',
       icon: Icons.policy,
@@ -395,17 +400,21 @@ class _ModernLeavesPageState extends State<ModernLeavesPage> with TickerProvider
         children: _leaveTypes.asMap().entries.map((entry) {
           final index = entry.key;
           final leaveType = entry.value.toString();
-          
+
           // Dynamic icons based on leave type
           IconData getIcon(String type) {
             final lowerType = type.toLowerCase();
-            if (lowerType.contains('annual') || lowerType.contains('vacation')) {
+            if (lowerType.contains('annual') ||
+                lowerType.contains('vacation')) {
               return Icons.beach_access;
-            } else if (lowerType.contains('sick') || lowerType.contains('medical')) {
+            } else if (lowerType.contains('sick') ||
+                lowerType.contains('medical')) {
               return Icons.local_hospital;
-            } else if (lowerType.contains('casual') || lowerType.contains('personal')) {
+            } else if (lowerType.contains('casual') ||
+                lowerType.contains('personal')) {
               return Icons.person;
-            } else if (lowerType.contains('maternity') || lowerType.contains('paternity')) {
+            } else if (lowerType.contains('maternity') ||
+                lowerType.contains('paternity')) {
               return Icons.family_restroom;
             } else if (lowerType.contains('emergency')) {
               return Icons.warning;
@@ -413,7 +422,7 @@ class _ModernLeavesPageState extends State<ModernLeavesPage> with TickerProvider
               return Icons.event_available;
             }
           }
-          
+
           // Dynamic colors
           final colors = [
             ModernDesignSystem.primaryTeal,
@@ -423,20 +432,21 @@ class _ModernLeavesPageState extends State<ModernLeavesPage> with TickerProvider
             ModernDesignSystem.error,
           ];
           final color = colors[index % colors.length];
-          
+
           // Dynamic descriptions based on balance data
           String getDescription(String type) {
             if (_leaveBalance != null && _leaveBalance!.containsKey(type)) {
               final balance = _leaveBalance![type];
               if (balance is Map) {
-                final allocated = balance['allocated_leaves']?.toString() ?? '0';
+                final allocated =
+                    balance['allocated_leaves']?.toString() ?? '0';
                 final remaining = balance['balance_leaves']?.toString() ?? '0';
                 return '$remaining of $allocated days remaining';
               }
             }
             return 'Available for use as per policy';
           }
-          
+
           return Column(
             children: [
               if (index > 0) ModernDesignSystem.verticalSpaceSM,
@@ -452,8 +462,9 @@ class _ModernLeavesPageState extends State<ModernLeavesPage> with TickerProvider
       ),
     );
   }
-  
-  Widget _buildPolicyItem(String title, String description, IconData icon, Color color) {
+
+  Widget _buildPolicyItem(
+      String title, String description, IconData icon, Color color) {
     return Row(
       children: [
         Container(
@@ -471,15 +482,15 @@ class _ModernLeavesPageState extends State<ModernLeavesPage> with TickerProvider
             children: [
               Text(
                 title,
-                style: ModernDesignSystem.labelLarge.copyWith(
+                style: AppThemeUnified.labelLarge.copyWith(
                   fontWeight: FontWeight.w600,
-                  color: ModernDesignSystem.getTextPrimary(Theme.of(context).brightness),
+                  color: AppThemeUnified.textPrimary,
                 ),
               ),
               Text(
                 description,
-                style: ModernDesignSystem.bodySmall.copyWith(
-                  color: ModernDesignSystem.getTextSecondary(Theme.of(context).brightness),
+                style: AppThemeUnified.bodySmall.copyWith(
+                  color: AppThemeUnified.textSecondary,
                 ),
               ),
             ],
@@ -488,28 +499,30 @@ class _ModernLeavesPageState extends State<ModernLeavesPage> with TickerProvider
       ],
     );
   }
-  
+
   String _getTotalLeaveBalance() {
     if (_leaveBalance == null) return '0';
-    
+
     int total = 0;
     _leaveBalance!.forEach((key, value) {
       if (value is Map && value['remaining_leaves'] != null) {
         total += (value['remaining_leaves'] as num).round();
       }
     });
-    
+
     return total.toString();
   }
-  
+
   void _showApplyLeaveForm() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => const ApplyLeaveFormPage(),
-      ),
-    ).then((_) => _loadLeavesData());
+    Navigator.of(context)
+        .push(
+          MaterialPageRoute(
+            builder: (context) => const ApplyLeaveFormPage(),
+          ),
+        )
+        .then((_) => _loadLeavesData());
   }
-  
+
   void _showLeaveDetails(Map<String, dynamic> leave) {
     showModalBottomSheet(
       context: context,
@@ -518,23 +531,40 @@ class _ModernLeavesPageState extends State<ModernLeavesPage> with TickerProvider
       builder: (context) => LeaveDetailsBottomSheet(leave: leave),
     );
   }
-  
+
   Future<void> _cancelLeave(Map<String, dynamic> leave) async {
     final name = leave['name']?.toString();
     if (name == null || name.isEmpty) return;
-    
+
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
+        backgroundColor: AppThemeUnified.glassLight,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
+          borderRadius: BorderRadius.circular(AppThemeUnified.radiusMD),
+          side: BorderSide(color: AppThemeUnified.glassBorder, width: 1),
         ),
-        title: const Text('Cancel Leave Application'),
-        content: const Text('Are you sure you want to cancel this leave application?'),
+        title: Text(
+          'Cancel Leave Application',
+          style: AppThemeUnified.headlineSmall.copyWith(
+            color: AppThemeUnified.textPrimary,
+          ),
+        ),
+        content: Text(
+          'Are you sure you want to cancel this leave application?',
+          style: AppThemeUnified.bodyMedium.copyWith(
+            color: AppThemeUnified.textSecondary,
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('No'),
+            child: Text(
+              'No',
+              style: AppThemeUnified.labelLarge.copyWith(
+                color: AppThemeUnified.textSecondary,
+              ),
+            ),
           ),
           ModernPrimaryButton(
             text: 'Yes, Cancel',
@@ -547,7 +577,7 @@ class _ModernLeavesPageState extends State<ModernLeavesPage> with TickerProvider
         ],
       ),
     );
-    
+
     if (confirm == true) {
       try {
         await LeavesService.cancelLeaveApplication(name);
@@ -574,7 +604,7 @@ class _ModernLeavesPageState extends State<ModernLeavesPage> with TickerProvider
 // Apply Leave Form Page
 class ApplyLeaveFormPage extends StatefulWidget {
   const ApplyLeaveFormPage({super.key});
-  
+
   @override
   State<ApplyLeaveFormPage> createState() => _ApplyLeaveFormPageState();
 }
@@ -582,27 +612,27 @@ class ApplyLeaveFormPage extends StatefulWidget {
 class _ApplyLeaveFormPageState extends State<ApplyLeaveFormPage> {
   final _formKey = GlobalKey<FormState>();
   final _reasonController = TextEditingController();
-  
+
   String? _selectedLeaveType;
   DateTime? _fromDate;
   DateTime? _toDate;
   bool _isSubmitting = false;
   bool _isLoadingLeaveTypes = true;
-  
+
   List<String> _leaveTypes = [];
-  
+
   @override
   void initState() {
     super.initState();
     _loadLeaveTypes();
   }
-  
+
   @override
   void dispose() {
     _reasonController.dispose();
     super.dispose();
   }
-  
+
   Future<void> _loadLeaveTypes() async {
     try {
       final types = await LeavesService.leaveTypes();
@@ -617,7 +647,7 @@ class _ApplyLeaveFormPageState extends State<ApplyLeaveFormPage> {
         setState(() {
           _leaveTypes = [
             'Annual Leave',
-            'Sick Leave', 
+            'Sick Leave',
             'Casual Leave',
             'Maternity Leave',
             'Paternity Leave',
@@ -628,7 +658,7 @@ class _ApplyLeaveFormPageState extends State<ApplyLeaveFormPage> {
       }
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -636,7 +666,7 @@ class _ApplyLeaveFormPageState extends State<ApplyLeaveFormPage> {
         children: [
           // Royal blue gradient wallpaper background
           AppThemeUnified.wallpaperBackground,
-          
+
           // Main content
           SafeArea(
             child: Column(
@@ -645,7 +675,6 @@ class _ApplyLeaveFormPageState extends State<ApplyLeaveFormPage> {
                   title: 'Apply for Leave',
                   showBackButton: true,
                 ),
-                
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.all(ModernDesignSystem.spaceMD),
@@ -655,13 +684,10 @@ class _ApplyLeaveFormPageState extends State<ApplyLeaveFormPage> {
                         children: [
                           _buildLeaveTypeSelector(),
                           ModernDesignSystem.verticalSpaceMD,
-                          
                           _buildDateSelectors(),
                           ModernDesignSystem.verticalSpaceMD,
-                          
                           _buildReasonField(),
                           ModernDesignSystem.verticalSpaceXL,
-                          
                           _buildSubmitButton(),
                         ],
                       ),
@@ -675,7 +701,7 @@ class _ApplyLeaveFormPageState extends State<ApplyLeaveFormPage> {
       ),
     );
   }
-  
+
   Widget _buildLeaveTypeSelector() {
     return ModernHeroCard(
       title: 'Leave Type',
@@ -694,25 +720,32 @@ class _ApplyLeaveFormPageState extends State<ApplyLeaveFormPage> {
               decoration: InputDecoration(
                 hintText: 'Select leave type',
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(ModernDesignSystem.radiusSM),
-                  borderSide: BorderSide(color: ModernDesignSystem.getBorderColor(Theme.of(context).brightness)),
+                  borderRadius:
+                      BorderRadius.circular(ModernDesignSystem.radiusSM),
+                  borderSide: BorderSide(
+                      color: ModernDesignSystem.getBorderColor(
+                          Theme.of(context).brightness)),
                 ),
-                contentPadding: const EdgeInsets.all(ModernDesignSystem.spaceMD),
+                contentPadding:
+                    const EdgeInsets.all(ModernDesignSystem.spaceMD),
               ),
-              items: _leaveTypes.map((type) => DropdownMenuItem(
-                value: type,
-                child: Text(type),
-              )).toList(),
-            onChanged: (value) {
-              if (mounted) {
-                setState(() => _selectedLeaveType = value);
-              }
-            },
-              validator: (value) => value == null ? 'Please select a leave type' : null,
+              items: _leaveTypes
+                  .map((type) => DropdownMenuItem(
+                        value: type,
+                        child: Text(type),
+                      ))
+                  .toList(),
+              onChanged: (value) {
+                if (mounted) {
+                  setState(() => _selectedLeaveType = value);
+                }
+              },
+              validator: (value) =>
+                  value == null ? 'Please select a leave type' : null,
             ),
     );
   }
-  
+
   Widget _buildDateSelectors() {
     return ModernHeroCard(
       title: 'Leave Duration',
@@ -746,8 +779,9 @@ class _ApplyLeaveFormPageState extends State<ApplyLeaveFormPage> {
       ),
     );
   }
-  
-  Widget _buildDateSelector(String label, DateTime? date, Function(DateTime) onDateSelected) {
+
+  Widget _buildDateSelector(
+      String label, DateTime? date, Function(DateTime) onDateSelected) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -755,18 +789,20 @@ class _ApplyLeaveFormPageState extends State<ApplyLeaveFormPage> {
           label,
           style: ModernDesignSystem.labelLarge.copyWith(
             fontWeight: FontWeight.w500,
-            color: ModernDesignSystem.getTextPrimary(Theme.of(context).brightness),
+            color:
+                ModernDesignSystem.getTextPrimary(Theme.of(context).brightness),
           ),
         ),
         ModernDesignSystem.verticalSpaceXS,
-        
         InkWell(
           onTap: () => _selectDate(onDateSelected),
           borderRadius: BorderRadius.circular(ModernDesignSystem.radiusSM),
           child: Container(
             padding: const EdgeInsets.all(ModernDesignSystem.spaceMD),
             decoration: BoxDecoration(
-              border: Border.all(color: ModernDesignSystem.getBorderColor(Theme.of(context).brightness)),
+              border: Border.all(
+                  color: ModernDesignSystem.getBorderColor(
+                      Theme.of(context).brightness)),
               borderRadius: BorderRadius.circular(ModernDesignSystem.radiusSM),
             ),
             child: Row(
@@ -778,13 +814,15 @@ class _ApplyLeaveFormPageState extends State<ApplyLeaveFormPage> {
                 ),
                 ModernDesignSystem.horizontalSpaceXS,
                 Text(
-                  date != null 
+                  date != null
                       ? '${date.day}/${date.month}/${date.year}'
                       : 'Select date',
                   style: ModernDesignSystem.bodyMedium.copyWith(
-                    color: date != null 
-                        ? ModernDesignSystem.getTextPrimary(Theme.of(context).brightness)
-                        : ModernDesignSystem.getTextTertiary(Theme.of(context).brightness),
+                    color: date != null
+                        ? ModernDesignSystem.getTextPrimary(
+                            Theme.of(context).brightness)
+                        : ModernDesignSystem.getTextTertiary(
+                            Theme.of(context).brightness),
                   ),
                 ),
               ],
@@ -794,7 +832,7 @@ class _ApplyLeaveFormPageState extends State<ApplyLeaveFormPage> {
       ],
     );
   }
-  
+
   Widget _buildReasonField() {
     return ModernHeroCard(
       title: 'Reason for Leave',
@@ -815,7 +853,7 @@ class _ApplyLeaveFormPageState extends State<ApplyLeaveFormPage> {
       ),
     );
   }
-  
+
   Widget _buildSubmitButton() {
     return ModernPrimaryButton(
       text: 'Submit Leave Application',
@@ -824,7 +862,7 @@ class _ApplyLeaveFormPageState extends State<ApplyLeaveFormPage> {
       icon: Icons.send,
     );
   }
-  
+
   Future<void> _selectDate(Function(DateTime) onDateSelected) async {
     final date = await showDatePicker(
       context: context,
@@ -835,19 +873,19 @@ class _ApplyLeaveFormPageState extends State<ApplyLeaveFormPage> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: Theme.of(context).colorScheme.copyWith(
-              primary: ModernDesignSystem.primaryTeal,
-            ),
+                  primary: ModernDesignSystem.primaryTeal,
+                ),
           ),
           child: child!,
         );
       },
     );
-    
+
     if (date != null) {
       onDateSelected(date);
     }
   }
-  
+
   Future<void> _submitLeaveApplication() async {
     if (!_formKey.currentState!.validate()) return;
     if (_fromDate == null || _toDate == null) {
@@ -856,18 +894,18 @@ class _ApplyLeaveFormPageState extends State<ApplyLeaveFormPage> {
       );
       return;
     }
-    
+
     if (_fromDate!.isAfter(_toDate!)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('From date cannot be after to date')),
       );
       return;
     }
-    
+
     if (mounted) {
       setState(() => _isSubmitting = true);
     }
-    
+
     try {
       await LeavesService.applyLeave({
         'leave_type': _selectedLeaveType!,
@@ -875,7 +913,7 @@ class _ApplyLeaveFormPageState extends State<ApplyLeaveFormPage> {
         'to_date': _toDate!.toIso8601String().split('T')[0],
         'description': _reasonController.text.trim(),
       });
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -902,9 +940,9 @@ class _ApplyLeaveFormPageState extends State<ApplyLeaveFormPage> {
 // Leave Details Bottom Sheet
 class LeaveDetailsBottomSheet extends StatelessWidget {
   final Map<String, dynamic> leave;
-  
+
   const LeaveDetailsBottomSheet({super.key, required this.leave});
-  
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -923,7 +961,8 @@ class LeaveDetailsBottomSheet extends StatelessWidget {
             decoration: BoxDecoration(
               border: Border(
                 bottom: BorderSide(
-                  color: ModernDesignSystem.getBorderColor(Theme.of(context).brightness),
+                  color: ModernDesignSystem.getBorderColor(
+                      Theme.of(context).brightness),
                   width: 1,
                 ),
               ),
@@ -935,7 +974,8 @@ class LeaveDetailsBottomSheet extends StatelessWidget {
                     'Leave Details',
                     style: ModernDesignSystem.headlineMedium.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: ModernDesignSystem.getTextPrimary(Theme.of(context).brightness),
+                      color: ModernDesignSystem.getTextPrimary(
+                          Theme.of(context).brightness),
                     ),
                   ),
                 ),
@@ -946,20 +986,26 @@ class LeaveDetailsBottomSheet extends StatelessWidget {
               ],
             ),
           ),
-          
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(ModernDesignSystem.spaceMD),
               child: Column(
                 children: [
-                  _buildDetailItem(context, 'Leave Type', leave['leave_type']?.toString() ?? ''),
-                  _buildDetailItem(context, 'From Date', leave['from_date']?.toString() ?? ''),
-                  _buildDetailItem(context, 'To Date', leave['to_date']?.toString() ?? ''),
-                  _buildDetailItem(context, 'Total Days', leave['total_leave_days']?.toString() ?? '0'),
-                  _buildDetailItem(context, 'Status', leave['status']?.toString() ?? ''),
-                  _buildDetailItem(context, 'Reason', leave['description']?.toString() ?? ''),
+                  _buildDetailItem(context, 'Leave Type',
+                      leave['leave_type']?.toString() ?? ''),
+                  _buildDetailItem(context, 'From Date',
+                      leave['from_date']?.toString() ?? ''),
+                  _buildDetailItem(
+                      context, 'To Date', leave['to_date']?.toString() ?? ''),
+                  _buildDetailItem(context, 'Total Days',
+                      leave['total_leave_days']?.toString() ?? '0'),
+                  _buildDetailItem(
+                      context, 'Status', leave['status']?.toString() ?? ''),
+                  _buildDetailItem(context, 'Reason',
+                      leave['description']?.toString() ?? ''),
                   if (leave['posting_date'] != null)
-                    _buildDetailItem(context, 'Applied On', leave['posting_date']?.toString() ?? ''),
+                    _buildDetailItem(context, 'Applied On',
+                        leave['posting_date']?.toString() ?? ''),
                 ],
               ),
             ),
@@ -968,7 +1014,7 @@ class LeaveDetailsBottomSheet extends StatelessWidget {
       ),
     );
   }
-  
+
   Widget _buildDetailItem(BuildContext context, String label, String value) {
     return Container(
       margin: const EdgeInsets.only(bottom: ModernDesignSystem.spaceMD),
@@ -981,7 +1027,8 @@ class LeaveDetailsBottomSheet extends StatelessWidget {
               label,
               style: ModernDesignSystem.labelLarge.copyWith(
                 fontWeight: FontWeight.w500,
-                color: ModernDesignSystem.getTextSecondary(Theme.of(context).brightness),
+                color: ModernDesignSystem.getTextSecondary(
+                    Theme.of(context).brightness),
               ),
             ),
           ),
@@ -989,7 +1036,8 @@ class LeaveDetailsBottomSheet extends StatelessWidget {
             child: Text(
               value,
               style: ModernDesignSystem.bodyMedium.copyWith(
-                color: ModernDesignSystem.getTextPrimary(Theme.of(context).brightness),
+                color: ModernDesignSystem.getTextPrimary(
+                    Theme.of(context).brightness),
               ),
             ),
           ),

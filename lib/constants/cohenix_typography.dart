@@ -4,16 +4,15 @@ import 'cohenix_colors.dart';
 
 /// Cohenix Typography System
 /// Based on the official Cohenix Style Guide
-/// 
+///
 /// Primary Typeface: Lato - For logos and headers in formal communication
 /// Secondary Typeface: Open Sans - For formal communication and multi-media artifacts
 /// Electronic Typeface: Verdana - For Word, Excel, PowerPoint, and e-mailed materials
 class CohenixTypography {
-  
   // =============================================================================
   // DISPLAY STYLES - Large headings (Lato)
   // =============================================================================
-  
+
   static TextStyle displayLarge = GoogleFonts.lato(
     fontSize: 32.0,
     fontWeight: FontWeight.w800,
