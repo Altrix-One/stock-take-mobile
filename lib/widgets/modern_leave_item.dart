@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'dart:ui';
+import 'package:stock_count/constants/app_theme_unified.dart';
 
 class ModernLeaveItem extends StatelessWidget {
   final Map<String, dynamic> leave;
@@ -133,7 +135,6 @@ class ModernLeaveItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final leaveType = leave['leave_type']?.toString() ?? 'Unknown';
     final fromDate = leave['from_date']?.toString();
     final toDate = leave['to_date']?.toString();
@@ -146,207 +147,223 @@ class ModernLeaveItem extends StatelessWidget {
     final canCancel =
         status.toLowerCase() == 'pending' || status.toLowerCase() == 'open';
 
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header row with leave type and status
-              Row(
-                children: [
-                  // Leave type icon and name
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          theme.colorScheme.primary,
-                          theme.colorScheme.primary.withOpacity(0.8),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: theme.colorScheme.primary.withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Icon(
-                      _getLeaveIcon(leaveType),
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
+      child: AppThemeUnified.glassContainer(
+        borderRadius: AppThemeUnified.radiusMD,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(AppThemeUnified.radiusMD),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppThemeUnified.glassLight,
+                borderRadius: BorderRadius.circular(AppThemeUnified.radiusMD),
+                border: Border.all(
+                  color: AppThemeUnified.glassBorder,
+                  width: 1,
+                ),
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(AppThemeUnified.radiusMD),
+                  onTap: onTap,
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          leaveType,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 16,
-                          ),
+                        // Header row with leave type and status
+                        Row(
+                          children: [
+                            // Leave type icon and name
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: AppThemeUnified.glassLight,
+                                borderRadius: BorderRadius.circular(
+                                    AppThemeUnified.radiusSM),
+                                border: Border.all(
+                                  color: AppThemeUnified.glassBorder,
+                                  width: 1,
+                                ),
+                              ),
+                              child: Icon(
+                                _getLeaveIcon(leaveType),
+                                color: AppThemeUnified.textPrimary,
+                                size: 24,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    leaveType,
+                                    style: AppThemeUnified.titleMedium.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                      color: AppThemeUnified.textPrimary,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    _formatDateRange(fromDate, toDate),
+                                    style: AppThemeUnified.bodyMedium.copyWith(
+                                      color: AppThemeUnified.textSecondary,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            // Status badge
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: statusColor.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: statusColor.withOpacity(0.3),
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    _getStatusIcon(status),
+                                    size: 14,
+                                    color: statusColor,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    status,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: statusColor,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 2),
-                        Text(
-                          _formatDateRange(fromDate, toDate),
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Status badge
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: statusColor.withOpacity(0.3),
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          _getStatusIcon(status),
-                          size: 14,
-                          color: statusColor,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          status,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: statusColor,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
 
-              const SizedBox(height: 16),
+                        const SizedBox(height: 16),
 
-              // Stats row
-              Row(
-                children: [
-                  Expanded(
-                    child: _statItem(
-                      context,
-                      'Duration',
-                      '${days.toStringAsFixed(0)} ${days == 1 ? 'day' : 'days'}',
-                      Icons.calendar_today_rounded,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  if (fromDate != null)
-                    Expanded(
-                      child: _statItem(
-                        context,
-                        'From',
-                        _formatDate(fromDate),
-                        Icons.play_arrow_rounded,
-                      ),
-                    ),
-                  const SizedBox(width: 16),
-                  if (toDate != null)
-                    Expanded(
-                      child: _statItem(
-                        context,
-                        'To',
-                        _formatDate(toDate),
-                        Icons.stop_rounded,
-                      ),
-                    ),
-                ],
-              ),
+                        // Stats row
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _statItem(
+                                context,
+                                'Duration',
+                                '${days.toStringAsFixed(0)} ${days == 1 ? 'day' : 'days'}',
+                                Icons.calendar_today_rounded,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            if (fromDate != null)
+                              Expanded(
+                                child: _statItem(
+                                  context,
+                                  'From',
+                                  _formatDate(fromDate),
+                                  Icons.play_arrow_rounded,
+                                ),
+                              ),
+                            const SizedBox(width: 16),
+                            if (toDate != null)
+                              Expanded(
+                                child: _statItem(
+                                  context,
+                                  'To',
+                                  _formatDate(toDate),
+                                  Icons.stop_rounded,
+                                ),
+                              ),
+                          ],
+                        ),
 
-              // Reason (if available)
-              if (reason.isNotEmpty) ...[
-                const SizedBox(height: 16),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: theme.colorScheme.outline.withOpacity(0.2),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.notes_rounded,
-                            size: 16,
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            'Reason',
-                            style: theme.textTheme.labelMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: theme.colorScheme.onSurfaceVariant,
+                        // Reason (if available)
+                        if (reason.isNotEmpty) ...[
+                          const SizedBox(height: 16),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppThemeUnified.glassLight,
+                              borderRadius: BorderRadius.circular(
+                                  AppThemeUnified.radiusSM),
+                              border: Border.all(
+                                color: AppThemeUnified.glassBorder,
+                                width: 1,
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.notes_rounded,
+                                      size: 18,
+                                      color: AppThemeUnified.textSecondary,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      'Reason',
+                                      style:
+                                          AppThemeUnified.labelMedium.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        color: AppThemeUnified.textSecondary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  reason,
+                                  style: AppThemeUnified.bodySmall.copyWith(
+                                    color: AppThemeUnified.textSecondary,
+                                    height: 1.4,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        reason,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant
-                              .withOpacity(0.8),
-                          height: 1.4,
-                        ),
-                      ),
-                    ],
+
+                        // Action buttons (if available)
+                        if (canCancel && onCancel != null) ...[
+                          const SizedBox(height: 16),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              TextButton.icon(
+                                onPressed: onCancel,
+                                icon:
+                                    const Icon(Icons.cancel_outlined, size: 16),
+                                label: const Text('Cancel'),
+                                style: TextButton.styleFrom(
+                                  foregroundColor: AppThemeUnified.error,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 8),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
                   ),
                 ),
-              ],
-
-              // Action buttons (if available)
-              if (canCancel && onCancel != null) ...[
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton.icon(
-                      onPressed: onCancel,
-                      icon: const Icon(Icons.cancel_outlined, size: 16),
-                      label: const Text('Cancel'),
-                      style: TextButton.styleFrom(
-                        foregroundColor: theme.colorScheme.error,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ],
+              ),
+            ),
           ),
         ),
       ),
@@ -355,39 +372,38 @@ class ModernLeaveItem extends StatelessWidget {
 
   Widget _statItem(
       BuildContext context, String label, String value, IconData icon) {
-    final theme = Theme.of(context);
-
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: theme.colorScheme.primaryContainer.withOpacity(0.3),
-        borderRadius: BorderRadius.circular(10),
+        color: AppThemeUnified.glassLight,
+        borderRadius: BorderRadius.circular(AppThemeUnified.radiusSM),
         border: Border.all(
-          color: theme.colorScheme.primary.withOpacity(0.1),
+          color: AppThemeUnified.glassBorder,
+          width: 1,
         ),
       ),
       child: Column(
         children: [
           Icon(
             icon,
-            size: 18,
-            color: theme.colorScheme.primary,
+            size: 20,
+            color: AppThemeUnified.textPrimary,
           ),
           const SizedBox(height: 6),
           Text(
             value,
-            style: TextStyle(
-              fontSize: 13,
+            style: AppThemeUnified.bodyMedium.copyWith(
               fontWeight: FontWeight.w700,
-              color: theme.colorScheme.primary,
+              color: AppThemeUnified.textPrimary,
+              shadows: AppThemeUnified.textShadow,
             ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 2),
           Text(
             label,
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
+            style: AppThemeUnified.labelSmall.copyWith(
+              color: AppThemeUnified.textSecondary,
               fontWeight: FontWeight.w600,
             ),
             textAlign: TextAlign.center,

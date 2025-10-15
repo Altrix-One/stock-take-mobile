@@ -24,8 +24,6 @@ class ModernPrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final brightness = Theme.of(context).brightness;
-
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -33,8 +31,8 @@ class ModernPrimaryButton extends StatelessWidget {
             ? null
             : LinearGradient(
                 colors: [
-                  ModernDesignSystem.primaryNavy,
-                  ModernDesignSystem.primaryTeal,
+                  AppThemeUnified.primaryRoyalBlue,
+                  AppThemeUnified.primaryRoyalBlue.withOpacity(0.85),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -108,8 +106,6 @@ class ModernSecondaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final brightness = Theme.of(context).brightness;
-
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(

@@ -713,7 +713,12 @@ class _NewClaimFormPageState extends State<NewClaimFormPage> {
             widget.existingClaim != null ? 'Edit Claim' : 'New Expense Claim',
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.fromLTRB(
+          16,
+          MediaQuery.of(context).padding.top + kToolbarHeight + 16,
+          16,
+          16 + 100, // Extra bottom padding for navigation
+        ),
         child: Form(
           key: _formKey,
           child: Column(
