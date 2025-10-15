@@ -287,14 +287,13 @@ class _ModernHRDashboardState extends State<ModernHRDashboard>
 
   Widget _buildBottomNavigation() {
     final navItems = [
-      _NavItem(Icons.dashboard_rounded, Icons.dashboard_outlined, 'Dashboard'),
-      _NavItem(Icons.event_note_rounded, Icons.event_note_outlined, 'Leaves'),
+      _NavItem(Icons.dashboard, Icons.dashboard_outlined, 'Dashboard'),
+      _NavItem(Icons.calendar_month, Icons.calendar_month_outlined, 'Leaves'),
       _NavItem(Icons.access_time_filled, Icons.access_time, 'Attendance'),
-      _NavItem(
-          Icons.receipt_long_rounded, Icons.receipt_long_outlined, 'Claims'),
+      _NavItem(Icons.receipt, Icons.receipt_outlined, 'Claims'),
       if (_canApprove)
         _NavItem(Icons.verified, Icons.verified_outlined, 'Approvals'),
-      _NavItem(Icons.person_rounded, Icons.person_outline, 'Profile'),
+      _NavItem(Icons.person, Icons.person_outline, 'Profile'),
     ];
 
     return Container(
@@ -370,8 +369,8 @@ class _ModernHRDashboardState extends State<ModernHRDashboard>
                                     : item.inactiveIcon,
                                 color: isSelected
                                     ? AppThemeUnified.textPrimary
-                                    : AppThemeUnified.textTertiary,
-                                size: isSelected ? 22 : 20,
+                                    : AppThemeUnified.textSecondary,
+                                size: isSelected ? 24 : 22,
                               ),
                               if (showBadge)
                                 Positioned(
@@ -562,7 +561,7 @@ class _ModernHRDashboardState extends State<ModernHRDashboard>
       children: [
         ModernSectionHeader(
           title: 'Quick Overview',
-          icon: Icons.analytics_rounded,
+          icon: Icons.analytics,
         ),
         Row(
           children: [
@@ -574,7 +573,7 @@ class _ModernHRDashboardState extends State<ModernHRDashboard>
               child: ModernStatsCard(
                 label: 'Pending Claims',
                 value: _getPendingClaimsCount(),
-                icon: Icons.receipt_long,
+                icon: Icons.receipt,
                 color: ModernDesignSystem.warning,
                 isCompact: true,
               ),
@@ -603,7 +602,7 @@ class _ModernHRDashboardState extends State<ModernHRDashboard>
       children: [
         ModernSectionHeader(
           title: 'Quick Actions',
-          icon: Icons.flash_on,
+          icon: Icons.bolt,
         ),
         GridView.count(
           shrinkWrap: true,
@@ -615,19 +614,19 @@ class _ModernHRDashboardState extends State<ModernHRDashboard>
           children: [
             _buildActionButton(
               'Apply Leave',
-              Icons.event_note,
+              Icons.calendar_month,
               ModernDesignSystem.primaryTeal,
               () => _navigateToPage(1),
             ),
             _buildActionButton(
               'Submit Claim',
-              Icons.receipt_long,
+              Icons.receipt,
               ModernDesignSystem.success,
               () => _navigateToPage(3),
             ),
             _buildActionButton(
               'Check Attendance',
-              Icons.access_time,
+              Icons.access_time_filled,
               ModernDesignSystem.primaryNavy,
               () => _navigateToPage(2),
             ),
@@ -665,12 +664,11 @@ class _ModernHRDashboardState extends State<ModernHRDashboard>
         ),
         if (_recentLeaves.isNotEmpty) ...[
           _buildActivitySection(
-              'Recent Leave Applications', _recentLeaves, Icons.event_note),
+              'Recent Leave Applications', _recentLeaves, Icons.calendar_month),
           ModernDesignSystem.verticalSpaceSM,
         ],
         if (_recentClaims.isNotEmpty) ...[
-          _buildActivitySection(
-              'Recent Claims', _recentClaims, Icons.receipt_long),
+          _buildActivitySection('Recent Claims', _recentClaims, Icons.receipt),
           ModernDesignSystem.verticalSpaceSM,
         ],
         if (_canApprove && _teamApprovals.isNotEmpty) ...[
@@ -888,14 +886,14 @@ class _ModernHRDashboardState extends State<ModernHRDashboard>
                           AnimatedContainer(
                             duration: const Duration(milliseconds: 300),
                             padding:
-                                const EdgeInsets.all(AppThemeUnified.spaceXS),
+                                const EdgeInsets.all(AppThemeUnified.spaceSM),
                             decoration: BoxDecoration(
-                              color: AppThemeUnified.glassMedium,
+                              color: AppThemeUnified.glassLight,
                               borderRadius: BorderRadius.circular(
-                                  AppThemeUnified.radiusXS),
+                                  AppThemeUnified.radiusSM),
                               border: Border.all(
                                 color: AppThemeUnified.glassBorder,
-                                width: 0.5,
+                                width: 1,
                               ),
                             ),
                             child: Stack(
@@ -903,10 +901,10 @@ class _ModernHRDashboardState extends State<ModernHRDashboard>
                                 AnimatedSwitcher(
                                   duration: const Duration(milliseconds: 300),
                                   child: Icon(
-                                    Icons.event_available,
+                                    Icons.calendar_month,
                                     key: ValueKey(currentColor.value),
-                                    color: currentColor,
-                                    size: 16,
+                                    color: AppThemeUnified.textPrimary,
+                                    size: 20,
                                   ),
                                 ),
                                 // Stack indicator with dynamic color
@@ -973,7 +971,8 @@ class _ModernHRDashboardState extends State<ModernHRDashboard>
                               '${currentData['balance']}-${currentColor.value}'),
                           style: AppThemeUnified.headlineSmall.copyWith(
                             fontWeight: FontWeight.w700,
-                            color: currentColor,
+                            color: AppThemeUnified.textPrimary,
+                            shadows: AppThemeUnified.textShadow,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,

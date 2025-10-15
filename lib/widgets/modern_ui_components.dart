@@ -451,8 +451,8 @@ class ModernSectionHeader extends StatelessWidget {
               ),
               child: Icon(
                 icon!,
-                color: ModernDesignSystem.primaryTeal,
-                size: 16,
+                color: AppThemeUnified.textPrimary,
+                size: 20,
               ),
             ),
             ModernDesignSystem.horizontalSpaceXS,
@@ -464,7 +464,7 @@ class ModernSectionHeader extends StatelessWidget {
                 Text(
                   title,
                   style: ModernDesignSystem.headlineSmall.copyWith(
-                    color: ModernDesignSystem.getTextPrimary(brightness),
+                    color: AppThemeUnified.textPrimary,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -473,7 +473,7 @@ class ModernSectionHeader extends StatelessWidget {
                   Text(
                     subtitle!,
                     style: ModernDesignSystem.bodySmall.copyWith(
-                      color: ModernDesignSystem.getTextSecondary(brightness),
+                      color: AppThemeUnified.textSecondary,
                     ),
                   ),
                 ],
@@ -604,16 +604,20 @@ class ModernStatsCard extends StatelessWidget {
                         if (icon != null) ...[
                           Container(
                             padding:
-                                const EdgeInsets.all(AppThemeUnified.spaceXS),
+                                const EdgeInsets.all(AppThemeUnified.spaceSM),
                             decoration: BoxDecoration(
-                              color: cardColor.withOpacity(0.1),
+                              color: AppThemeUnified.glassLight,
                               borderRadius: BorderRadius.circular(
-                                  AppThemeUnified.radiusXS),
+                                  AppThemeUnified.radiusSM),
+                              border: Border.all(
+                                color: AppThemeUnified.glassBorder,
+                                width: 1,
+                              ),
                             ),
                             child: Icon(
                               icon,
-                              color: cardColor,
-                              size: isCompact ? 16 : 20,
+                              color: AppThemeUnified.textPrimary,
+                              size: isCompact ? 20 : 24,
                             ),
                           ),
                           SizedBox(
@@ -627,8 +631,9 @@ class ModernStatsCard extends StatelessWidget {
                                   ? AppThemeUnified.headlineSmall
                                   : AppThemeUnified.headlineLarge)
                               .copyWith(
-                            color: cardColor,
+                            color: AppThemeUnified.textPrimary,
                             fontWeight: FontWeight.w700,
+                            shadows: AppThemeUnified.textShadow,
                           ),
                         ),
                         const SizedBox(height: AppThemeUnified.spaceXS),
@@ -718,16 +723,20 @@ class ModernActionCard extends StatelessWidget {
                         if (icon != null) ...[
                           Container(
                             padding:
-                                const EdgeInsets.all(AppThemeUnified.spaceXS),
+                                const EdgeInsets.all(AppThemeUnified.spaceSM),
                             decoration: BoxDecoration(
-                              color: cardColor.withOpacity(0.1),
+                              color: AppThemeUnified.glassLight,
                               borderRadius: BorderRadius.circular(
-                                  AppThemeUnified.radiusXS),
+                                  AppThemeUnified.radiusSM),
+                              border: Border.all(
+                                color: AppThemeUnified.glassBorder,
+                                width: 1,
+                              ),
                             ),
                             child: Icon(
                               icon,
-                              color: cardColor,
-                              size: 18,
+                              color: AppThemeUnified.textPrimary,
+                              size: 22,
                             ),
                           ),
                           const SizedBox(width: AppThemeUnified.spaceSM),
