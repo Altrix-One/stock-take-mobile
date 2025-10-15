@@ -397,12 +397,9 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
                           Text(
                             item.label,
                             style: AppThemeUnified.labelSmall.copyWith(
-                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                              color: isSelected
-                                  ? AppThemeUnified.textPrimary
-                                  : AppThemeUnified.textTertiary,
+                              color: AppThemeUnified.textPrimary, // Always white text for visibility
+                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                             ),
-                            maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ],

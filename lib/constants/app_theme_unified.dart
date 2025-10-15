@@ -41,9 +41,9 @@ class AppThemeUnified {
   // =============================================================================
   
   /// Light glass containers (white-based)
-  static const Color glassLight = Color(0x1AFFFFFF);      // 10% white
-  static const Color glassMedium = Color(0x33FFFFFF);     // 20% white
-  static const Color glassBorder = Color(0x4DFFFFFF);     // 30% white
+  static const Color glassLight = Color(0x26FFFFFF);      // 15% white
+  static const Color glassMedium = Color(0x40FFFFFF);     // 25% white
+  static const Color glassBorder = Color(0x33FFFFFF);     // 20% white
   
   /// Dark glass containers (black-based) for contrast
   static const Color glassDark = Color(0x1A000000);       // 10% black

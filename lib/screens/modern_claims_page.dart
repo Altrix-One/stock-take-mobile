@@ -87,22 +87,26 @@ class _ModernClaimsPageState extends State<ModernClaimsPage> with TickerProvider
           ),
         ],
       ),
-      body: Column(
-        children: [
-          _buildTabBar(),
-          Expanded(
-            child: _isLoading 
-                ? const ModernLoadingIndicator(message: 'Loading claims data...')
-                : TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _buildMyClaimsTab(),
-                      _buildStatsTab(),
-                      _buildCategoriesTab(),
-                    ],
-                  ),
-          ),
-        ],
+      body: SafeArea(
+        child: Column(
+          children: [
+            const SizedBox(height: AppThemeUnified.spaceSM),
+            _buildTabBar(),
+            const SizedBox(height: AppThemeUnified.spaceMD),
+            Expanded(
+              child: _isLoading 
+                  ? const ModernLoadingIndicator(message: 'Loading claims data...')
+                  : TabBarView(
+                      controller: _tabController,
+                      children: [
+                        _buildMyClaimsTab(),
+                        _buildStatsTab(),
+                        _buildCategoriesTab(),
+                      ],
+                    ),
+            ),
+          ],
+        ),
       ),
       floatingActionButton: LiquidFloatingActionButton(
         onPressed: _showNewClaimForm,
@@ -115,27 +119,23 @@ class _ModernClaimsPageState extends State<ModernClaimsPage> with TickerProvider
   
   
   Widget _buildTabBar() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: AppThemeUnified.glassLight,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppThemeUnified.glassBorder,
-        ),
-      ),
+    return AppThemeUnified.glassContainer(
+      margin: const EdgeInsets.symmetric(horizontal: AppThemeUnified.spaceMD),
       child: TabBar(
         controller: _tabController,
         indicator: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppThemeUnified.radiusMD),
           color: AppThemeUnified.primaryRoyalBlue,
         ),
         labelColor: Colors.white,
         unselectedLabelColor: AppThemeUnified.textSecondary,
-        labelStyle: AppThemeUnified.buttonLarge.copyWith(fontWeight: FontWeight.w600),
-        unselectedLabelStyle: AppThemeUnified.buttonLarge,
-        dividerColor: Colors.transparent,
         indicatorSize: TabBarIndicatorSize.tab,
+        indicatorWeight: 0,
+        dividerColor: Colors.transparent,
+        labelStyle: AppThemeUnified.labelLarge.copyWith(
+          fontWeight: FontWeight.w600,
+        ),
+        unselectedLabelStyle: AppThemeUnified.labelLarge,
         tabs: const [
           Tab(text: 'My Claims'),
           Tab(text: 'Statistics'),
@@ -150,12 +150,14 @@ class _ModernClaimsPageState extends State<ModernClaimsPage> with TickerProvider
       onRefresh: _loadClaimsData,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(AppThemeUnified.spaceMD).copyWith(
+          top: AppThemeUnified.spaceLG,
+        ),
         child: Column(
           children: [
             // Quick Stats
             _buildQuickStats(),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppThemeUnified.spaceLG),
             
             // Recent Claims
             _buildRecentClaims(),
@@ -173,16 +175,18 @@ class _ModernClaimsPageState extends State<ModernClaimsPage> with TickerProvider
       onRefresh: _loadClaimsData,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(AppThemeUnified.spaceMD).copyWith(
+          top: AppThemeUnified.spaceLG,
+        ),
         child: Column(
           children: [
             // Monthly Overview
             _buildMonthlyOverview(),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppThemeUnified.spaceLG),
             
             // Category Breakdown
             _buildCategoryBreakdown(),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppThemeUnified.spaceLG),
             
             // Status Distribution
             _buildStatusDistribution(),
@@ -197,7 +201,9 @@ class _ModernClaimsPageState extends State<ModernClaimsPage> with TickerProvider
       onRefresh: _loadClaimsData,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(AppThemeUnified.spaceMD).copyWith(
+          top: AppThemeUnified.spaceLG,
+        ),
         child: Column(
           children: [
             // Categories List

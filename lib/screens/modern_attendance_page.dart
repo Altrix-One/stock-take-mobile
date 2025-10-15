@@ -214,8 +214,9 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
           : SafeArea(
               child: Column(
                 children: [
-                  _buildHeader(),
+                  const SizedBox(height: AppThemeUnified.spaceSM),
                   _buildTabBar(),
+                  const SizedBox(height: AppThemeUnified.spaceMD),
                   Expanded(
                     child: _isLoading 
                         ? const ModernLoadingIndicator(message: 'Loading attendance data...')
@@ -287,27 +288,23 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
   }
   
   Widget _buildTabBar() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: ModernDesignSystem.spaceMD),
-      decoration: BoxDecoration(
-        color: ModernDesignSystem.getSurfaceColor(Theme.of(context).brightness),
-        borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
-        border: Border.all(
-          color: ModernDesignSystem.getBorderColor(Theme.of(context).brightness),
-        ),
-      ),
+    return AppThemeUnified.glassContainer(
+      margin: const EdgeInsets.symmetric(horizontal: AppThemeUnified.spaceMD),
       child: TabBar(
         controller: _tabController,
         indicator: BoxDecoration(
-          borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
-          color: ModernDesignSystem.primaryTeal,
+          borderRadius: BorderRadius.circular(AppThemeUnified.radiusMD),
+          color: AppThemeUnified.primaryRoyalBlue,
         ),
         labelColor: Colors.white,
-        unselectedLabelColor: ModernDesignSystem.getTextSecondary(Theme.of(context).brightness),
-        labelStyle: ModernDesignSystem.labelLarge.copyWith(fontWeight: FontWeight.w600),
-        unselectedLabelStyle: ModernDesignSystem.labelLarge,
-        dividerColor: Colors.transparent,
+        unselectedLabelColor: AppThemeUnified.textSecondary,
         indicatorSize: TabBarIndicatorSize.tab,
+        indicatorWeight: 0,
+        dividerColor: Colors.transparent,
+        labelStyle: AppThemeUnified.labelLarge.copyWith(
+          fontWeight: FontWeight.w600,
+        ),
+        unselectedLabelStyle: AppThemeUnified.labelLarge,
         tabs: const [
           Tab(text: 'Today'),
           Tab(text: 'History'),
@@ -322,16 +319,18 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
       onRefresh: _loadAttendanceData,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(ModernDesignSystem.spaceMD),
+        padding: EdgeInsets.all(AppThemeUnified.spaceMD).copyWith(
+          top: AppThemeUnified.spaceLG,
+        ),
         child: Column(
           children: [
             // Check-in/Check-out Card
             _buildCheckInOutCard(),
-            ModernDesignSystem.verticalSpaceLG,
+            const SizedBox(height: AppThemeUnified.spaceLG),
             
             // Today's Stats
             _buildTodayStats(),
-            ModernDesignSystem.verticalSpaceLG,
+            const SizedBox(height: AppThemeUnified.spaceLG),
             
             // Quick Actions
             _buildQuickActions(),
@@ -346,17 +345,19 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
       onRefresh: _refreshHistoryData,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(ModernDesignSystem.spaceMD),
+        padding: EdgeInsets.all(AppThemeUnified.spaceMD).copyWith(
+          top: AppThemeUnified.spaceLG,
+        ),
         child: Column(
           children: [
             // Monthly Summary
             _buildMonthlySummary(),
-            ModernDesignSystem.verticalSpaceLG,
+            const SizedBox(height: AppThemeUnified.spaceLG),
             
             // Attendance History with loading state
             if (_isLoadingHistory)
               Container(
-                padding: const EdgeInsets.all(ModernDesignSystem.spaceLG),
+                padding: const EdgeInsets.all(AppThemeUnified.spaceLG),
                 child: const ModernLoadingIndicator(message: 'Refreshing attendance history...'),
               )
             else
@@ -372,7 +373,9 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
       onRefresh: _loadAttendanceData,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(ModernDesignSystem.spaceMD),
+        padding: EdgeInsets.all(AppThemeUnified.spaceMD).copyWith(
+          top: AppThemeUnified.spaceLG,
+        ),
         child: Column(
           children: [
             // Shift Requests
@@ -695,11 +698,13 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
       child: Row(
         children: [
           Expanded(
-            child: _buildSummaryItem('Working Days', workingDays.toString(), Icons.calendar_today, ModernDesignSystem.primaryTeal),
+            child: _buildSummaryItem('Working Days', workingDays.toString(), Icons.calendar_today, AppThemeUnified.primaryRoyalBlue),
           ),
+          SizedBox(width: AppThemeUnified.spaceXS),
           Expanded(
             child: _buildSummaryItem('Present Days', presentDays.toString(), Icons.check_circle, ModernDesignSystem.success),
           ),
+          SizedBox(width: AppThemeUnified.spaceXS),
           Expanded(
             child: _buildSummaryItem('Total Hours', totalHours.toStringAsFixed(1), Icons.schedule, ModernDesignSystem.info),
           ),
@@ -709,32 +714,39 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
   }
   
   Widget _buildSummaryItem(String label, String value, IconData icon, Color color) {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(ModernDesignSystem.spaceXS),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(ModernDesignSystem.radiusSM),
+    return AppThemeUnified.glassContainer(
+      padding: EdgeInsets.all(AppThemeUnified.spaceMD),
+      color: Colors.white,
+      opacity: 0.9,
+      child: Column(
+        children: [
+          Container(
+            padding: EdgeInsets.all(AppThemeUnified.spaceXS),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(AppThemeUnified.radiusXS),
+            ),
+            child: Icon(icon, color: color, size: 20),
           ),
-          child: Icon(icon, color: color, size: 24),
-        ),
-        ModernDesignSystem.verticalSpaceXS,
-        Text(
-          value,
-          style: ModernDesignSystem.headlineSmall.copyWith(
-            fontWeight: FontWeight.w700,
-            color: ModernDesignSystem.getTextPrimary(Theme.of(context).brightness),
+          SizedBox(height: AppThemeUnified.spaceXS),
+          Text(
+            value,
+            style: AppThemeUnified.headlineSmall.copyWith(
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
           ),
-        ),
-        Text(
-          label,
-          style: ModernDesignSystem.captionLarge.copyWith(
-            color: ModernDesignSystem.getTextSecondary(Theme.of(context).brightness),
+          SizedBox(height: AppThemeUnified.spaceXS / 2),
+          Text(
+            label,
+            style: AppThemeUnified.labelMedium.copyWith(
+              color: AppThemeUnified.textSecondary.withOpacity(0.8),
+              fontWeight: FontWeight.w500,
+            ),
+            textAlign: TextAlign.center,
           ),
-          textAlign: TextAlign.center,
-        ),
-      ],
+        ],
+      ),
     );
   }
   

@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:stock_count/constants/modern_design_system.dart';
+import 'package:stock_count/constants/app_theme_unified.dart';
 import 'package:stock_count/constants/wallpaper_manager.dart';
 import 'package:stock_count/hr/services/profile_service.dart';
 import 'package:stock_count/utilis/outbox_queue.dart';
 import 'package:stock_count/screens/queue_status.dart';
 import 'package:stock_count/screens/login.dart';
 import 'package:stock_count/widgets/modern_ui_components.dart';
+import 'package:stock_count/widgets/universal_scaffold.dart';
 import 'package:hive/hive.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -180,79 +182,113 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              ModernDesignSystem.getSurfaceColor(Theme.of(context).brightness),
-              ModernDesignSystem.getSurfaceVariant(Theme.of(context).brightness),
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              _buildHeader(),
-              Expanded(
-                child: _loading 
-                    ? const ModernLoadingIndicator(message: 'Loading profile data...')
-                    : _employeeData == null
-                        ? const Center(
-                            child: Text(
-                              'No profile data found',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          )
-                        : Form(
-                            key: _formKey,
-                            child: RefreshIndicator(
-                              onRefresh: _loadEmployeeData,
-                              color: ModernDesignSystem.primaryTeal,
-                              child: ListView(
-                                padding: const EdgeInsets.all(ModernDesignSystem.spaceMD).copyWith(
-                                  bottom: ModernDesignSystem.spaceXL * 4,
-                                ),
-                                children: [
-                                  // Profile Header Card
-                                  _buildProfileHeader(),
-                                  ModernDesignSystem.verticalSpaceLG,
-
-                                  // Quick Stats Row
-                                  _buildQuickStats(),
-                                  ModernDesignSystem.verticalSpaceLG,
-
-                                  // Profile Sections
-                                  if (!_editing) ...[
-                                    _buildPersonalInfoCard(),
-                                    ModernDesignSystem.verticalSpaceMD,
-                                    _buildCompanyInfoCard(),
-                                    ModernDesignSystem.verticalSpaceMD,
-                                  ],
-
-                                  _buildContactInfoCard(),
-                                  ModernDesignSystem.verticalSpaceMD,
-                                  _buildAddressInfoCard(),
-                                  ModernDesignSystem.verticalSpaceMD,
-                                  _buildEmergencyContactCard(),
-                                  ModernDesignSystem.verticalSpaceMD,
-                                  _buildFinancialInfoCard(),
-                                  ModernDesignSystem.verticalSpaceMD,
-                                  _buildSettingsCard(),
-                                ],
-                              ),
-                            ),
-                          ),
+    return UniversalScaffold(
+      appBar: UniversalAppBar(
+        title: 'My Profile',
+        actions: [
+          if (!_editing && _employeeData != null)
+            IconButton(
+              onPressed: () => setState(() => _editing = true),
+              icon: const Icon(
+                Icons.edit,
+                color: AppThemeUnified.textPrimary,
               ),
-            ],
-          ),
-        ),
+              style: IconButton.styleFrom(
+                backgroundColor: AppThemeUnified.glassLight,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppThemeUnified.radiusSM),
+                ),
+              ),
+              tooltip: 'Edit Profile',
+            ),
+          if (_editing) ...[
+            TextButton(
+              onPressed: _saving
+                  ? null
+                  : () {
+                      setState(() => _editing = false);
+                      _populateControllers();
+                    },
+              child: Text(
+                'Cancel',
+                style: AppThemeUnified.labelLarge.copyWith(
+                  color: AppThemeUnified.textSecondary,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: _saving ? null : _saveChanges,
+              child: _saving
+                  ? SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppThemeUnified.textPrimary,
+                      ),
+                    )
+                  : Text(
+                      'Save',
+                      style: AppThemeUnified.labelLarge.copyWith(
+                        color: AppThemeUnified.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+            ),
+          ],
+        ],
       ),
+      body: _loading 
+          ? const ModernLoadingIndicator(message: 'Loading profile data...')
+          : _employeeData == null
+              ? Center(
+                  child: Text(
+                    'No profile data found',
+                    style: AppThemeUnified.bodyLarge.copyWith(
+                      color: AppThemeUnified.textSecondary,
+                    ),
+                  ),
+                )
+              : Form(
+                  key: _formKey,
+                  child: RefreshIndicator(
+                    onRefresh: _loadEmployeeData,
+                    color: AppThemeUnified.textPrimary,
+                    child: ListView(
+                      padding: EdgeInsets.all(AppThemeUnified.spaceMD).copyWith(
+                        top: MediaQuery.of(context).padding.top + kToolbarHeight + AppThemeUnified.spaceSM, // Account for status bar + app bar + spacing
+                        bottom: AppThemeUnified.spaceXL * 4,
+                      ),
+                      children: [
+                        // Profile Header Card
+                        _buildProfileHeader(),
+                        SizedBox(height: AppThemeUnified.spaceLG),
+
+                        // Quick Stats Row
+                        _buildQuickStats(),
+                        SizedBox(height: AppThemeUnified.spaceLG),
+
+                        // Profile Sections
+                        if (!_editing) ...[
+                          _buildPersonalInfoCard(),
+                          SizedBox(height: AppThemeUnified.spaceMD),
+                          _buildCompanyInfoCard(),
+                          SizedBox(height: AppThemeUnified.spaceMD),
+                        ],
+
+                        _buildContactInfoCard(),
+                        SizedBox(height: AppThemeUnified.spaceMD),
+                        _buildAddressInfoCard(),
+                        SizedBox(height: AppThemeUnified.spaceMD),
+                        _buildEmergencyContactCard(),
+                        SizedBox(height: AppThemeUnified.spaceMD),
+                        _buildFinancialInfoCard(),
+                        SizedBox(height: AppThemeUnified.spaceMD),
+                        _buildSettingsCard(),
+                      ],
+                    ),
+                  ),
+                ),
     );
   }
 
@@ -405,190 +441,170 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
   }
 
   Widget _buildProfileHeader() {
-    final brightness = Theme.of(context).brightness;
-    return Container(
-      decoration: ModernDesignSystem.modernCardDecoration(brightness),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              ModernDesignSystem.primaryTealPale,
-              ModernDesignSystem.primaryTealPale.withOpacity(0.6),
-            ],
-          ),
-        ),
-        padding: ModernDesignSystem.cardPadding.copyWith(
-          top: ModernDesignSystem.spaceXL,
-          bottom: ModernDesignSystem.spaceXL,
-        ),
-        child: Column(
-          children: [
-            // Profile Avatar
-            Stack(
-              children: [
-                Container(
+    return AppThemeUnified.glassCard(
+      padding: EdgeInsets.all(AppThemeUnified.spaceLG),
+      child: Column(
+        children: [
+          // Profile Avatar
+          Stack(
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: AppThemeUnified.primaryRoyalBlue.withOpacity(0.3),
+                    width: 3,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppThemeUnified.primaryRoyalBlue.withOpacity(0.2),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: CircleAvatar(
+                  radius: 50,
+                  backgroundColor: AppThemeUnified.primaryRoyalBlue,
+                  backgroundImage: _profileImageUrl != null
+                      ? NetworkImage(_profileImageUrl!)
+                      : null,
+                  child: _uploadingImage
+                      ? SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(AppThemeUnified.textPrimary),
+                          ),
+                        )
+                      : _profileImageUrl == null
+                          ? Text(
+                              (_employeeData!['employee_name']?.toString() ?? 'U')
+                                  .substring(0, 1)
+                                  .toUpperCase(),
+                              style: TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                                color: AppThemeUnified.textPrimary,
+                              ),
+                            )
+                          : null,
+                ),
+              ),
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: Container(
                   decoration: BoxDecoration(
+                    color: AppThemeUnified.primaryRoyalBlue,
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: ModernDesignSystem.primaryTeal.withOpacity(0.3),
-                      width: 3,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: ModernDesignSystem.primaryTeal.withOpacity(0.2),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: CircleAvatar(
-                    radius: 50,
-                    backgroundColor: ModernDesignSystem.primaryTeal,
-                    backgroundImage: _profileImageUrl != null
-                        ? NetworkImage(_profileImageUrl!)
-                        : null,
-                    child: _uploadingImage
-                        ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                            ),
-                          )
-                        : _profileImageUrl == null
-                            ? Text(
-                                (_employeeData!['employee_name']?.toString() ?? 'U')
-                                    .substring(0, 1)
-                                    .toUpperCase(),
-                                style: const TextStyle(
-                                  fontSize: 32,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : null,
-                  ),
-                ),
-                Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: ModernDesignSystem.primaryTeal,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: Colors.white,
-                        width: 2,
-                      ),
-                    ),
-                    child: IconButton(
-                      icon: const Icon(Icons.camera_alt, size: 18),
-                      color: Colors.white,
-        onPressed: _uploadingImage ? null : () {
-                          _showImagePicker();
-                        },
-                      iconSize: 18,
-                      constraints: const BoxConstraints(
-                        minWidth: 36,
-                        minHeight: 36,
-                      ),
-                      padding: const EdgeInsets.all(6),
+                      color: AppThemeUnified.textPrimary,
+                      width: 2,
                     ),
                   ),
-                ),
-              ],
-            ),
-            ModernDesignSystem.verticalSpaceMD,
-
-            // Name and Title
-            Text(
-              _employeeData!['employee_name']?.toString() ?? 'Unknown',
-              style: ModernDesignSystem.displayMedium.copyWith(
-                color: ModernDesignSystem.getTextPrimary(brightness),
-                fontWeight: FontWeight.w700,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            ModernDesignSystem.verticalSpaceXS,
-
-            Text(
-              _employeeData!['designation']?.toString() ?? '',
-              style: ModernDesignSystem.bodyLarge.copyWith(
-                color: ModernDesignSystem.getTextSecondary(brightness),
-              ),
-              textAlign: TextAlign.center,
-            ),
-
-            if (_employeeData!['employee_number'] != null) ...[
-              ModernDesignSystem.verticalSpaceXS,
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: ModernDesignSystem.spaceMD,
-                  vertical: ModernDesignSystem.spaceXS,
-                ),
-                decoration: BoxDecoration(
-                  color: ModernDesignSystem.primaryTeal.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(ModernDesignSystem.radiusSM),
-                ),
-                child: Text(
-                  'ID: ${_employeeData!['employee_number']}',
-                  style: ModernDesignSystem.labelMedium.copyWith(
-                    color: ModernDesignSystem.primaryTeal,
-                    fontWeight: FontWeight.w600,
+                  child: IconButton(
+                    icon: const Icon(Icons.camera_alt, size: 18),
+                    color: AppThemeUnified.textPrimary,
+                    onPressed: _uploadingImage ? null : () {
+                        _showImagePicker();
+                      },
+                    iconSize: 18,
+                    constraints: const BoxConstraints(
+                      minWidth: 36,
+                      minHeight: 36,
+                    ),
+                    padding: const EdgeInsets.all(6),
                   ),
                 ),
               ),
             ],
+          ),
+          SizedBox(height: AppThemeUnified.spaceMD),
+
+          // Name and Title
+          Text(
+            _employeeData!['employee_name']?.toString() ?? 'Unknown',
+            style: AppThemeUnified.displayMedium.copyWith(
+              color: AppThemeUnified.textPrimary,
+              fontWeight: FontWeight.w700,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: AppThemeUnified.spaceXS),
+
+          Text(
+            _employeeData!['designation']?.toString() ?? '',
+            style: AppThemeUnified.bodyLarge.copyWith(
+              color: AppThemeUnified.textSecondary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+
+          if (_employeeData!['employee_number'] != null) ...[
+            SizedBox(height: AppThemeUnified.spaceXS),
+            Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: AppThemeUnified.spaceMD,
+                vertical: AppThemeUnified.spaceXS,
+              ),
+              decoration: BoxDecoration(
+                color: AppThemeUnified.primaryRoyalBlue.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(AppThemeUnified.radiusSM),
+              ),
+              child: Text(
+                'ID: ${_employeeData!['employee_number']}',
+                style: AppThemeUnified.labelMedium.copyWith(
+                  color: AppThemeUnified.textPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
           ],
-        ),
+        ],
       ),
     );
   }
 
   Widget _buildQuickStats() {
-    final brightness = Theme.of(context).brightness;
     return Row(
       children: [
-        Expanded(child: _buildStatCard('Department', _employeeData!['department']?.toString(), Icons.business_outlined, brightness)),
-        ModernDesignSystem.horizontalSpaceSM,
-        Expanded(child: _buildStatCard('Branch', _employeeData!['branch']?.toString(), Icons.location_on_outlined, brightness)),
-        ModernDesignSystem.horizontalSpaceSM,
-        Expanded(child: _buildStatCard('Type', _employeeData!['employment_type']?.toString(), Icons.work_outline, brightness)),
+        Expanded(child: _buildStatCard('Department', _employeeData!['department']?.toString(), Icons.business_outlined)),
+        SizedBox(width: AppThemeUnified.spaceSM),
+        Expanded(child: _buildStatCard('Branch', _employeeData!['branch']?.toString(), Icons.location_on_outlined)),
+        SizedBox(width: AppThemeUnified.spaceSM),
+        Expanded(child: _buildStatCard('Type', _employeeData!['employment_type']?.toString(), Icons.work_outline)),
       ],
     );
   }
 
-  Widget _buildStatCard(String label, String? value, IconData icon, Brightness brightness) {
-    return Container(
-      padding: const EdgeInsets.all(ModernDesignSystem.spaceMD),
-      decoration: ModernDesignSystem.modernCardDecoration(brightness),
+  Widget _buildStatCard(String label, String? value, IconData icon) {
+    return AppThemeUnified.glassContainer(
+      padding: EdgeInsets.all(AppThemeUnified.spaceMD),
       child: Column(
         children: [
           Icon(
             icon,
-            color: ModernDesignSystem.primaryTeal,
+            color: AppThemeUnified.primaryRoyalBlue,
             size: 24,
           ),
-          ModernDesignSystem.verticalSpaceXS,
+          SizedBox(height: AppThemeUnified.spaceXS),
           Text(
             value ?? '-',
-            style: ModernDesignSystem.bodyMedium.copyWith(
+            style: AppThemeUnified.bodyMedium.copyWith(
               fontWeight: FontWeight.w600,
-              color: ModernDesignSystem.getTextPrimary(brightness),
+              color: AppThemeUnified.textPrimary,
             ),
             textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
-          ModernDesignSystem.verticalSpaceMicro,
+          SizedBox(height: AppThemeUnified.spaceXS / 2),
           Text(
             label,
-            style: ModernDesignSystem.bodySmall.copyWith(
-              color: ModernDesignSystem.getTextSecondary(brightness),
+            style: AppThemeUnified.bodySmall.copyWith(
+              color: AppThemeUnified.textSecondary,
             ),
             textAlign: TextAlign.center,
           ),
@@ -856,51 +872,39 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
     required IconData icon,
     required Widget child,
   }) {
-    return Container(
-      decoration: ModernDesignSystem.modernCardDecoration(brightness),
+    return AppThemeUnified.glassCard(
+      padding: EdgeInsets.all(AppThemeUnified.spaceMD),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header
-          Container(
-            padding: ModernDesignSystem.cardPadding,
-            decoration: BoxDecoration(
-              color: ModernDesignSystem.primaryTealPale.withOpacity(0.5),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(ModernDesignSystem.radiusMD),
-                topRight: Radius.circular(ModernDesignSystem.radiusMD),
+          Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(AppThemeUnified.spaceXS),
+                decoration: BoxDecoration(
+                  color: AppThemeUnified.primaryRoyalBlue.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(AppThemeUnified.radiusXS),
+                ),
+                child: Icon(
+                  icon,
+                  color: AppThemeUnified.textPrimary,
+                  size: 20,
+                ),
               ),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(ModernDesignSystem.spaceXS),
-                  decoration: BoxDecoration(
-                    color: ModernDesignSystem.primaryTeal.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(ModernDesignSystem.radiusXS),
-                  ),
-                  child: Icon(
-                    icon,
-                    color: ModernDesignSystem.primaryTeal,
-                    size: 20,
-                  ),
+              SizedBox(width: AppThemeUnified.spaceSM),
+              Text(
+                title,
+                style: AppThemeUnified.headlineMedium.copyWith(
+                  color: AppThemeUnified.textPrimary,
+                  fontWeight: FontWeight.w600,
                 ),
-                ModernDesignSystem.horizontalSpaceSM,
-                Text(
-                  title,
-                  style: ModernDesignSystem.headlineMedium.copyWith(
-                    color: ModernDesignSystem.getTextPrimary(brightness),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
+          SizedBox(height: AppThemeUnified.spaceMD),
           // Content
-          Padding(
-            padding: ModernDesignSystem.cardPadding,
-            child: child,
-          ),
+          child,
         ],
       ),
     );
@@ -908,7 +912,7 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
 
   Widget _buildInfoRow(String label, String? value, Brightness brightness) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: ModernDesignSystem.spaceXS),
+      padding: EdgeInsets.symmetric(vertical: AppThemeUnified.spaceXS),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -916,19 +920,19 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
             width: 100,
             child: Text(
               label,
-              style: ModernDesignSystem.labelLarge.copyWith(
-                color: ModernDesignSystem.getTextSecondary(brightness),
+              style: AppThemeUnified.labelLarge.copyWith(
+                color: AppThemeUnified.textSecondary,
               ),
             ),
           ),
-          ModernDesignSystem.horizontalSpaceSM,
+          SizedBox(width: AppThemeUnified.spaceSM),
           Expanded(
             child: Text(
               value?.isNotEmpty == true ? value! : 'Not provided',
-              style: ModernDesignSystem.bodyMedium.copyWith(
+              style: AppThemeUnified.bodyMedium.copyWith(
                 color: value?.isNotEmpty == true
-                    ? ModernDesignSystem.getTextPrimary(brightness)
-                    : ModernDesignSystem.getTextSecondary(brightness),
+                    ? AppThemeUnified.textPrimary
+                    : AppThemeUnified.textSecondary,
                 fontStyle: value?.isNotEmpty == true ? FontStyle.normal : FontStyle.italic,
               ),
             ),
@@ -1040,23 +1044,46 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
   Future<void> _showLogoutDialog() async {
     final confirmed = await showDialog<bool>(
       context: context,
+      barrierColor: Colors.black.withOpacity(0.5),
       builder: (context) => AlertDialog(
+        backgroundColor: AppThemeUnified.glassLight,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
+          borderRadius: BorderRadius.circular(AppThemeUnified.radiusMD),
+          side: BorderSide(color: AppThemeUnified.glassBorder, width: 1),
         ),
-        title: const Text('Confirm Logout'),
-        content: const Text('Are you sure you want to logout?'),
+        title: Text(
+          'Confirm Logout',
+          style: AppThemeUnified.headlineSmall.copyWith(
+            color: AppThemeUnified.textPrimary,
+          ),
+        ),
+        content: Text(
+          'Are you sure you want to logout?',
+          style: AppThemeUnified.bodyMedium.copyWith(
+            color: AppThemeUnified.textSecondary,
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text(
+              'Cancel',
+              style: AppThemeUnified.labelLarge.copyWith(
+                color: AppThemeUnified.textSecondary,
+              ),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: TextButton.styleFrom(
-              foregroundColor: ModernDesignSystem.error,
+              foregroundColor: AppThemeUnified.error,
             ),
-            child: const Text('Logout'),
+            child: Text(
+              'Logout',
+              style: AppThemeUnified.labelLarge.copyWith(
+                color: AppThemeUnified.error,
+              ),
+            ),
           ),
         ],
       ),
@@ -1156,15 +1183,23 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
     
     await showDialog(
       context: context,
+      barrierColor: Colors.black.withOpacity(0.5),
       builder: (context) => AlertDialog(
+        backgroundColor: AppThemeUnified.glassLight,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
+          borderRadius: BorderRadius.circular(AppThemeUnified.radiusMD),
+          side: BorderSide(color: AppThemeUnified.glassBorder, width: 1),
         ),
         title: Row(
           children: [
-            Icon(Icons.wallpaper_outlined, color: ModernDesignSystem.primaryTeal),
-            ModernDesignSystem.horizontalSpaceSM,
-            const Text('Choose Wallpaper'),
+            Icon(Icons.wallpaper_outlined, color: AppThemeUnified.primaryRoyalBlue),
+            SizedBox(width: AppThemeUnified.spaceSM),
+            Text(
+              'Choose Wallpaper',
+              style: AppThemeUnified.headlineSmall.copyWith(
+                color: AppThemeUnified.textPrimary,
+              ),
+            ),
           ],
         ),
         content: SizedBox(
@@ -1206,11 +1241,19 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
                 },
                 child: Container(
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
+                    color: AppThemeUnified.glassLight,
+                    borderRadius: BorderRadius.circular(AppThemeUnified.radiusSM),
                     border: Border.all(
-                      color: isSelected ? ModernDesignSystem.primaryTeal : ModernDesignSystem.neutralLight,
+                      color: isSelected ? AppThemeUnified.primaryRoyalBlue : AppThemeUnified.glassBorder,
                       width: isSelected ? 3 : 1,
                     ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
                   child: Column(
                     children: [
@@ -1240,8 +1283,8 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
                         padding: const EdgeInsets.all(8),
                         child: Text(
                           wallpaper.name,
-                          style: ModernDesignSystem.bodySmall.copyWith(
-                            color: ModernDesignSystem.getTextPrimary(brightness),
+                          style: AppThemeUnified.bodySmall.copyWith(
+                            color: AppThemeUnified.textPrimary,
                             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                           ),
                           textAlign: TextAlign.center,
@@ -1297,79 +1340,103 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: ModernDesignSystem.getSurfaceVariant(Theme.of(context).brightness),
+      backgroundColor: Colors.transparent,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text('Change Password'),
+        title: Text(
+          'Change Password',
+          style: AppThemeUnified.headlineLarge.copyWith(
+            color: AppThemeUnified.textPrimary,
+          ),
+        ),
+        iconTheme: const IconThemeData(color: AppThemeUnified.textPrimary),
       ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: ModernDesignSystem.pagePadding,
-          children: [
-            _buildPasswordField(
-              controller: _currentPasswordController,
-              label: 'Current Password',
-              isPassword: !_showCurrentPassword,
-              onToggleVisibility: () => setState(() => _showCurrentPassword = !_showCurrentPassword),
-              validator: (v) => v?.isEmpty == true ? 'Enter current password' : null,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: AppThemeUnified.gradientColors,
+          ),
+        ),
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            padding: EdgeInsets.all(AppThemeUnified.spaceMD).copyWith(
+              top: kToolbarHeight + MediaQuery.of(context).padding.top + AppThemeUnified.spaceMD,
             ),
-            ModernDesignSystem.verticalSpaceMD,
-            
-            _buildPasswordField(
-              controller: _newPasswordController,
-              label: 'New Password',
-              isPassword: !_showNewPassword,
-              onToggleVisibility: () => setState(() => _showNewPassword = !_showNewPassword),
-              validator: (v) {
-                if (v?.isEmpty == true) return 'Enter new password';
-                if (v!.length < 8) return 'Password must be at least 8 characters';
-                return null;
-              },
-            ),
-            ModernDesignSystem.verticalSpaceMD,
-            
-            _buildPasswordField(
-              controller: _confirmPasswordController,
-              label: 'Confirm New Password',
-              isPassword: !_showConfirmPassword,
-              onToggleVisibility: () => setState(() => _showConfirmPassword = !_showConfirmPassword),
-              validator: (v) {
-                if (v?.isEmpty == true) return 'Confirm new password';
-                if (v != _newPasswordController.text) return 'Passwords do not match';
-                return null;
-              },
-            ),
-            ModernDesignSystem.verticalSpaceXL,
-            
-            SizedBox(
-              height: 48,
-              child: ElevatedButton(
-                onPressed: _isSubmitting ? null : _changePassword,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: ModernDesignSystem.primaryTeal,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
-                  ),
-                ),
-                child: _isSubmitting
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+            children: [
+              AppThemeUnified.glassCard(
+                child: Column(
+                  children: [
+                    _buildPasswordField(
+                      controller: _currentPasswordController,
+                      label: 'Current Password',
+                      isPassword: !_showCurrentPassword,
+                      onToggleVisibility: () => setState(() => _showCurrentPassword = !_showCurrentPassword),
+                      validator: (v) => v?.isEmpty == true ? 'Enter current password' : null,
+                    ),
+                    SizedBox(height: AppThemeUnified.spaceMD),
+                    
+                    _buildPasswordField(
+                      controller: _newPasswordController,
+                      label: 'New Password',
+                      isPassword: !_showNewPassword,
+                      onToggleVisibility: () => setState(() => _showNewPassword = !_showNewPassword),
+                      validator: (v) {
+                        if (v?.isEmpty == true) return 'Enter new password';
+                        if (v!.length < 8) return 'Password must be at least 8 characters';
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: AppThemeUnified.spaceMD),
+                    
+                    _buildPasswordField(
+                      controller: _confirmPasswordController,
+                      label: 'Confirm New Password',
+                      isPassword: !_showConfirmPassword,
+                      onToggleVisibility: () => setState(() => _showConfirmPassword = !_showConfirmPassword),
+                      validator: (v) {
+                        if (v?.isEmpty == true) return 'Confirm new password';
+                        if (v != _newPasswordController.text) return 'Passwords do not match';
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: AppThemeUnified.spaceXL),
+                    
+                    SizedBox(
+                      height: 48,
+                      child: ElevatedButton(
+                        onPressed: _isSubmitting ? null : _changePassword,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppThemeUnified.primaryRoyalBlue,
+                          foregroundColor: AppThemeUnified.textPrimary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppThemeUnified.radiusMD),
+                          ),
                         ),
-                      )
-                    : const Text(
-                        'Change Password',
-                        style: TextStyle(fontWeight: FontWeight.w600),
+                        child: _isSubmitting
+                            ? SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(AppThemeUnified.textPrimary),
+                                ),
+                              )
+                            : Text(
+                                'Change Password',
+                                style: AppThemeUnified.buttonLarge,
+                              ),
                       ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -1387,19 +1454,34 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       obscureText: isPassword,
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: const Icon(Icons.lock_outline),
+        labelStyle: TextStyle(color: AppThemeUnified.textSecondary),
+        prefixIcon: Icon(
+          Icons.lock_outline,
+          color: AppThemeUnified.textSecondary,
+        ),
         suffixIcon: IconButton(
-          icon: Icon(isPassword ? Icons.visibility : Icons.visibility_off),
+          icon: Icon(
+            isPassword ? Icons.visibility : Icons.visibility_off,
+            color: AppThemeUnified.textSecondary,
+          ),
           onPressed: onToggleVisibility,
         ),
+        filled: true,
+        fillColor: AppThemeUnified.glassLight,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(ModernDesignSystem.radiusSM),
+          borderRadius: BorderRadius.circular(AppThemeUnified.radiusSM),
+          borderSide: BorderSide(color: AppThemeUnified.glassBorder),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppThemeUnified.radiusSM),
+          borderSide: BorderSide(color: AppThemeUnified.glassBorder),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(ModernDesignSystem.radiusSM),
-          borderSide: const BorderSide(color: ModernDesignSystem.primaryTeal, width: 2),
+          borderRadius: BorderRadius.circular(AppThemeUnified.radiusSM),
+          borderSide: BorderSide(color: AppThemeUnified.textPrimary, width: 2),
         ),
       ),
+      style: TextStyle(color: AppThemeUnified.textPrimary),
       validator: validator,
     );
   }

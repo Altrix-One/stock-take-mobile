@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:stock_count/hr/services/approvals_service.dart';
 import 'package:stock_count/constants/modern_design_system.dart';
+import 'package:stock_count/constants/app_theme_unified.dart';
 import 'package:stock_count/widgets/modern_ui_components.dart';
+import 'package:stock_count/widgets/universal_scaffold.dart';
 import 'package:stock_count/utilis/outbox_queue.dart';
 import 'dart:async';
 
@@ -75,39 +77,75 @@ class _ModernApprovalsPageState extends State<ModernApprovalsPage> with TickerPr
   
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              ModernDesignSystem.getSurfaceColor(Theme.of(context).brightness),
-              ModernDesignSystem.getSurfaceVariant(Theme.of(context).brightness),
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              _buildHeader(),
-              _buildTabBar(),
-              Expanded(
-                child: _isLoading 
-                    ? const ModernLoadingIndicator(message: 'Loading approvals data...')
-                    : TabBarView(
-                        controller: _tabController,
-                        children: [
-                          _buildPendingTab(),
-                          _buildHistoryTab(),
-                          _buildTeamTab(),
-                        ],
-                      ),
+    return UniversalScaffold(
+      appBar: UniversalAppBar(
+        title: 'Approvals',
+        actions: [
+          if (_pendingApprovals.isNotEmpty) 
+            Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: AppThemeUnified.spaceXS,
+                vertical: AppThemeUnified.spaceXS,
               ),
-            ],
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(AppThemeUnified.radiusSM),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.pending_actions,
+                    size: 16,
+                    color: Colors.red,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${_pendingApprovals.length}',
+                    style: AppThemeUnified.labelSmall.copyWith(
+                      color: Colors.red,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          IconButton(
+            onPressed: _loadApprovalsData,
+            icon: Icon(
+              Icons.refresh,
+              color: AppThemeUnified.textPrimary,
+            ),
+            style: IconButton.styleFrom(
+              backgroundColor: AppThemeUnified.glassLight,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppThemeUnified.radiusSM),
+              ),
+            ),
           ),
-        ),
+        ],
       ),
+      body: _isLoading 
+          ? UniversalLoading(message: 'Loading approvals data...')
+          : SafeArea(
+              child: Column(
+                children: [
+                  SizedBox(height: AppThemeUnified.spaceSM),
+                  _buildTabBar(),
+                  SizedBox(height: AppThemeUnified.spaceMD),
+                  Expanded(
+                    child: TabBarView(
+                      controller: _tabController,
+                      children: [
+                        _buildPendingTab(),
+                        _buildHistoryTab(),
+                        _buildTeamTab(),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
     );
   }
   
@@ -185,27 +223,23 @@ class _ModernApprovalsPageState extends State<ModernApprovalsPage> with TickerPr
   }
   
   Widget _buildTabBar() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: ModernDesignSystem.spaceMD),
-      decoration: BoxDecoration(
-        color: ModernDesignSystem.getSurfaceColor(Theme.of(context).brightness),
-        borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
-        border: Border.all(
-          color: ModernDesignSystem.getBorderColor(Theme.of(context).brightness),
-        ),
-      ),
+    return AppThemeUnified.glassContainer(
+      margin: EdgeInsets.symmetric(horizontal: AppThemeUnified.spaceMD),
       child: TabBar(
         controller: _tabController,
         indicator: BoxDecoration(
-          borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
-          color: ModernDesignSystem.primaryTeal,
+          borderRadius: BorderRadius.circular(AppThemeUnified.radiusMD),
+          color: AppThemeUnified.primaryRoyalBlue,
         ),
         labelColor: Colors.white,
-        unselectedLabelColor: ModernDesignSystem.getTextSecondary(Theme.of(context).brightness),
-        labelStyle: ModernDesignSystem.labelLarge.copyWith(fontWeight: FontWeight.w600),
-        unselectedLabelStyle: ModernDesignSystem.labelLarge,
-        dividerColor: Colors.transparent,
+        unselectedLabelColor: AppThemeUnified.textSecondary,
         indicatorSize: TabBarIndicatorSize.tab,
+        indicatorWeight: 0,
+        dividerColor: Colors.transparent,
+        labelStyle: AppThemeUnified.labelLarge.copyWith(
+          fontWeight: FontWeight.w600,
+        ),
+        unselectedLabelStyle: AppThemeUnified.labelLarge,
         tabs: [
           Tab(
             child: Row(
@@ -213,7 +247,7 @@ class _ModernApprovalsPageState extends State<ModernApprovalsPage> with TickerPr
               children: [
                 const Text('Pending'),
                 if (_pendingApprovals.isNotEmpty) ...[
-                  ModernDesignSystem.horizontalSpaceMicro,
+                  const SizedBox(width: 4),
                   Container(
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
@@ -222,7 +256,7 @@ class _ModernApprovalsPageState extends State<ModernApprovalsPage> with TickerPr
                     ),
                     child: Text(
                       '${_pendingApprovals.length}',
-                      style: ModernDesignSystem.captionSmall.copyWith(
+                      style: AppThemeUnified.labelSmall.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
                       ),
@@ -244,7 +278,9 @@ class _ModernApprovalsPageState extends State<ModernApprovalsPage> with TickerPr
       onRefresh: _loadApprovalsData,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(ModernDesignSystem.spaceMD),
+        padding: EdgeInsets.all(AppThemeUnified.spaceMD).copyWith(
+          top: AppThemeUnified.spaceLG,
+        ),
         child: Column(
           children: [
             // Quick Stats

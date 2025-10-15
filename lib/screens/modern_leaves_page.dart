@@ -118,20 +118,23 @@ class _ModernLeavesPageState extends State<ModernLeavesPage> with TickerProvider
       ),
       body: _isLoading 
           ? const UniversalLoading(message: 'Loading leaves data...')
-          : Column(
-              children: [
-                _buildTabBar(),
-                const SizedBox(height: AppThemeUnified.spaceMD),
-                Expanded(
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _buildMyLeavesTab(),
-                      _buildLeaveBalanceTab(),
-                    ],
+          : SafeArea(
+              child: Column(
+                children: [
+                  const SizedBox(height: AppThemeUnified.spaceSM),
+                  _buildTabBar(),
+                  const SizedBox(height: AppThemeUnified.spaceMD),
+                  Expanded(
+                    child: TabBarView(
+                      controller: _tabController,
+                      children: [
+                        _buildMyLeavesTab(),
+                        _buildLeaveBalanceTab(),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showApplyLeaveForm,
@@ -173,7 +176,9 @@ class _ModernLeavesPageState extends State<ModernLeavesPage> with TickerProvider
       onRefresh: _loadLeavesData,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(ModernDesignSystem.spaceMD),
+        padding: EdgeInsets.all(AppThemeUnified.spaceMD).copyWith(
+          top: AppThemeUnified.spaceLG,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -197,7 +202,9 @@ class _ModernLeavesPageState extends State<ModernLeavesPage> with TickerProvider
       onRefresh: _loadLeavesData,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(ModernDesignSystem.spaceMD),
+        padding: EdgeInsets.all(AppThemeUnified.spaceMD).copyWith(
+          top: AppThemeUnified.spaceLG,
+        ),
         child: Column(
           children: [
             // Leave Balance Cards
@@ -244,11 +251,11 @@ class _ModernLeavesPageState extends State<ModernLeavesPage> with TickerProvider
           Expanded(
             child: _buildStatCard('Total Balance', totalLeaves, Icons.event_available, ModernDesignSystem.success),
           ),
-          ModernDesignSystem.horizontalSpaceXS,
+          SizedBox(width: AppThemeUnified.spaceXS),
           Expanded(
             child: _buildStatCard('Pending', pendingCount.toString(), Icons.hourglass_empty, ModernDesignSystem.warning),
           ),
-          ModernDesignSystem.horizontalSpaceXS,
+          SizedBox(width: AppThemeUnified.spaceXS),
           Expanded(
             child: _buildStatCard('Approved', approvedCount.toString(), Icons.check_circle, ModernDesignSystem.success),
           ),
@@ -258,29 +265,33 @@ class _ModernLeavesPageState extends State<ModernLeavesPage> with TickerProvider
   }
   
   Widget _buildStatCard(String label, String value, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(ModernDesignSystem.spaceSM),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(ModernDesignSystem.radiusSM),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
+    return AppThemeUnified.glassContainer(
+      padding: EdgeInsets.all(AppThemeUnified.spaceMD),
+      color: Colors.white,
+      opacity: 0.9,
       child: Column(
         children: [
-          Icon(icon, color: color, size: 20),
-          ModernDesignSystem.verticalSpaceXS,
+          Container(
+            padding: EdgeInsets.all(AppThemeUnified.spaceXS),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(AppThemeUnified.radiusXS),
+            ),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          SizedBox(height: AppThemeUnified.spaceXS),
           Text(
             value,
-            style: ModernDesignSystem.headlineSmall.copyWith(
+            style: AppThemeUnified.headlineSmall.copyWith(
               fontWeight: FontWeight.w700,
               color: color,
             ),
           ),
-          ModernDesignSystem.verticalSpaceMicro,
+          SizedBox(height: AppThemeUnified.spaceXS / 2),
           Text(
             label,
-            style: ModernDesignSystem.captionLarge.copyWith(
-              color: ModernDesignSystem.getTextSecondary(Theme.of(context).brightness),
+            style: AppThemeUnified.labelMedium.copyWith(
+              color: AppThemeUnified.textSecondary.withOpacity(0.8),
               fontWeight: FontWeight.w500,
             ),
             textAlign: TextAlign.center,

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
 import '../constants/modern_design_system.dart';
+import '../constants/app_theme_unified.dart';
 
 /// Modern Button Component - Primary CTA button
 class ModernPrimaryButton extends StatelessWidget {
@@ -567,58 +569,76 @@ class ModernStatsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
-    final cardColor = color ?? ModernDesignSystem.primaryTeal;
+    final cardColor = color ?? AppThemeUnified.primaryRoyalBlue;
     
     return Container(
       margin: margin ?? const EdgeInsets.symmetric(
-        horizontal: ModernDesignSystem.spaceXS,
+        horizontal: AppThemeUnified.spaceXS,
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
-          child: Container(
-            decoration: ModernDesignSystem.modernCardDecoration(brightness),
-            padding: EdgeInsets.all(
-              isCompact ? ModernDesignSystem.spaceCompactMD : ModernDesignSystem.spaceMD,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (icon != null) ...[
-                  Container(
-                    padding: const EdgeInsets.all(ModernDesignSystem.spaceXS),
-                    decoration: BoxDecoration(
-                      color: cardColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(ModernDesignSystem.radiusXS),
+      child: AppThemeUnified.glassContainer(
+        borderRadius: AppThemeUnified.radiusMD,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(AppThemeUnified.radiusMD),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppThemeUnified.glassLight,
+                borderRadius: BorderRadius.circular(AppThemeUnified.radiusMD),
+                border: Border.all(
+                  color: AppThemeUnified.glassBorder,
+                  width: 1,
+                ),
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: onTap,
+                  borderRadius: BorderRadius.circular(AppThemeUnified.radiusMD),
+                  child: Padding(
+                    padding: EdgeInsets.all(
+                      isCompact ? AppThemeUnified.spaceMD : AppThemeUnified.spaceLG,
                     ),
-                    child: Icon(
-                      icon,
-                      color: cardColor,
-                      size: isCompact ? 16 : 20,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (icon != null) ...[
+                          Container(
+                            padding: const EdgeInsets.all(AppThemeUnified.spaceXS),
+                            decoration: BoxDecoration(
+                              color: cardColor.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(AppThemeUnified.radiusXS),
+                            ),
+                            child: Icon(
+                              icon,
+                              color: cardColor,
+                              size: isCompact ? 16 : 20,
+                            ),
+                          ),
+                          SizedBox(height: isCompact ? AppThemeUnified.spaceXS : AppThemeUnified.spaceSM),
+                        ],
+                        Text(
+                          value,
+                          style: (isCompact ? AppThemeUnified.headlineSmall : AppThemeUnified.headlineLarge).copyWith(
+                            color: cardColor,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: AppThemeUnified.spaceXS),
+                        Text(
+                          label,
+                          style: (isCompact ? AppThemeUnified.bodySmall : AppThemeUnified.bodyMedium).copyWith(
+                            color: AppThemeUnified.textSecondary,
+                          ),
+                          maxLines: isCompact ? 1 : 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ),
-                  ),
-                  SizedBox(height: isCompact ? ModernDesignSystem.spaceXS : ModernDesignSystem.spaceSM),
-                ],
-                Text(
-                  value,
-                  style: (isCompact ? ModernDesignSystem.headlineSmall : ModernDesignSystem.headlineLarge).copyWith(
-                    color: cardColor,
-                    fontWeight: FontWeight.w700,
                   ),
                 ),
-                const SizedBox(height: ModernDesignSystem.spaceXS),
-                Text(
-                  label,
-                  style: (isCompact ? ModernDesignSystem.bodySmall : ModernDesignSystem.bodyMedium).copyWith(
-                    color: ModernDesignSystem.getTextSecondary(brightness),
-                  ),
-                  maxLines: isCompact ? 1 : 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
+              ),
             ),
           ),
         ),
@@ -653,70 +673,88 @@ class ModernActionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
-    final cardColor = color ?? ModernDesignSystem.primaryTeal;
+    final cardColor = color ?? AppThemeUnified.primaryRoyalBlue;
     
     return Container(
       margin: margin ?? const EdgeInsets.symmetric(
-        horizontal: ModernDesignSystem.spaceXS,
-        vertical: ModernDesignSystem.spaceXS,
+        horizontal: AppThemeUnified.spaceXS,
+        vertical: AppThemeUnified.spaceXS,
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
-          child: Container(
-            decoration: ModernDesignSystem.subtleCardDecoration(brightness),
-            padding: padding ?? const EdgeInsets.all(ModernDesignSystem.spaceMD),
-            child: Row(
-              children: [
-                if (icon != null) ...[
-                  Container(
-                    padding: const EdgeInsets.all(ModernDesignSystem.spaceXS),
-                    decoration: BoxDecoration(
-                      color: cardColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(ModernDesignSystem.radiusXS),
-                    ),
-                    child: Icon(
-                      icon,
-                      color: cardColor,
-                      size: 18,
-                    ),
-                  ),
-                  const SizedBox(width: ModernDesignSystem.spaceSM),
-                ],
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: ModernDesignSystem.labelLarge.copyWith(
-                          color: ModernDesignSystem.getTextPrimary(brightness),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      if (subtitle != null) ...[
-                        const SizedBox(height: ModernDesignSystem.spaceXS),
-                        Text(
-                          subtitle!,
-                          style: ModernDesignSystem.bodySmall.copyWith(
-                            color: ModernDesignSystem.getTextSecondary(brightness),
+      child: AppThemeUnified.glassContainer(
+        borderRadius: AppThemeUnified.radiusMD,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(AppThemeUnified.radiusMD),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppThemeUnified.glassLight,
+                borderRadius: BorderRadius.circular(AppThemeUnified.radiusMD),
+                border: Border.all(
+                  color: AppThemeUnified.glassBorder,
+                  width: 1,
+                ),
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: onTap,
+                  borderRadius: BorderRadius.circular(AppThemeUnified.radiusMD),
+                  child: Padding(
+                    padding: padding ?? const EdgeInsets.all(AppThemeUnified.spaceMD),
+                    child: Row(
+                      children: [
+                        if (icon != null) ...[
+                          Container(
+                            padding: const EdgeInsets.all(AppThemeUnified.spaceXS),
+                            decoration: BoxDecoration(
+                              color: cardColor.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(AppThemeUnified.radiusXS),
+                            ),
+                            child: Icon(
+                              icon,
+                              color: cardColor,
+                              size: 18,
+                            ),
+                          ),
+                          const SizedBox(width: AppThemeUnified.spaceSM),
+                        ],
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                title,
+                                style: AppThemeUnified.labelLarge.copyWith(
+                                  color: AppThemeUnified.textPrimary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              if (subtitle != null) ...[
+                                const SizedBox(height: AppThemeUnified.spaceXS),
+                                Text(
+                                  subtitle!,
+                                  style: AppThemeUnified.bodySmall.copyWith(
+                                    color: AppThemeUnified.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
                         ),
+                        if (showArrow) ...[
+                          const SizedBox(width: AppThemeUnified.spaceSM),
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            color: AppThemeUnified.textTertiary,
+                            size: 14,
+                          ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
                 ),
-                if (showArrow) ...[
-                  const SizedBox(width: ModernDesignSystem.spaceSM),
-                  Icon(
-                    Icons.arrow_forward_ios,
-                    color: ModernDesignSystem.getTextTertiary(brightness),
-                    size: 14,
-                  ),
-                ],
-              ],
+              ),
             ),
           ),
         ),
@@ -749,79 +787,97 @@ class ModernHeroCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
-    final cardColor = headerColor ?? ModernDesignSystem.primaryTeal;
+    final cardColor = headerColor ?? AppThemeUnified.primaryRoyalBlue;
     
     return Container(
       margin: margin ?? const EdgeInsets.symmetric(
-        horizontal: ModernDesignSystem.spaceMD,
-        vertical: ModernDesignSystem.spaceXS,
+        horizontal: AppThemeUnified.spaceMD,
+        vertical: AppThemeUnified.spaceXS,
       ),
-      decoration: ModernDesignSystem.heroCardDecoration(brightness),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (title.isNotEmpty) ...[
-            Padding(
-              padding: padding ?? const EdgeInsets.fromLTRB(
-                ModernDesignSystem.spaceMD,
-                ModernDesignSystem.spaceMD,
-                ModernDesignSystem.spaceMD,
-                ModernDesignSystem.spaceSM,
+      child: AppThemeUnified.glassContainer(
+        borderRadius: AppThemeUnified.radiusMD,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(AppThemeUnified.radiusMD),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppThemeUnified.glassLight,
+                borderRadius: BorderRadius.circular(AppThemeUnified.radiusMD),
+                border: Border.all(
+                  color: AppThemeUnified.glassBorder,
+                  width: 1,
+                ),
               ),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (icon != null) ...[
-                    Container(
-                      padding: const EdgeInsets.all(ModernDesignSystem.spaceXS),
-                      decoration: BoxDecoration(
-                        color: cardColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(ModernDesignSystem.radiusXS),
+                  if (title.isNotEmpty) ...[
+                    Padding(
+                      padding: padding ?? const EdgeInsets.fromLTRB(
+                        AppThemeUnified.spaceMD,
+                        AppThemeUnified.spaceMD,
+                        AppThemeUnified.spaceMD,
+                        AppThemeUnified.spaceSM,
                       ),
-                      child: Icon(
-                        icon,
-                        color: cardColor,
-                        size: 18,
-                      ),
-                    ),
-                    const SizedBox(width: ModernDesignSystem.spaceSM),
-                  ],
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          style: ModernDesignSystem.headlineSmall.copyWith(
-                            color: ModernDesignSystem.getTextPrimary(brightness),
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        if (subtitle != null) ...[
-                          const SizedBox(height: 2),
-                          Text(
-                            subtitle!,
-                            style: ModernDesignSystem.bodyMedium.copyWith(
-                              color: ModernDesignSystem.getTextSecondary(brightness),
+                      child: Row(
+                        children: [
+                          if (icon != null) ...[
+                            Container(
+                              padding: const EdgeInsets.all(AppThemeUnified.spaceXS),
+                              decoration: BoxDecoration(
+                                color: cardColor.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(AppThemeUnified.radiusXS),
+                              ),
+                              child: Icon(
+                                icon,
+                                color: cardColor,
+                                size: 18,
+                              ),
+                            ),
+                            const SizedBox(width: AppThemeUnified.spaceSM),
+                          ],
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  title,
+                                  style: AppThemeUnified.headlineSmall.copyWith(
+                                    color: AppThemeUnified.textPrimary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                if (subtitle != null) ...[
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    subtitle!,
+                                    style: AppThemeUnified.bodyMedium.copyWith(
+                                      color: AppThemeUnified.textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ],
                             ),
                           ),
                         ],
-                      ],
+                      ),
                     ),
+                  ],
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppThemeUnified.spaceMD,
+                      0,
+                      AppThemeUnified.spaceMD,
+                      AppThemeUnified.spaceMD,
+                    ),
+                    child: child,
                   ),
                 ],
               ),
             ),
-          ],
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              ModernDesignSystem.spaceMD,
-              0,
-              ModernDesignSystem.spaceMD,
-              ModernDesignSystem.spaceMD,
-            ),
-            child: child,
           ),
-        ],
+        ),
       ),
     );
   }
@@ -858,88 +914,106 @@ class ModernListItemCard extends StatelessWidget {
     
     return Container(
       margin: margin ?? const EdgeInsets.symmetric(
-        vertical: ModernDesignSystem.spaceXS,
+        vertical: AppThemeUnified.spaceXS,
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(ModernDesignSystem.radiusSM),
-          child: Container(
-            decoration: ModernDesignSystem.subtleCardDecoration(brightness),
-            padding: padding ?? const EdgeInsets.symmetric(
-              horizontal: ModernDesignSystem.spaceMD,
-              vertical: ModernDesignSystem.spaceSM,
-            ),
-            child: Row(
-              children: [
-                if (leadingWidget != null)
-                  leadingWidget!
-                else if (leadingIcon != null) ...[
-                  Container(
-                    padding: const EdgeInsets.all(ModernDesignSystem.spaceXS),
-                    decoration: BoxDecoration(
-                      color: ModernDesignSystem.getSurfaceVariant(brightness),
-                      borderRadius: BorderRadius.circular(ModernDesignSystem.radiusXS),
+      child: AppThemeUnified.glassContainer(
+        borderRadius: AppThemeUnified.radiusSM,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(AppThemeUnified.radiusSM),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppThemeUnified.glassLight,
+                borderRadius: BorderRadius.circular(AppThemeUnified.radiusSM),
+                border: Border.all(
+                  color: AppThemeUnified.glassBorder,
+                  width: 1,
+                ),
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: onTap,
+                  borderRadius: BorderRadius.circular(AppThemeUnified.radiusSM),
+                  child: Padding(
+                    padding: padding ?? const EdgeInsets.symmetric(
+                      horizontal: AppThemeUnified.spaceMD,
+                      vertical: AppThemeUnified.spaceSM,
                     ),
-                    child: Icon(
-                      leadingIcon,
-                      color: ModernDesignSystem.getTextSecondary(brightness),
-                      size: 16,
-                    ),
-                  ),
-                  const SizedBox(width: ModernDesignSystem.spaceSM),
-                ],
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: ModernDesignSystem.bodyMedium.copyWith(
-                          color: ModernDesignSystem.getTextPrimary(brightness),
-                          fontWeight: FontWeight.w500,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      if (subtitle != null && subtitle!.isNotEmpty) ...[
-                        const SizedBox(height: ModernDesignSystem.spaceXS),
-                        Text(
-                          subtitle!,
-                          style: ModernDesignSystem.bodySmall.copyWith(
-                            color: ModernDesignSystem.getTextSecondary(brightness),
+                    child: Row(
+                      children: [
+                        if (leadingWidget != null)
+                          leadingWidget!
+                        else if (leadingIcon != null) ...[
+                          Container(
+                            padding: const EdgeInsets.all(AppThemeUnified.spaceXS),
+                            decoration: BoxDecoration(
+                              color: AppThemeUnified.glassMedium,
+                              borderRadius: BorderRadius.circular(AppThemeUnified.radiusXS),
+                            ),
+                            child: Icon(
+                              leadingIcon,
+                              color: AppThemeUnified.textSecondary,
+                              size: 16,
+                            ),
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                          const SizedBox(width: AppThemeUnified.spaceSM),
+                        ],
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                title,
+                                style: AppThemeUnified.bodyMedium.copyWith(
+                                  color: AppThemeUnified.textPrimary,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              if (subtitle != null && subtitle!.isNotEmpty) ...[
+                                const SizedBox(height: AppThemeUnified.spaceXS),
+                                Text(
+                                  subtitle!,
+                                  style: AppThemeUnified.bodySmall.copyWith(
+                                    color: AppThemeUnified.textSecondary,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ],
+                          ),
                         ),
+                        if (trailingWidget != null)
+                          trailingWidget!
+                        else if (trailing != null && trailing!.isNotEmpty) ...[
+                          const SizedBox(width: AppThemeUnified.spaceSM),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppThemeUnified.spaceXS,
+                              vertical: AppThemeUnified.spaceXS,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppThemeUnified.glassMedium,
+                              borderRadius: BorderRadius.circular(AppThemeUnified.radiusXS),
+                            ),
+                            child: Text(
+                              trailing!,
+                              style: AppThemeUnified.labelSmall.copyWith(
+                                color: AppThemeUnified.textSecondary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
                 ),
-                if (trailingWidget != null)
-                  trailingWidget!
-                else if (trailing != null && trailing!.isNotEmpty) ...[
-                  const SizedBox(width: ModernDesignSystem.spaceSM),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: ModernDesignSystem.spaceXS,
-                      vertical: ModernDesignSystem.spaceXS,
-                    ),
-                    decoration: BoxDecoration(
-                      color: ModernDesignSystem.getSurfaceVariant(brightness),
-                      borderRadius: BorderRadius.circular(ModernDesignSystem.radiusXS),
-                    ),
-                    child: Text(
-                      trailing!,
-                      style: ModernDesignSystem.labelSmall.copyWith(
-                        color: ModernDesignSystem.getTextSecondary(brightness),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ],
+              ),
             ),
           ),
         ),
