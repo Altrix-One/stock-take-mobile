@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:stock_count/constants/modern_design_system.dart';
+import 'package:stock_count/constants/wallpaper_manager.dart';
 import 'package:stock_count/hr/services/profile_service.dart';
 import 'package:stock_count/utilis/outbox_queue.dart';
 import 'package:stock_count/screens/queue_status.dart';
@@ -7,7 +8,6 @@ import 'package:stock_count/screens/login.dart';
 import 'package:stock_count/widgets/modern_ui_components.dart';
 import 'package:hive/hive.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
 
 class ModernProfilePage extends StatefulWidget {
   const ModernProfilePage({super.key});
@@ -798,6 +798,13 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
       child: Column(
         children: [
           _buildSettingsItem(
+            icon: Icons.wallpaper_outlined,
+            title: 'Change Wallpaper',
+            subtitle: 'Customize app background',
+            onTap: () => _showWallpaperSelector(),
+            brightness: brightness,
+          ),
+          _buildSettingsItem(
             icon: Icons.cloud_sync_outlined,
             title: 'Queue Status',
             subtitle: 'View pending operations',
@@ -1139,6 +1146,124 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
         );
       }
     }
+  }
+  
+  Future<void> _showWallpaperSelector() async {
+    final currentWallpaper = await WallpaperManager.getCurrentWallpaper();
+    final brightness = Theme.of(context).brightness;
+    
+    if (!context.mounted) return;
+    
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
+        ),
+        title: Row(
+          children: [
+            Icon(Icons.wallpaper_outlined, color: ModernDesignSystem.primaryTeal),
+            ModernDesignSystem.horizontalSpaceSM,
+            const Text('Choose Wallpaper'),
+          ],
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: GridView.builder(
+            shrinkWrap: true,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 1.2,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+            ),
+            itemCount: WallpaperManager.wallpapers.length,
+            itemBuilder: (context, index) {
+              final entry = WallpaperManager.wallpapers.entries.elementAt(index);
+              final key = entry.key;
+              final wallpaper = entry.value;
+              final isSelected = key == currentWallpaper;
+              
+              return GestureDetector(
+                onTap: () async {
+                  await WallpaperManager.setWallpaper(key);
+                  if (context.mounted) {
+                    Navigator.of(context).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Wallpaper changed to ${wallpaper.name}'),
+                        backgroundColor: ModernDesignSystem.success,
+                        action: SnackBarAction(
+                          label: 'Restart',
+                          textColor: Colors.white,
+                          onPressed: () {
+                            // User needs to restart the app
+                          },
+                        ),
+                      ),
+                    );
+                  }
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isSelected ? ModernDesignSystem.primaryTeal : ModernDesignSystem.neutralLight,
+                      width: isSelected ? 3 : 1,
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          margin: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: wallpaper.colors,
+                            ),
+                          ),
+                          child: isSelected
+                              ? const Center(
+                                  child: Icon(
+                                    Icons.check_circle,
+                                    color: Colors.white,
+                                    size: 30,
+                                  ),
+                                )
+                              : null,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: Text(
+                          wallpaper.name,
+                          style: ModernDesignSystem.bodySmall.copyWith(
+                            color: ModernDesignSystem.getTextPrimary(brightness),
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          ),
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
   }
 }
 

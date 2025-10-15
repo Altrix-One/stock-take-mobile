@@ -14,14 +14,14 @@ class LeaveBalanceCard extends StatelessWidget {
     return 0;
   }
 
-  // Professional, cohesive color palette for leave types - using theme colors
+  // Professional, cohesive color palette for leave types - Royal Blue theme
   static const List<Color> _palette = [
-    Color(0xFF0A3F75), // Deep Navy (Primary)
-    Color(0xFF34495E), // Steel Blue (Primary Light)
+    Color(0xFF1436AC), // Royal Blue (Primary)
+    Color(0xFF1483EB), // Ocean Blue (Primary Light)
     Color(0xFF27AE60), // Professional Green (Success)
     Color(0xFFF39C12), // Warm Amber (Warning)
-    Color(0xFF3498DB), // Professional Blue (Info)
-    Color(0xFF041E3A), // Dark Navy (Primary Dark)
+    Color(0xFF0D5EAF), // Medium Blue
+    Color(0xFF0A2F6B), // Dark Royal Blue
   ];
 
   // Build a stable color map based on order so each leave type gets a distinct color.
@@ -66,26 +66,12 @@ class LeaveBalanceCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 6),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            accent.withOpacity(0.08),
-            accent.withOpacity(0.03),
-          ],
-        ),
+        color: Colors.white.withOpacity(0.1), // Glass effect on royal blue background
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: accent.withOpacity(0.15),
+          color: Colors.white.withOpacity(0.2),
           width: 1,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: accent.withOpacity(0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -230,15 +216,10 @@ class LeaveBalanceCard extends StatelessWidget {
     final cardBg = LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
-      colors: theme.brightness == Brightness.dark
-          ? [
-              theme.colorScheme.surfaceVariant.withOpacity(0.22),
-              theme.colorScheme.surface.withOpacity(0.12),
-            ]
-          : [
-              theme.colorScheme.surface, 
-              theme.colorScheme.surfaceVariant.withOpacity(0.45),
-            ],
+      colors: [
+        Colors.white.withOpacity(0.15),
+        Colors.white.withOpacity(0.05),
+      ],
     );
 
     // Precompute distinct accents per title using current brightness

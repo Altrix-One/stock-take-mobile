@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
 import '../constants/modern_design_system.dart';
 import 'modern_ui_components.dart';
 
@@ -34,69 +35,104 @@ class ModernActionCard extends StatelessWidget {
     
     return Container(
       margin: margin ?? const EdgeInsets.only(bottom: ModernDesignSystem.spaceMD),
-      decoration: ModernDesignSystem.modernCardDecoration(brightness),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
-          child: Padding(
-            padding: const EdgeInsets.all(ModernDesignSystem.spaceCompactMD),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(ModernDesignSystem.spaceXS),
-                  decoration: BoxDecoration(
-                    color: actionColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(ModernDesignSystem.radiusSM),
-                  ),
-                  child: Icon(
-                    icon,
-                    color: actionColor,
-                    size: 20,
-                  ),
-                ),
-                
-                ModernDesignSystem.horizontalSpaceXS,
-                
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        title,
-                        style: ModernDesignSystem.bodyCompactMedium.copyWith(
-                          color: isDestructive
-                              ? ModernDesignSystem.error
-                              : ModernDesignSystem.getTextPrimary(brightness),
-                          fontWeight: FontWeight.w600,
+      decoration: BoxDecoration(
+        // Glass morphism effect - much more transparent
+        color: brightness == Brightness.dark 
+            ? Colors.white.withOpacity(0.08)
+            : Colors.white.withOpacity(0.25),
+        borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
+        border: Border.all(
+          color: brightness == Brightness.dark 
+              ? Colors.white.withOpacity(0.4)
+              : Colors.white.withOpacity(0.75),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: brightness == Brightness.dark 
+                ? Colors.black.withOpacity(0.3)
+                : Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
+              child: Padding(
+                padding: const EdgeInsets.all(ModernDesignSystem.spaceCompactMD),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(ModernDesignSystem.spaceXS),
+                      decoration: BoxDecoration(
+                        color: brightness == Brightness.dark 
+                            ? Colors.white.withOpacity(0.1)
+                            : Colors.black.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(ModernDesignSystem.radiusSM),
+                        border: Border.all(
+                          color: brightness == Brightness.dark 
+                              ? Colors.white.withOpacity(0.15)
+                              : Colors.black.withOpacity(0.1),
+                          width: 0.5,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
-                      if (subtitle != null) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          subtitle!,
-                          style: ModernDesignSystem.captionCompact.copyWith(
-                            color: ModernDesignSystem.getTextSecondary(brightness),
+                      child: Icon(
+                        icon,
+                        color: actionColor,
+                        size: 20,
+                      ),
+                    ),
+                    
+                    ModernDesignSystem.horizontalSpaceXS,
+                    
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            title,
+                            style: ModernDesignSystem.bodyCompactMedium.copyWith(
+                              color: isDestructive
+                                  ? ModernDesignSystem.error
+                                  : ModernDesignSystem.getTextPrimary(brightness),
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ],
-                  ),
+                          if (subtitle != null) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              subtitle!,
+                              style: ModernDesignSystem.captionCompact.copyWith(
+                                color: ModernDesignSystem.getTextSecondary(brightness),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    
+                    if (showArrow && onTap != null)
+                      Icon(
+                        Icons.arrow_forward_ios,
+                        size: 16,
+                        color: ModernDesignSystem.getTextTertiary(brightness),
+                      ),
+                  ],
                 ),
-                
-                if (showArrow && onTap != null)
-                  Icon(
-                    Icons.arrow_forward_ios,
-                    size: 16,
-                    color: ModernDesignSystem.getTextTertiary(brightness),
-                  ),
-              ],
+              ),
             ),
           ),
         ),
@@ -132,85 +168,120 @@ class ModernStatsCard extends StatelessWidget {
     final cardColor = color ?? ModernDesignSystem.primaryTeal;
     
     return Container(
-      decoration: ModernDesignSystem.modernCardDecoration(brightness),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
-          child: Padding(
-            padding: EdgeInsets.all(isCompact 
-                ? ModernDesignSystem.spaceCompactMD 
-                : ModernDesignSystem.spaceMD),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+      decoration: BoxDecoration(
+        // Glass morphism effect - much more transparent
+        color: brightness == Brightness.dark 
+            ? Colors.white.withOpacity(0.08)
+            : Colors.white.withOpacity(0.25),
+        borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
+        border: Border.all(
+          color: brightness == Brightness.dark 
+              ? Colors.white.withOpacity(0.4)
+              : Colors.white.withOpacity(0.75),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: brightness == Brightness.dark 
+                ? Colors.black.withOpacity(0.3)
+                : Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
+              child: Padding(
+                padding: EdgeInsets.all(isCompact 
+                    ? ModernDesignSystem.spaceCompactMD 
+                    : ModernDesignSystem.spaceMD),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(ModernDesignSystem.spaceXS),
-                      decoration: BoxDecoration(
-                        color: cardColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(ModernDesignSystem.radiusXS),
-                      ),
-                      child: Icon(
-                        icon,
-                        color: cardColor,
-                        size: isCompact ? 16 : 20,
-                      ),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(ModernDesignSystem.spaceXS),
+                          decoration: BoxDecoration(
+                            color: brightness == Brightness.dark 
+                                ? Colors.white.withOpacity(0.1)
+                                : Colors.black.withOpacity(0.05),
+                            borderRadius: BorderRadius.circular(ModernDesignSystem.radiusXS),
+                            border: Border.all(
+                              color: brightness == Brightness.dark 
+                                  ? Colors.white.withOpacity(0.15)
+                                  : Colors.black.withOpacity(0.1),
+                              width: 0.5,
+                            ),
+                          ),
+                          child: Icon(
+                            icon,
+                            color: cardColor,
+                            size: isCompact ? 16 : 20,
+                          ),
+                        ),
+                        
+                        const Spacer(),
+                        
+                        if (onTap != null)
+                          Icon(
+                            Icons.more_horiz,
+                            size: 16,
+                            color: ModernDesignSystem.getTextTertiary(brightness),
+                          ),
+                      ],
                     ),
                     
-                    const Spacer(),
+                    ModernDesignSystem.verticalSpaceMD,
                     
-                    if (onTap != null)
-                      Icon(
-                        Icons.more_horiz,
-                        size: 16,
-                        color: ModernDesignSystem.getTextTertiary(brightness),
+                    Text(
+                      value,
+                      style: isCompact 
+                          ? ModernDesignSystem.headlineCompact.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: cardColor,
+                            )
+                          : ModernDesignSystem.headlineSmall.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: cardColor,
+                            ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    
+                    ModernDesignSystem.verticalSpaceXS,
+                    
+                    Text(
+                      label,
+                      style: ModernDesignSystem.captionCompact.copyWith(
+                        color: ModernDesignSystem.getTextSecondary(brightness),
+                        fontWeight: FontWeight.w500,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    
+                    if (subtitle != null) ...[
+                      ModernDesignSystem.verticalSpaceMicro,
+                      Text(
+                        subtitle!,
+                        style: ModernDesignSystem.captionLarge.copyWith(
+                          color: ModernDesignSystem.getTextTertiary(brightness),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
-                
-                ModernDesignSystem.verticalSpaceMD,
-                
-                Text(
-                  value,
-                  style: isCompact 
-                      ? ModernDesignSystem.headlineCompact.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: ModernDesignSystem.getTextPrimary(brightness),
-                        )
-                      : ModernDesignSystem.headlineSmall.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: ModernDesignSystem.getTextPrimary(brightness),
-                        ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                
-                ModernDesignSystem.verticalSpaceXS,
-                
-                Text(
-                  label,
-                  style: ModernDesignSystem.captionCompact.copyWith(
-                    color: ModernDesignSystem.getTextSecondary(brightness),
-                    fontWeight: FontWeight.w500,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                
-                if (subtitle != null) ...[
-                  ModernDesignSystem.verticalSpaceMicro,
-                  Text(
-                    subtitle!,
-                    style: ModernDesignSystem.captionLarge.copyWith(
-                      color: ModernDesignSystem.getTextTertiary(brightness),
-                    ),
-                  ),
-                ],
-              ],
+              ),
             ),
           ),
         ),
@@ -396,13 +467,35 @@ class ModernHeroCard extends StatelessWidget {
     
     return Container(
       margin: margin ?? const EdgeInsets.only(bottom: ModernDesignSystem.spaceLG),
-      decoration: ModernDesignSystem.heroCardDecoration(brightness).copyWith(
-        color: backgroundColor,
-        gradient: gradient,
+      decoration: BoxDecoration(
+        // Glass morphism effect for hero card
+        color: brightness == Brightness.dark 
+            ? Colors.white.withOpacity(0.08)
+            : Colors.white.withOpacity(0.25),
+        borderRadius: BorderRadius.circular(ModernDesignSystem.radiusLG),
+        border: Border.all(
+          color: brightness == Brightness.dark 
+              ? Colors.white.withOpacity(0.4)
+              : Colors.white.withOpacity(0.75),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: brightness == Brightness.dark 
+                ? Colors.black.withOpacity(0.3)
+                : Colors.black.withOpacity(0.08),
+            blurRadius: 15,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(ModernDesignSystem.radiusLG),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
           if (title != null || subtitle != null || icon != null) ...[
             Container(
               padding: const EdgeInsets.all(ModernDesignSystem.spaceMD),
@@ -469,11 +562,13 @@ class ModernHeroCard extends StatelessWidget {
             ),
           ],
           
-          Padding(
-            padding: padding ?? const EdgeInsets.all(ModernDesignSystem.spaceMD),
-            child: child,
+              Padding(
+                padding: padding ?? const EdgeInsets.all(ModernDesignSystem.spaceMD),
+                child: child,
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

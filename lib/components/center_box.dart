@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:async'; // For Timer
 import 'package:flutter/material.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';

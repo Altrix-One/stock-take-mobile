@@ -23,6 +23,9 @@ import 'package:stock_count/widgets/modern_shift_item.dart';
 import 'package:stock_count/widgets/modern_claim_item.dart';
 import 'package:stock_count/screens/modern_profile_page.dart';
 import 'package:stock_count/constants/modern_design_system.dart';
+import 'package:stock_count/constants/wallpaper_manager.dart';
+import 'package:stock_count/components/liquid_components.dart';
+import 'package:stock_count/widgets/clean_leave_balance_card.dart';
 
 class ESSHomeScreen extends StatefulWidget {
   const ESSHomeScreen({super.key});
@@ -46,6 +49,7 @@ class _ESSHomeScreenState extends State<ESSHomeScreen> with TickerProviderStateM
     );
     _pageController = PageController(initialPage: 0);
     _loadRoles();
+    _loadWallpaper();
   }
   
   @override
@@ -85,6 +89,10 @@ class _ESSHomeScreenState extends State<ESSHomeScreen> with TickerProviderStateM
       if (mounted) setState(() => _approvalsNavCount = approvals);
     } catch (_) {}
   }
+  
+  Future<void> _loadWallpaper() async {
+    await WallpaperManager.getCurrentWallpaper();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -98,17 +106,23 @@ class _ESSHomeScreenState extends State<ESSHomeScreen> with TickerProviderStateM
     ];
     // Clamp index if approvals hidden
     if (!_canApprove && _index == 4) _index = 3;
-    return Scaffold(
-      extendBody: true,
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Theme.of(context).colorScheme.surface, Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.35)],
-          ),
+    
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF1436AC), // Royal Blue
+            Color(0xFF1483EB), // Ocean Blue
+            Color(0xFF1436AC), // Royal Blue
+          ],
         ),
-        child: PageView(
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        extendBody: true,
+        body: PageView(
           controller: _pageController,
           onPageChanged: (index) {
             setState(() {
@@ -120,8 +134,8 @@ class _ESSHomeScreenState extends State<ESSHomeScreen> with TickerProviderStateM
           },
           children: pages,
         ),
+        bottomNavigationBar: _buildLiquidBottomNav(),
       ),
-      bottomNavigationBar: _buildAnimatedBottomNav(),
     );
   }
   
@@ -313,6 +327,120 @@ class _ESSHomeScreenState extends State<ESSHomeScreen> with TickerProviderStateM
       },
     );
   }
+  
+  Widget _buildLiquidBottomNav() {
+    final items = [
+      LiquidBottomNavigationBarItem(
+        icon: const Icon(Icons.home_outlined),
+        activeIcon: const Icon(Icons.home_rounded),
+        label: 'Home',
+      ),
+      LiquidBottomNavigationBarItem(
+        icon: const Icon(Icons.event_note_outlined),
+        activeIcon: const Icon(Icons.event_note_rounded),
+        label: 'Leaves',
+      ),
+      LiquidBottomNavigationBarItem(
+        icon: const Icon(Icons.access_time),
+        activeIcon: const Icon(Icons.access_time_filled),
+        label: 'Attendance',
+      ),
+      LiquidBottomNavigationBarItem(
+        icon: const Icon(Icons.receipt_long_outlined),
+        activeIcon: const Icon(Icons.receipt_long_rounded),
+        label: 'Claims',
+      ),
+      if (_canApprove) LiquidBottomNavigationBarItem(
+        icon: Stack(
+          children: [
+            const Icon(Icons.verified_outlined),
+            if (_approvalsNavCount > 0)
+              Positioned(
+                right: -2,
+                top: -2,
+                child: Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: const BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                  ),
+                  constraints: const BoxConstraints(
+                    minWidth: 16,
+                    minHeight: 16,
+                  ),
+                  child: Text(
+                    _approvalsNavCount > 99 ? '99+' : _approvalsNavCount.toString(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        activeIcon: Stack(
+          children: [
+            const Icon(Icons.verified),
+            if (_approvalsNavCount > 0)
+              Positioned(
+                right: -2,
+                top: -2,
+                child: Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: const BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                  ),
+                  constraints: const BoxConstraints(
+                    minWidth: 16,
+                    minHeight: 16,
+                  ),
+                  child: Text(
+                    _approvalsNavCount > 99 ? '99+' : _approvalsNavCount.toString(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        label: 'Approvals',
+      ),
+      LiquidBottomNavigationBarItem(
+        icon: const Icon(Icons.person_outline),
+        activeIcon: const Icon(Icons.person_rounded),
+        label: 'Profile',
+      ),
+    ];
+    
+    return LiquidBottomNavigationBar(
+      liquidPalette: 'corporate',
+      currentIndex: _index,
+      onTap: (index) {
+        if (_index != index) {
+          setState(() {
+            _index = index;
+          });
+          _pageController.animateToPage(
+            index,
+            duration: const Duration(milliseconds: 350),
+            curve: Curves.easeInOutCubic,
+          );
+          _animationController.forward().then((_) {
+            _animationController.reset();
+          });
+        }
+      },
+      items: items,
+    );
+  }
 }
 
 class _NavItem {
@@ -406,7 +534,7 @@ class _DashboardPageState extends State<_DashboardPage> {
         color: theme.colorScheme.surface,
         border: Border(
           bottom: BorderSide(
-            color: theme.colorScheme.outline.withOpacity(0.2),
+            color: theme.dividerColor,
             width: 0.5,
           ),
         ),
@@ -446,7 +574,7 @@ class _DashboardPageState extends State<_DashboardPage> {
                         'Cohenix ESS',
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
-                          color: theme.colorScheme.primary,
+                          color: Colors.white,
                           fontSize: 14,
                           height: 1.0,
                         ),
@@ -484,15 +612,19 @@ class _DashboardPageState extends State<_DashboardPage> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.primaryContainer.withOpacity(0.3),
+                    color: Colors.white.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.3),
+                      width: 1,
+                    ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       CircleAvatar(
                         radius: 12,
-                        backgroundColor: theme.colorScheme.primary,
+                        backgroundColor: Colors.white.withOpacity(0.2),
                         backgroundImage: _profileImageUrl != null
                             ? NetworkImage(_profileImageUrl!)
                             : null,
@@ -519,7 +651,7 @@ class _DashboardPageState extends State<_DashboardPage> {
                               _userInfo!['full_name']?.toString() ?? 'User',
                               style: theme.textTheme.bodySmall?.copyWith(
                                 fontWeight: FontWeight.w600,
-                                color: theme.colorScheme.onSurface,
+                                color: Colors.white,
                                 fontSize: 10,
                                 height: 1.0,
                               ),
@@ -527,10 +659,10 @@ class _DashboardPageState extends State<_DashboardPage> {
                               overflow: TextOverflow.ellipsis,
                             ),
                             if (_userInfo!['designation']?.toString().isNotEmpty == true)
-                              Text(
+                                Text(
                                 _userInfo!['designation']?.toString() ?? '',
                                 style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant,
+                                  color: Colors.white.withOpacity(0.8),
                                   fontSize: 8,
                                   height: 1.0,
                                 ),
@@ -544,7 +676,7 @@ class _DashboardPageState extends State<_DashboardPage> {
                       Icon(
                         Icons.arrow_forward_ios,
                         size: 8,
-                        color: theme.colorScheme.onSurfaceVariant,
+                        color: Colors.white.withOpacity(0.7),
                       ),
                     ],
                   ),
@@ -561,55 +693,41 @@ class _DashboardPageState extends State<_DashboardPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: theme.brightness == Brightness.dark
-                ? [
-                    theme.colorScheme.surface,
-                    theme.colorScheme.surfaceVariant.withOpacity(0.1),
-                  ]
-                : [
-                    theme.colorScheme.surface,
-                    theme.colorScheme.surfaceVariant.withOpacity(0.15),
-                  ],
-          ),
-        ),
-        child: Column(
-          children: [
-            _buildCustomNavBar(context),
-            Expanded(
-              child: _loading
-                  ? const Center(child: CircularProgressIndicator())
-                  : RefreshIndicator(
-                      onRefresh: _load,
-                      child: ListView(
-                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-                        children: [
-                          // Welcome message
-                          _buildWelcomeSection(context),
-                          const SizedBox(height: 12),
-                          
-                          // Leave balance card
-                          LeaveBalanceCard(balances: _balance),
-                          const SizedBox(height: 12),
-                          
-                          // Approvals card (if user can approve - HR Manager role only)
-                          if (widget.canApprove)
-                            _buildApprovalsCard(context),
-                          if (widget.canApprove) const SizedBox(height: 12),
-                          
-                          // Quick actions section
-                          _buildQuickActionsSection(context),
-                        ],
-                      ),
+    return Material(
+      color: Colors.transparent, // Completely transparent to show wallpaper
+      child: Column(
+        children: [
+          _buildCustomNavBar(context),
+          Expanded(
+            child: _loading
+                ? const Center(
+                    child: CircularProgressIndicator(color: Colors.white)
+                  )
+                : RefreshIndicator(
+                    onRefresh: _load,
+                    child: ListView(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                      children: [
+                        // Welcome message
+                        _buildWelcomeSection(context),
+                        const SizedBox(height: 12),
+                        
+                        // Leave balance card - transparent
+                        CleanLeaveBalanceCard(balances: _balance),
+                        const SizedBox(height: 12),
+                        
+                        // Approvals card (if user can approve - HR Manager role only)
+                        if (widget.canApprove)
+                          _buildCleanApprovalsCard(context),
+                        if (widget.canApprove) const SizedBox(height: 12),
+                        
+                        // Quick actions section
+                        _buildQuickActionsSection(context),
+                      ],
                     ),
-            ),
-          ],
-        ),
+                  ),
+          ),
+        ],
       ),
     );
   }
@@ -621,17 +739,14 @@ class _DashboardPageState extends State<_DashboardPage> {
     
     return Container(
       width: double.infinity,
+      margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.brightness == Brightness.dark
-            ? theme.colorScheme.surfaceContainer.withOpacity(0.5)
-            : const Color(0xFFE8F0F3), // Subtle, light blue/gray background
+        color: Colors.white.withOpacity(0.1),  // Glass effect for wallpaper
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: theme.brightness == Brightness.dark
-              ? theme.colorScheme.outline.withOpacity(0.4)
-              : const Color(0xFFC4D5DD), // Lighter, soft border
-          width: 1.5,
+          color: Colors.white.withOpacity(0.2),
+          width: 1,
         ),
       ),
       child: Column(
@@ -642,12 +757,12 @@ class _DashboardPageState extends State<_DashboardPage> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary, // Deep Navy Blue
+                  color: Colors.white.withOpacity(0.25),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(
                   Icons.waving_hand,
-                  color: Colors.white,
+                  color: Colors.amber,
                   size: 18,
                 ),
               ),
@@ -661,7 +776,7 @@ class _DashboardPageState extends State<_DashboardPage> {
                       child: Text(
                         'Welcome back,',
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
+                          color: Colors.white.withOpacity(0.9),
                           fontWeight: FontWeight.w500,
                           fontSize: 10,
                         ),
@@ -673,7 +788,7 @@ class _DashboardPageState extends State<_DashboardPage> {
                         firstName,
                         style: theme.textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w700,
-                          color: theme.colorScheme.primary,
+                          color: Colors.white,
                           fontSize: 14,
                         ),
                       ),
@@ -693,92 +808,80 @@ class _DashboardPageState extends State<_DashboardPage> {
     );
   }
   
-  Widget _buildApprovalsCard(BuildContext context) {
-    final theme = Theme.of(context);
-    
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Container(
-        decoration: BoxDecoration(
-          color: theme.brightness == Brightness.dark
-              ? const Color(0xFFFFC107).withOpacity(0.2)     // Professional amber background
-              : const Color(0xFFFFF8E1),                     // Light amber background
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: theme.brightness == Brightness.dark
-                ? const Color(0xFFE69900).withOpacity(0.5)   // Deeper amber border dark
-                : const Color(0xFFFFC107).withOpacity(0.5),   // Standard amber border light
-            width: 1.5,
-          ),
+  Widget _buildCleanApprovalsCard(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.2),
+          width: 1,
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE69900),  // Deeper amber for icon background
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(
-                  Icons.verified,
-                  color: Colors.white,
-                  size: 22,
-                ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.amber.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: Colors.amber.withOpacity(0.5),
+                width: 1,
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        'Pending Approvals',
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 1),
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        'Items awaiting your approval',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w500,
-                          fontSize: 9,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE69900),  // Deeper amber for count badge
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    '$_pendingApprovals',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                    ),
+            ),
+            child: const Icon(
+              Icons.verified,
+              color: Colors.amber,
+              size: 22,
+            ),
+          ),
+          const SizedBox(width: 16),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Pending Approvals',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                    color: Colors.white,
                   ),
                 ),
-              ),
-            ],
+                SizedBox(height: 4),
+                Text(
+                  'Items awaiting your approval',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.amber.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: Colors.amber.withOpacity(0.5),
+                width: 1,
+              ),
+            ),
+            child: Text(
+              '$_pendingApprovals',
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                color: Colors.amber,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -795,7 +898,7 @@ class _DashboardPageState extends State<_DashboardPage> {
             children: [
               Icon(
                 Icons.flash_on_rounded,
-                color: theme.colorScheme.primary,
+                color: Colors.white,
                 size: 20,
               ),
               const SizedBox(width: 8),
@@ -805,7 +908,7 @@ class _DashboardPageState extends State<_DashboardPage> {
                   'Quick Actions',
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
-                    color: theme.colorScheme.onSurface,
+                    color: Colors.white,
                     fontSize: 14,
                   ),
                 ),
@@ -885,14 +988,10 @@ class _DashboardPageState extends State<_DashboardPage> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
-            color: theme.brightness == Brightness.dark
-                ? color.withOpacity(0.12)
-                : color.withOpacity(0.08),  // More subtle background
+            color: Colors.white.withOpacity(0.15),  // Glass-morphism effect
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: theme.brightness == Brightness.dark
-                  ? color.withOpacity(0.35)
-                  : color.withOpacity(0.25),  // More subtle border
+              color: Colors.white.withOpacity(0.3),
               width: 1.5,
             ),
           ),
@@ -902,14 +1001,12 @@ class _DashboardPageState extends State<_DashboardPage> {
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: theme.brightness == Brightness.dark
-                      ? color.withOpacity(0.9)  // Slightly transparent in dark mode
-                      : color,                   // Full opacity in light mode
+                  color: Colors.white.withOpacity(0.25),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Icon(
                   icon,
-                  color: Colors.white,
+                  color: color,
                   size: 16,
                 ),
               ),
@@ -919,7 +1016,7 @@ class _DashboardPageState extends State<_DashboardPage> {
                   title,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w700,
-                    color: theme.colorScheme.onSurface,
+                    color: Colors.white,
                     fontSize: 12,  // Slightly smaller for more compact look
                     height: 1.2,   // Better line height
                   ),
@@ -931,7 +1028,7 @@ class _DashboardPageState extends State<_DashboardPage> {
               Icon(
                 Icons.arrow_forward_ios_rounded,
                 size: 12,
-                color: theme.colorScheme.onSurfaceVariant.withOpacity(0.6),
+                color: Colors.white.withOpacity(0.7),
               ),
             ],
           ),
@@ -1265,31 +1362,48 @@ class _LeavesPageState extends State<_LeavesPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('My Leaves'),
-        elevation: 0,
-        actions: [
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF1436AC), // Royal Blue
+            Color(0xFF1483EB), // Ocean Blue
+            Color(0xFF1436AC), // Royal Blue
+          ],
+        ),
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          title: const Text('My Leaves', style: TextStyle(color: Colors.white)),
+          iconTheme: const IconThemeData(color: Colors.white),
+          actions: [
           Container(
             margin: const EdgeInsets.only(right: 16),
-            child: FilledButton.icon(
-              onPressed: () async {
-                await Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => _ApplyLeavePage()),
-                );
-                if (mounted) _load();
-              },
-              icon: const Icon(Icons.add, size: 18),
-              label: const Text('Apply'),
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              ),
+              child: FilledButton.icon(
+                onPressed: () async {
+                  await Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => _ApplyLeavePage()),
+                  );
+                  if (mounted) _load();
+                },
+                icon: const Icon(Icons.add, size: 18, color: Colors.white),
+                label: const Text('Apply', style: TextStyle(color: Colors.white)),
+                style: FilledButton.styleFrom(
+                  backgroundColor: Colors.white.withValues(alpha: 0.2),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                ),
             ),
           ),
         ],
       ),
       body: _loading 
-        ? const ProfessionalLoading(message: 'Loading your leave applications...')
+        ? const Center(
+            child: CircularProgressIndicator()
+          )
         : RefreshIndicator(
             onRefresh: _load,
             child: ListView(
@@ -1326,6 +1440,7 @@ class _LeavesPageState extends State<_LeavesPage> {
               ],
             ),
           ),
+      ),
     );
   }
 }

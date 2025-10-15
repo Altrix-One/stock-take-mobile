@@ -10,10 +10,9 @@ import 'package:hive/hive.dart'; // Hive for token management
 
 import 'package:stock_count/components/calculator_card.dart';
 import 'package:stock_count/components/center_box.dart';
-import 'package:stock_count/config.dart';
+import 'package:stock_count/screens/setup_dialog.dart';
+import 'package:stock_count/components/calculator_card.dart';
 import 'package:stock_count/constants/theme.dart';
-import 'package:stock_count/constants/app_theme.dart';
-import 'package:stock_count/utilis/api_service.dart';
 import 'package:stock_count/utilis/change_notifier.dart';
 import 'package:stock_count/utilis/db_schema.dart';
 import 'package:stock_count/utilis/dialog_messages.dart';
@@ -58,6 +57,8 @@ class _HomeScreenState extends State<HomeScreen>
   List<Map<String, dynamic>> assignedItems = [];
   final TextEditingController _searchController = TextEditingController();
   String searchQuery = ""; // State to store search input
+  String _currentWallpaper = 'corporate_teal';
+  bool _effectsEnabled = true;
 
   // Variables for slide-in dialog
   late AnimationController _animationController;
@@ -102,6 +103,9 @@ class _HomeScreenState extends State<HomeScreen>
       recountEntry = true;
       database = widget.database;
     }
+
+    // Load wallpaper settings
+    _loadWallpaperSettings();
   }
 
   // Check if the user is authenticated by verifying the token
@@ -290,6 +294,150 @@ class _HomeScreenState extends State<HomeScreen>
     });
   }
 
+  Future<void> _loadWallpaperSettings() async {
+    final wallpaper = await WallpaperManager.getCurrentWallpaper();
+    final effects = await WallpaperManager.areEffectsEnabled();
+    setState(() {
+      _currentWallpaper = wallpaper;
+      _effectsEnabled = effects;
+    });
+  }
+
+  Future<void> _setWallpaper(String wallpaper) async {
+    await WallpaperManager.setWallpaper(wallpaper);
+    setState(() {
+      _currentWallpaper = wallpaper;
+    });
+  }
+
+  Future<void> _toggleEffects(bool enabled) async {
+    await WallpaperManager.setEffectsEnabled(enabled);
+    setState(() {
+      _effectsEnabled = enabled;
+    });
+  }
+
+  void _showWallpaperSelector() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: DraggableScrollableSheet(
+            initialChildSize: 0.7,
+            minChildSize: 0.5,
+            maxChildSize: 0.9,
+            builder: (context, scrollController) {
+              return Column(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(top: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Text(
+                      'Choose Wallpaper',
+                      style: semibold18Black33,
+                    ),
+                  ),
+                  Expanded(
+                    child: GridView.builder(
+                      controller: scrollController,
+                      padding: const EdgeInsets.all(16),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        childAspectRatio: 0.8,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                      ),
+                      itemCount: WallpaperManager.wallpapers.length,
+                      itemBuilder: (context, index) {
+                        final entry = WallpaperManager.wallpapers.entries.elementAt(index);
+                        final key = entry.key;
+                        final wallpaper = entry.value;
+                        final isSelected = key == _currentWallpaper;
+                        
+                        return GestureDetector(
+                          onTap: () {
+                            _setWallpaper(key);
+                            Navigator.pop(context);
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: isSelected ? primaryColor : Colors.grey[300]!,
+                                width: isSelected ? 3 : 1,
+                              ),
+                            ),
+                            child: Column(
+                              children: [
+                                Expanded(
+                                  child: Container(
+                                    margin: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Container(
+                                        width: double.infinity,
+                                        height: double.infinity,
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                            colors: wallpaper.colors,
+                                          ),
+                                        ),
+                                        child: isSelected
+                                            ? const Icon(
+                                                Icons.check_circle,
+                                                color: Colors.white,
+                                                size: 30,
+                                              )
+                                            : null,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.all(8),
+                                  child: Text(
+                                    wallpaper.name,
+                                    style: medium12Black33,
+                                    textAlign: TextAlign.center,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> fetchAssignedItems() async {
     var authBox = await Hive.openBox('authBox'); // Ensure Hive box is open
 
@@ -313,8 +461,15 @@ class _HomeScreenState extends State<HomeScreen>
   Widget build(BuildContext context) {
     return Stack(
       children: [
+        // Liquid wallpaper background
+        Positioned.fill(
+          child: WallpaperManager.fromKey(
+            _currentWallpaper,
+            effectsEnabled: _effectsEnabled,
+          ),
+        ),
         Scaffold(
-          backgroundColor: AppTheme.getBackgroundColor(context),
+          backgroundColor: Colors.transparent,
           appBar: AppBar(
             elevation: 0,
             toolbarHeight: 70.0,
@@ -359,177 +514,43 @@ class _HomeScreenState extends State<HomeScreen>
                   ),
                 )
               : null,
-          bottomNavigationBar: Container(
-            margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface.withOpacity(0.85),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Theme.of(context).colorScheme.shadow.withOpacity(0.1),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(24),
-              child: BottomNavigationBar(
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                type: BottomNavigationBarType.fixed,
-                selectedItemColor: Theme.of(context).colorScheme.primary,
-                unselectedItemColor: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.6),
-                selectedLabelStyle: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                unselectedLabelStyle: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.6),
-                ),
-                items: _selectedIndex == 1 && isCountStarted
+          bottomNavigationBar: LiquidBottomNavigationBar(
+            liquidPalette: 'corporate',
+            currentIndex: _selectedIndex,
+            onTap: _onItemTapped,
+            items: _selectedIndex == 1 && isCountStarted
+                ? [
+                    LiquidBottomNavigationBarItem(
+                      icon: const Icon(Icons.list_alt_rounded),
+                      activeIcon: const Icon(Icons.list_alt_rounded),
+                      label: 'Entries',
+                    ),
+                  ]
+                : isCountStarted
                     ? [
-                        BottomNavigationBarItem(
-                          icon: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.primaryContainer,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(
-                              Icons.list_alt_rounded,
-                              color: Theme.of(context).colorScheme.onPrimaryContainer,
-                            ),
-                          ),
-                          activeIcon: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.primary,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(
-                              Icons.list_alt_rounded,
-                              color: Theme.of(context).colorScheme.onPrimary,
-                            ),
-                          ),
+                        LiquidBottomNavigationBarItem(
+                          icon: const Icon(Icons.stop_circle_outlined),
+                          activeIcon: const Icon(Icons.stop_circle),
+                          label: 'Stop Count',
+                        ),
+                        LiquidBottomNavigationBarItem(
+                          icon: const Icon(Icons.list_alt_rounded),
+                          activeIcon: const Icon(Icons.list_alt_rounded),
                           label: 'Entries',
                         ),
                       ]
-                    : isCountStarted
-                        ? [
-                            BottomNavigationBarItem(
-                              icon: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.errorContainer,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Icon(
-                                  Icons.stop_circle_outlined,
-                                  color: Theme.of(context).colorScheme.onErrorContainer,
-                                ),
-                              ),
-                              activeIcon: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.error,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Icon(
-                                  Icons.stop_circle,
-                                  color: Theme.of(context).colorScheme.onError,
-                                ),
-                              ),
-                              label: 'Stop Count',
-                            ),
-                            BottomNavigationBarItem(
-                              icon: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.primaryContainer,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Icon(
-                                  Icons.list_alt_rounded,
-                                  color: Theme.of(context).colorScheme.onPrimaryContainer,
-                                ),
-                              ),
-                              activeIcon: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.primary,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Icon(
-                                  Icons.list_alt_rounded,
-                                  color: Theme.of(context).colorScheme.onPrimary,
-                                ),
-                              ),
-                              label: 'Entries',
-                            ),
-                          ]
-                        : [
-                            BottomNavigationBarItem(
-                              icon: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.primaryContainer,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Icon(
-                                  Icons.play_circle_outline_rounded,
-                                  color: Theme.of(context).colorScheme.onPrimaryContainer,
-                                ),
-                              ),
-                              activeIcon: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.primary,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Icon(
-                                  Icons.play_circle_rounded,
-                                  color: Theme.of(context).colorScheme.onPrimary,
-                                ),
-                              ),
-                              label: 'Start Count',
-                            ),
-                            BottomNavigationBarItem(
-                              icon: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.primaryContainer,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Icon(
-                                  Icons.list_alt_rounded,
-                                  color: Theme.of(context).colorScheme.onPrimaryContainer,
-                                ),
-                              ),
-                              activeIcon: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.primary,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Icon(
-                                  Icons.list_alt_rounded,
-                                  color: Theme.of(context).colorScheme.onPrimary,
-                                ),
-                              ),
-                              label: 'Entries',
-                            ),
-                          ],
-                currentIndex: _selectedIndex,
-                onTap: _onItemTapped,
-              ),
-            ),
+                    : [
+                        LiquidBottomNavigationBarItem(
+                          icon: const Icon(Icons.play_circle_outline_rounded),
+                          activeIcon: const Icon(Icons.play_circle_rounded),
+                          label: 'Start Count',
+                        ),
+                        LiquidBottomNavigationBarItem(
+                          icon: const Icon(Icons.list_alt_rounded),
+                          activeIcon: const Icon(Icons.list_alt_rounded),
+                          label: 'Entries',
+                        ),
+                      ],
           ),
         ),
         if (_isDialogVisible) ...[
@@ -593,6 +614,43 @@ class _HomeScreenState extends State<HomeScreen>
             MaterialPageRoute(builder: (_) => const MoveScreen()),
           );
         },
+      ),
+      const Divider(),
+      const Padding(
+        padding: EdgeInsets.symmetric(vertical: 8.0),
+        child: Text('Wallpaper & Effects', style: semibold14Black33),
+      ),
+      ListTile(
+        leading: const Icon(Icons.wallpaper),
+        title: const Text('Choose Wallpaper', style: medium14Black33),
+        subtitle: Text(WallpaperManager.wallpapers[_currentWallpaper]?.name ?? 'Corporate Teal'),
+        onTap: _showWallpaperSelector,
+      ),
+      SwitchListTile(
+        secondary: const Icon(Icons.auto_awesome),
+        title: const Text('Enable Effects', style: medium14Black33),
+        subtitle: const Text('Animations and particles'),
+        value: _effectsEnabled,
+        onChanged: _toggleEffects,
+      ),
+      const Divider(),
+      ListTile(
+        leading: const Icon(Icons.logout),
+        title: const Text('Logout', style: medium14Black33),
+        onTap: logOutUser,
+      ),
+      ListTile(
+        leading: const Icon(Icons.wallpaper),
+        title: const Text('Choose Wallpaper', style: medium14Black33),
+        subtitle: Text(WallpaperManager.wallpapers[_currentWallpaper]?.name ?? 'Corporate Teal'),
+        onTap: _showWallpaperSelector,
+      ),
+      SwitchListTile(
+        secondary: const Icon(Icons.auto_awesome),
+        title: const Text('Enable Effects', style: medium14Black33),
+        subtitle: const Text('Animations and particles'),
+        value: _effectsEnabled,
+        onChanged: _toggleEffects,
       ),
       ListTile(
         leading: const Icon(Icons.logout),

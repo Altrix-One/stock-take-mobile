@@ -2,11 +2,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:stock_count/config.dart';
-import 'package:stock_count/constants/theme.dart';
-import 'package:stock_count/constants/app_theme.dart';
-import 'package:stock_count/constants/cohenix_colors.dart';
-import 'package:stock_count/constants/cohenix_typography.dart';
-import 'package:stock_count/constants/cohenix_spacing.dart';
+import 'package:stock_count/constants/app_theme_unified.dart';
+import 'package:stock_count/widgets/universal_scaffold.dart';
 import 'package:stock_count/screens/setup_dialog.dart';
 import 'package:stock_count/utilis/api_service.dart';
 import 'package:stock_count/hr/widgets/leave_hero_animation.dart';
@@ -24,8 +21,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final brightness = Theme.of(context).brightness;
-    
     return WillPopScope(
       onWillPop: () async {
         bool backStatus = onWillPop();
@@ -34,72 +29,71 @@ class _LoginScreenState extends State<LoginScreen> {
         }
         return false;
       },
-      child: AnnotatedRegion<SystemUiOverlayStyle>(
-        value: SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent,
-          statusBarIconBrightness: brightness == Brightness.dark 
-            ? Brightness.light 
-            : Brightness.dark,
-        ),
-        child: Scaffold(
-          backgroundColor: CohenixColors.getBackgroundColor(brightness),
-          appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            systemOverlayStyle: SystemUiOverlayStyle(
-              statusBarColor: Colors.transparent,
-              statusBarIconBrightness: brightness == Brightness.dark 
-                ? Brightness.light 
-                : Brightness.dark,
-            ),
-            actions: [
-              // Settings button with Cohenix styling
-              Container(
-                margin: const EdgeInsets.only(right: CohenixSpacing.md),
-                decoration: BoxDecoration(
-                  color: CohenixColors.getOutlineColor(brightness).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(CohenixSpacing.radiusSM),
-                ),
-                child: IconButton(
-                  icon: Icon(
-                    Icons.settings_outlined,
-                    color: CohenixColors.getOnSurfaceColor(brightness),
-                  ),
-                  onPressed: () => _showSettingsDialog(context),
-                  tooltip: 'App Settings',
+      child: UniversalScaffold(
+        appBar: UniversalAppBar(
+          title: '',
+          automaticallyImplyLeading: false,
+          actions: [
+            IconButton(
+              onPressed: () => _showSettingsDialog(context),
+              icon: const Icon(
+                Icons.settings_outlined,
+                color: AppThemeUnified.textPrimary,
+              ),
+              style: IconButton.styleFrom(
+                backgroundColor: AppThemeUnified.glassLight,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppThemeUnified.radiusSM),
                 ),
               ),
-            ],
-          ),
-          body: SafeArea(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: CohenixSpacing.pagePadding,
-                child: Column(
-                  children: [
-                    CohenixSpacing.verticalSpaceXL,
-                    
-                    // Hero Section with Logo and Brand
-                    _buildHeroSection(context, brightness),
-                    
-                    CohenixSpacing.verticalSpaceXXL,
-                    
-                    // Features Animation
-                    _buildFeaturesSection(context, brightness),
-                    
-                    CohenixSpacing.verticalSpaceXXL,
-                    
-                    // Call to Action
-                    _buildCallToActionSection(context, brightness),
-                    
-                    CohenixSpacing.verticalSpaceXL,
-                    
-                    // Login Button
-                    _buildLoginButton(context),
-                    
-                    CohenixSpacing.verticalSpaceLG,
-                  ],
-                ),
+              tooltip: 'App Settings',
+            ),
+            const SizedBox(width: AppThemeUnified.spaceMD),
+          ],
+        ),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppThemeUnified.spaceLG,
+            ),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: MediaQuery.of(context).size.height - 
+                    MediaQuery.of(context).padding.top - 
+                    MediaQuery.of(context).padding.bottom - 
+                    kToolbarHeight,
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const SizedBox(height: AppThemeUnified.spaceMD),
+                  
+                  // Logo at top center
+                  _buildCenteredLogo(),
+                  
+                  const SizedBox(height: AppThemeUnified.spaceLG),
+                  
+                  // App Name
+                  _buildAppName(),
+                  
+                  const SizedBox(height: AppThemeUnified.space2XL),
+                  
+                  // Features Animation
+                  _buildFeaturesSection(context, Theme.of(context).brightness),
+                  
+                  const SizedBox(height: AppThemeUnified.space2XL),
+                  
+                  // Description
+                  _buildCallToActionSection(context, Theme.of(context).brightness),
+                  
+                  const SizedBox(height: AppThemeUnified.space2XL),
+                  
+                  // Login Button
+                  _buildLoginButton(context),
+                  
+                  const SizedBox(height: AppThemeUnified.spaceLG),
+                ],
               ),
             ),
           ),
@@ -108,69 +102,60 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // Hero Section with Cohenix branding
-  Widget _buildHeroSection(BuildContext context, Brightness brightness) {
-    return Column(
-      children: [
-        // Company Logo
-        Container(
-          width: 120,
-          height: 120,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(CohenixSpacing.radiusLG),
-            boxShadow: [
-              BoxShadow(
-                color: accentColor.withOpacity(0.15),
-                blurRadius: 24,
-                offset: const Offset(0, 8),
-                spreadRadius: 0,
+  // Centered Logo at top
+  Widget _buildCenteredLogo() {
+    return Container(
+      width: 120,
+      height: 120,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(AppThemeUnified.radiusLG),
+        boxShadow: [
+          BoxShadow(
+            color: AppThemeUnified.primaryRoyalBlue.withOpacity(0.15),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+            spreadRadius: 0,
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppThemeUnified.radiusLG),
+        child: Image.asset(
+          'assets/images/cohenixess.png',
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppThemeUnified.primaryRoyalBlue,
+                    AppThemeUnified.secondaryOceanBlue,
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(AppThemeUnified.radiusLG),
               ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(CohenixSpacing.radiusLG),
-            child: Image.asset(
-              'assets/images/cohenixess.png',
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        CohenixColors.royalBlue,
-                        CohenixColors.oceanBlue,
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(CohenixSpacing.radiusLG),
-                  ),
-                  child: const Icon(
-                    Icons.business_rounded,
-                    color: Colors.white,
-                    size: 48,
-                  ),
-                );
-              },
-            ),
-          ),
+              child: const Icon(
+                Icons.business_rounded,
+                color: Colors.white,
+                size: 56,
+              ),
+            );
+          },
         ),
-        
-        CohenixSpacing.verticalSpaceLG,
-        
-        // Brand Name with Cohenix Typography
-        Text(
-          "Cohenix ESS",
-          style: CohenixTypography.withPrimaryColor(
-            CohenixTypography.displayMedium,
-            brightness,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        
-        CohenixSpacing.verticalSpaceSM,
-        
-      ],
+      ),
+    );
+  }
+  
+  // App Name Section
+  Widget _buildAppName() {
+    return Text(
+      "Cohenix ESS",
+      style: AppThemeUnified.displayMedium.copyWith(
+        fontWeight: FontWeight.bold,
+      ),
+      textAlign: TextAlign.center,
     );
   }
   
@@ -183,7 +168,7 @@ class _LoginScreenState extends State<LoginScreen> {
         used: 7.5,
         tiles: 16,
         columns: 4,
-        accent: accentColor,
+        accent: AppThemeUnified.primaryRoyalBlue,
         mode: LeaveHeroMode.calendar,
         showLabels: false,
       ),
@@ -198,9 +183,8 @@ class _LoginScreenState extends State<LoginScreen> {
         children: [
           Text(
             "Manage your team with ease through real-time data, automation, and effortless integration. Cohenix ESS makes HR simple.",
-            style: CohenixTypography.withSecondaryColor(
-              CohenixTypography.bodyLarge,
-              brightness,
+            style: AppThemeUnified.bodyLarge.copyWith(
+              color: Colors.white.withValues(alpha: 0.95),
             ),
             textAlign: TextAlign.center,
           ),
@@ -209,12 +193,12 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
   
-  // Professional Login Button with Cohenix styling
+  // Professional Login Button with Liquid styling
   Widget _buildLoginButton(BuildContext context) {
     return Container(
       constraints: const BoxConstraints(maxWidth: 400),
       width: double.infinity,
-      child: ElevatedButton(
+      child: FilledButton(
         onPressed: _isLoggingIn ? null : () async {
           setState(() {
             _isLoggingIn = true;
@@ -224,17 +208,6 @@ class _LoginScreenState extends State<LoginScreen> {
             _isLoggingIn = false;
           });
         },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: accentColor,
-          foregroundColor: Colors.white,
-          elevation: CohenixSpacing.elevationMD,
-          shadowColor: accentColor.withOpacity(0.3),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(CohenixSpacing.radiusMD),
-          ),
-          padding: CohenixSpacing.buttonPaddingLarge,
-          minimumSize: const Size(double.infinity, 56),
-        ),
         child: _isLoggingIn
             ? const SizedBox(
                 width: 24,
@@ -252,11 +225,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     Icons.login_rounded,
                     size: 20,
                   ),
-                  CohenixSpacing.horizontalSpaceSM,
+                  const SizedBox(width: 8),
                   Text(
                     "LOGIN",
-                    style: CohenixTypography.withWhite(
-                      CohenixTypography.buttonLarge,
+                    style: AppThemeUnified.buttonLarge.copyWith(
+                      color: Colors.white,
                     ),
                   ),
                 ],
@@ -290,10 +263,13 @@ class _LoginScreenState extends State<LoginScreen> {
         const SnackBar(
           duration: Duration(milliseconds: 1500),
           behavior: SnackBarBehavior.floating,
-          backgroundColor: blackColor,
-          content: Text(
+          backgroundColor: Colors.black,
+          content: const Text(
             "Press back once again to exit",
-            style: semibold15White,
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       );

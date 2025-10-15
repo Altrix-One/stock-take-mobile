@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:stock_count/hr/services/leaves_service.dart';
-import 'package:stock_count/hr/services/profile_service.dart';
+import 'package:stock_count/constants/app_theme_unified.dart';
 import 'package:stock_count/constants/modern_design_system.dart';
 import 'package:stock_count/widgets/modern_ui_components.dart';
-import 'package:stock_count/widgets/modern_enhanced_cards.dart';
 import 'package:stock_count/hr/widgets/leave_balance_card.dart';
 import 'package:stock_count/utilis/outbox_queue.dart';
+import 'package:stock_count/widgets/universal_scaffold.dart';
 import 'dart:async';
 
 class ModernLeavesPage extends StatefulWidget {
@@ -97,118 +97,69 @@ class _ModernLeavesPageState extends State<ModernLeavesPage> with TickerProvider
   
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              ModernDesignSystem.getSurfaceColor(Theme.of(context).brightness),
-              ModernDesignSystem.getSurfaceVariant(Theme.of(context).brightness),
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              _buildHeader(),
-              _buildTabBar(),
-              Expanded(
-                child: _isLoading 
-                    ? const ModernLoadingIndicator(message: 'Loading leaves data...')
-                    : TabBarView(
-                        controller: _tabController,
-                        children: [
-                          _buildMyLeavesTab(),
-                          _buildLeaveBalanceTab(),
-                        ],
-                      ),
-              ),
-            ],
-          ),
-        ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showApplyLeaveForm,
-        backgroundColor: ModernDesignSystem.primaryTeal,
-        foregroundColor: Colors.white,
-        elevation: 4,
-        icon: const Icon(Icons.add),
-        label: const Text(
-          'Apply Leave',
-          style: TextStyle(fontWeight: FontWeight.w600),
-        ),
-      ),
-    );
-  }
-  
-  Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.all(ModernDesignSystem.spaceMD),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'My Leaves',
-                  style: ModernDesignSystem.displaySmall.copyWith(
-                    color: ModernDesignSystem.getTextPrimary(Theme.of(context).brightness),
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                ModernDesignSystem.verticalSpaceMicro,
-                Text(
-                  'Manage your leave applications',
-                  style: ModernDesignSystem.bodyMedium.copyWith(
-                    color: ModernDesignSystem.getTextSecondary(Theme.of(context).brightness),
-                  ),
-                ),
-              ],
-            ),
-          ),
+    return UniversalScaffold(
+      appBar: UniversalAppBar(
+        title: 'My Leaves',
+        actions: [
           IconButton(
             onPressed: _loadLeavesData,
-            icon: Icon(
+            icon: const Icon(
               Icons.refresh,
-              color: ModernDesignSystem.primaryTeal,
+              color: AppThemeUnified.textPrimary,
             ),
             style: IconButton.styleFrom(
-              backgroundColor: ModernDesignSystem.primaryTeal.withOpacity(0.1),
+              backgroundColor: AppThemeUnified.glassLight,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(ModernDesignSystem.radiusSM),
+                borderRadius: BorderRadius.circular(AppThemeUnified.radiusSM),
               ),
             ),
           ),
         ],
       ),
+      body: _isLoading 
+          ? const UniversalLoading(message: 'Loading leaves data...')
+          : Column(
+              children: [
+                _buildTabBar(),
+                const SizedBox(height: AppThemeUnified.spaceMD),
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildMyLeavesTab(),
+                      _buildLeaveBalanceTab(),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showApplyLeaveForm,
+        backgroundColor: AppThemeUnified.primaryRoyalBlue,
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
     );
   }
   
+  
   Widget _buildTabBar() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: ModernDesignSystem.spaceMD),
-      decoration: BoxDecoration(
-        color: ModernDesignSystem.getSurfaceColor(Theme.of(context).brightness),
-        borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
-        border: Border.all(
-          color: ModernDesignSystem.getBorderColor(Theme.of(context).brightness),
-        ),
-      ),
+    return AppThemeUnified.glassContainer(
+      margin: const EdgeInsets.symmetric(horizontal: AppThemeUnified.spaceMD),
       child: TabBar(
         controller: _tabController,
         indicator: BoxDecoration(
-          borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
-          color: ModernDesignSystem.primaryTeal,
+          borderRadius: BorderRadius.circular(AppThemeUnified.radiusMD),
+          color: AppThemeUnified.primaryRoyalBlue,
         ),
         labelColor: Colors.white,
-        unselectedLabelColor: ModernDesignSystem.getTextSecondary(Theme.of(context).brightness),
-        labelStyle: ModernDesignSystem.labelLarge.copyWith(fontWeight: FontWeight.w600),
-        unselectedLabelStyle: ModernDesignSystem.labelLarge,
-        dividerColor: Colors.transparent,
+        unselectedLabelColor: AppThemeUnified.textSecondary,
         indicatorSize: TabBarIndicatorSize.tab,
+        indicatorWeight: 0,
+        dividerColor: Colors.transparent,
+        labelStyle: AppThemeUnified.labelLarge.copyWith(
+          fontWeight: FontWeight.w600,
+        ),
+        unselectedLabelStyle: AppThemeUnified.labelLarge,
         tabs: const [
           Tab(text: 'My Applications'),
           Tab(text: 'Leave Balance'),
@@ -670,50 +621,46 @@ class _ApplyLeaveFormPageState extends State<ApplyLeaveFormPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              ModernDesignSystem.getSurfaceColor(Theme.of(context).brightness),
-              ModernDesignSystem.getSurfaceVariant(Theme.of(context).brightness),
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              ModernAppBar(
-                title: 'Apply for Leave',
-                showBackButton: true,
-              ),
-              
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(ModernDesignSystem.spaceMD),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      children: [
-                        _buildLeaveTypeSelector(),
-                        ModernDesignSystem.verticalSpaceMD,
-                        
-                        _buildDateSelectors(),
-                        ModernDesignSystem.verticalSpaceMD,
-                        
-                        _buildReasonField(),
-                        ModernDesignSystem.verticalSpaceXL,
-                        
-                        _buildSubmitButton(),
-                      ],
+      body: Stack(
+        children: [
+          // Royal blue gradient wallpaper background
+          AppThemeUnified.wallpaperBackground,
+          
+          // Main content
+          SafeArea(
+            child: Column(
+              children: [
+                ModernAppBar(
+                  title: 'Apply for Leave',
+                  showBackButton: true,
+                ),
+                
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(ModernDesignSystem.spaceMD),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        children: [
+                          _buildLeaveTypeSelector(),
+                          ModernDesignSystem.verticalSpaceMD,
+                          
+                          _buildDateSelectors(),
+                          ModernDesignSystem.verticalSpaceMD,
+                          
+                          _buildReasonField(),
+                          ModernDesignSystem.verticalSpaceXL,
+                          
+                          _buildSubmitButton(),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

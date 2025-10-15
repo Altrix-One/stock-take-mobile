@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:stock_count/hr/services/claims_service.dart';
+import 'package:stock_count/constants/app_theme_unified.dart';
 import 'package:stock_count/constants/modern_design_system.dart';
 import 'package:stock_count/widgets/modern_ui_components.dart';
-import 'package:stock_count/widgets/modern_enhanced_cards.dart';
+import 'package:stock_count/widgets/universal_scaffold.dart';
 import 'package:stock_count/utilis/outbox_queue.dart';
+import 'package:stock_count/constants/wallpaper_manager.dart';
+import 'package:stock_count/components/liquid_components.dart';
 import 'dart:async';
 import 'dart:io';
 
@@ -74,117 +77,63 @@ class _ModernClaimsPageState extends State<ModernClaimsPage> with TickerProvider
   
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              ModernDesignSystem.getSurfaceColor(Theme.of(context).brightness),
-              ModernDesignSystem.getSurfaceVariant(Theme.of(context).brightness),
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              _buildHeader(),
-              _buildTabBar(),
-              Expanded(
-                child: _isLoading 
-                    ? const ModernLoadingIndicator(message: 'Loading claims data...')
-                    : TabBarView(
-                        controller: _tabController,
-                        children: [
-                          _buildMyClaimsTab(),
-                          _buildStatsTab(),
-                          _buildCategoriesTab(),
-                        ],
-                      ),
-              ),
-            ],
-          ),
-        ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showNewClaimForm,
-        backgroundColor: ModernDesignSystem.primaryTeal,
-        foregroundColor: Colors.white,
-        elevation: 4,
-        icon: const Icon(Icons.add),
-        label: const Text(
-          'New Claim',
-          style: TextStyle(fontWeight: FontWeight.w600),
-        ),
-      ),
-    );
-  }
-  
-  Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.all(ModernDesignSystem.spaceMD),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Expense Claims',
-                  style: ModernDesignSystem.displaySmall.copyWith(
-                    color: ModernDesignSystem.getTextPrimary(Theme.of(context).brightness),
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                ModernDesignSystem.verticalSpaceMicro,
-                Text(
-                  'Manage your expense claims',
-                  style: ModernDesignSystem.bodyMedium.copyWith(
-                    color: ModernDesignSystem.getTextSecondary(Theme.of(context).brightness),
-                  ),
-                ),
-              ],
-            ),
-          ),
+    return UniversalScaffold(
+      appBar: UniversalAppBar(
+        title: 'Claims',
+        actions: [
           IconButton(
+            icon: Icon(Icons.refresh, color: AppThemeUnified.primaryRoyalBlue),
             onPressed: _loadClaimsData,
-            icon: Icon(
-              Icons.refresh,
-              color: ModernDesignSystem.primaryTeal,
-            ),
-            style: IconButton.styleFrom(
-              backgroundColor: ModernDesignSystem.primaryTeal.withOpacity(0.1),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(ModernDesignSystem.radiusSM),
-              ),
-            ),
           ),
         ],
       ),
+      body: Column(
+        children: [
+          _buildTabBar(),
+          Expanded(
+            child: _isLoading 
+                ? const ModernLoadingIndicator(message: 'Loading claims data...')
+                : TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildMyClaimsTab(),
+                      _buildStatsTab(),
+                      _buildCategoriesTab(),
+                    ],
+                  ),
+          ),
+        ],
+      ),
+      floatingActionButton: LiquidFloatingActionButton(
+        onPressed: _showNewClaimForm,
+        heroTag: 'newClaim',
+        liquidPalette: 'ocean',
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
     );
   }
   
+  
   Widget _buildTabBar() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: ModernDesignSystem.spaceMD),
+      margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: ModernDesignSystem.getSurfaceColor(Theme.of(context).brightness),
-        borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
+        color: AppThemeUnified.glassLight,
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: ModernDesignSystem.getBorderColor(Theme.of(context).brightness),
+          color: AppThemeUnified.glassBorder,
         ),
       ),
       child: TabBar(
         controller: _tabController,
         indicator: BoxDecoration(
-          borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
-          color: ModernDesignSystem.primaryTeal,
+          borderRadius: BorderRadius.circular(12),
+          color: AppThemeUnified.primaryRoyalBlue,
         ),
         labelColor: Colors.white,
-        unselectedLabelColor: ModernDesignSystem.getTextSecondary(Theme.of(context).brightness),
-        labelStyle: ModernDesignSystem.labelLarge.copyWith(fontWeight: FontWeight.w600),
-        unselectedLabelStyle: ModernDesignSystem.labelLarge,
+        unselectedLabelColor: AppThemeUnified.textSecondary,
+        labelStyle: AppThemeUnified.buttonLarge.copyWith(fontWeight: FontWeight.w600),
+        unselectedLabelStyle: AppThemeUnified.buttonLarge,
         dividerColor: Colors.transparent,
         indicatorSize: TabBarIndicatorSize.tab,
         tabs: const [
@@ -201,12 +150,12 @@ class _ModernClaimsPageState extends State<ModernClaimsPage> with TickerProvider
       onRefresh: _loadClaimsData,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(ModernDesignSystem.spaceMD),
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             // Quick Stats
             _buildQuickStats(),
-            ModernDesignSystem.verticalSpaceLG,
+            const SizedBox(height: 24),
             
             // Recent Claims
             _buildRecentClaims(),
@@ -224,16 +173,16 @@ class _ModernClaimsPageState extends State<ModernClaimsPage> with TickerProvider
       onRefresh: _loadClaimsData,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(ModernDesignSystem.spaceMD),
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             // Monthly Overview
             _buildMonthlyOverview(),
-            ModernDesignSystem.verticalSpaceLG,
+            const SizedBox(height: 24),
             
             // Category Breakdown
             _buildCategoryBreakdown(),
-            ModernDesignSystem.verticalSpaceLG,
+            const SizedBox(height: 24),
             
             // Status Distribution
             _buildStatusDistribution(),
@@ -248,7 +197,7 @@ class _ModernClaimsPageState extends State<ModernClaimsPage> with TickerProvider
       onRefresh: _loadClaimsData,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(ModernDesignSystem.spaceMD),
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             // Categories List
@@ -712,48 +661,26 @@ class _NewClaimFormPageState extends State<NewClaimFormPage> {
   
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              ModernDesignSystem.getSurfaceColor(Theme.of(context).brightness),
-              ModernDesignSystem.getSurfaceVariant(Theme.of(context).brightness),
-            ],
-          ),
-        ),
-        child: SafeArea(
+    return UniversalScaffold(
+      appBar: UniversalAppBar(
+        title: widget.existingClaim != null ? 'Edit Claim' : 'New Expense Claim',
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Form(
+          key: _formKey,
           child: Column(
             children: [
-              ModernAppBar(
-                title: widget.existingClaim != null ? 'Edit Claim' : 'New Expense Claim',
-                showBackButton: true,
-              ),
+              _buildBasicInfoSection(),
+              const SizedBox(height: 16),
               
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(ModernDesignSystem.spaceMD),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      children: [
-                        _buildBasicInfoSection(),
-                        ModernDesignSystem.verticalSpaceMD,
-                        
-                        _buildExpenseDetailsSection(),
-                        ModernDesignSystem.verticalSpaceMD,
-                        
-                        _buildAttachmentsSection(),
-                        ModernDesignSystem.verticalSpaceXL,
-                        
-                        _buildActionButtons(),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
+              _buildExpenseDetailsSection(),
+              const SizedBox(height: 16),
+              
+              _buildAttachmentsSection(),
+              const SizedBox(height: 32),
+              
+              _buildActionButtons(),
             ],
           ),
         ),
@@ -786,10 +713,10 @@ class _NewClaimFormPageState extends State<NewClaimFormPage> {
               labelText: 'Category',
               hintText: 'Select expense category',
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(ModernDesignSystem.radiusSM),
-                borderSide: BorderSide(color: ModernDesignSystem.getBorderColor(Theme.of(context).brightness)),
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: AppThemeUnified.glassBorder),
               ),
-              contentPadding: const EdgeInsets.all(ModernDesignSystem.spaceMD),
+              contentPadding: const EdgeInsets.all(16),
             ),
             items: _categories.map((category) {
               final name = category['name']?.toString() ?? '';
@@ -832,28 +759,28 @@ class _NewClaimFormPageState extends State<NewClaimFormPage> {
           
           InkWell(
             onTap: _selectExpenseDate,
-            borderRadius: BorderRadius.circular(ModernDesignSystem.radiusSM),
+            borderRadius: BorderRadius.circular(8),
             child: Container(
-              padding: const EdgeInsets.all(ModernDesignSystem.spaceMD),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                border: Border.all(color: ModernDesignSystem.getBorderColor(Theme.of(context).brightness)),
-                borderRadius: BorderRadius.circular(ModernDesignSystem.radiusSM),
+                border: Border.all(color: AppThemeUnified.glassBorder),
+                borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
                 children: [
                   Icon(
                     Icons.calendar_today,
-                    color: ModernDesignSystem.primaryTeal,
+                    color: AppThemeUnified.primaryRoyalBlue,
                   ),
-                  ModernDesignSystem.horizontalSpaceSM,
+                  const SizedBox(width: 12),
                   Text(
                     _expenseDate != null 
                         ? '${_expenseDate!.day}/${_expenseDate!.month}/${_expenseDate!.year}'
                         : 'Select expense date',
-                    style: ModernDesignSystem.bodyMedium.copyWith(
+                    style: AppThemeUnified.bodyMedium.copyWith(
                       color: _expenseDate != null 
-                          ? ModernDesignSystem.getTextPrimary(Theme.of(context).brightness)
-                          : ModernDesignSystem.getTextTertiary(Theme.of(context).brightness),
+                          ? AppThemeUnified.textPrimary
+                          : AppThemeUnified.textSecondary,
                     ),
                   ),
                 ],
@@ -975,7 +902,7 @@ class _NewClaimFormPageState extends State<NewClaimFormPage> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: Theme.of(context).colorScheme.copyWith(
-              primary: ModernDesignSystem.primaryTeal,
+              primary: AppThemeUnified.primaryRoyalBlue,
             ),
           ),
           child: child!,

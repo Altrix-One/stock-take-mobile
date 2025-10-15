@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:stock_count/hr/services/attendance_service.dart';
 import 'package:stock_count/hr/services/profile_service.dart';
+import 'package:stock_count/constants/app_theme_unified.dart';
 import 'package:stock_count/constants/modern_design_system.dart';
 import 'package:stock_count/widgets/modern_ui_components.dart';
-import 'package:stock_count/widgets/modern_enhanced_cards.dart';
 import 'package:stock_count/utilis/outbox_queue.dart';
+import 'package:stock_count/widgets/universal_scaffold.dart';
 import 'dart:async';
 
 class ModernAttendancePage extends StatefulWidget {
@@ -189,50 +190,53 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> with Ticker
   
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              ModernDesignSystem.getSurfaceColor(Theme.of(context).brightness),
-              ModernDesignSystem.getSurfaceVariant(Theme.of(context).brightness),
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              _buildHeader(),
-              _buildTabBar(),
-              Expanded(
-                child: _isLoading 
-                    ? const ModernLoadingIndicator(message: 'Loading attendance data...')
-                    : TabBarView(
-                        controller: _tabController,
-                        children: [
-                          _buildTodayTab(),
-                          _buildHistoryTab(),
-                          _buildShiftRequestsTab(),
-                        ],
-                      ),
+    return UniversalScaffold(
+      appBar: UniversalAppBar(
+        title: 'Attendance',
+        actions: [
+          IconButton(
+            onPressed: _loadAttendanceData,
+            icon: const Icon(
+              Icons.refresh,
+              color: AppThemeUnified.textPrimary,
+            ),
+            style: IconButton.styleFrom(
+              backgroundColor: AppThemeUnified.glassLight,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppThemeUnified.radiusSM),
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
-      floatingActionButton: _tabController.index == 2 
-          ? FloatingActionButton.extended(
-              onPressed: _showShiftRequestForm,
-              backgroundColor: ModernDesignSystem.primaryTeal,
-              foregroundColor: Colors.white,
-              elevation: 4,
-              icon: const Icon(Icons.add),
-              label: const Text(
-                'Request Shift',
-                style: TextStyle(fontWeight: FontWeight.w600),
+      body: _isLoading 
+          ? const UniversalLoading(message: 'Loading attendance data...')
+          : SafeArea(
+              child: Column(
+                children: [
+                  _buildHeader(),
+                  _buildTabBar(),
+                  Expanded(
+                    child: _isLoading 
+                        ? const ModernLoadingIndicator(message: 'Loading attendance data...')
+                        : TabBarView(
+                            controller: _tabController,
+                            children: [
+                              _buildTodayTab(),
+                              _buildHistoryTab(),
+                              _buildShiftRequestsTab(),
+                            ],
+                          ),
+                  ),
+                ],
               ),
+            ),
+      floatingActionButton: _tabController.index == 2 
+          ? FloatingActionButton(
+              onPressed: _showShiftRequestForm,
+              heroTag: 'requestShift',
+              backgroundColor: AppThemeUnified.primaryRoyalBlue,
+              child: const Icon(Icons.add, color: Colors.white),
             )
           : null,
     );

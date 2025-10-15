@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:stock_count/config.dart';
-import 'package:stock_count/constants/app_theme.dart';
+import 'package:stock_count/constants/app_theme_unified.dart';
+import 'package:stock_count/widgets/universal_scaffold.dart';
 import 'package:stock_count/screens/login.dart';
 import 'package:stock_count/screens/setup_dialog.dart';
 import 'package:stock_count/utilis/outbox_queue.dart';
@@ -81,16 +82,20 @@ class _MyAppState extends State<MyApp> {
   Future<void> _checkConfiguration() async {
     try {
       final isConfigured = await AppConfig.isConfigured;
-      setState(() {
-        _isConfigured = isConfigured;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isConfigured = isConfigured;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
       print("Error checking configuration: $e");
-      setState(() {
-        _isConfigured = false;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isConfigured = false;
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -98,14 +103,14 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Cohenix ESS',
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
+      theme: AppThemeUnified.lightTheme,
+      darkTheme: AppThemeUnified.darkTheme,
+      themeMode: ThemeMode.light,
       debugShowCheckedModeBanner: false,
       home: _isLoading
-          ? const Scaffold(
-              body: Center(
-                child: CircularProgressIndicator(),
+          ? const UniversalScaffold(
+              body: UniversalLoading(
+                message: 'Loading...',
               ),
             )
           : _isConfigured
@@ -130,16 +135,9 @@ class _MyAppState extends State<MyApp> {
                     });
 
                     // Return a loading screen while dialog is being shown
-                    return const Scaffold(
-                      body: Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            CircularProgressIndicator(),
-                            SizedBox(height: 16),
-                            Text('Setting up the app...'),
-                          ],
-                        ),
+                    return const UniversalScaffold(
+                      body: UniversalLoading(
+                        message: 'Setting up the app...',
                       ),
                     );
                   },

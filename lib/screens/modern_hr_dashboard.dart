@@ -3,9 +3,9 @@ import 'package:stock_count/hr/services/leaves_service.dart';
 import 'package:stock_count/hr/services/attendance_service.dart';
 import 'package:stock_count/hr/services/claims_service.dart';
 import 'package:stock_count/hr/services/profile_service.dart';
+import 'package:stock_count/constants/app_theme_unified.dart';
 import 'package:stock_count/constants/modern_design_system.dart';
-import 'package:stock_count/widgets/modern_ui_components.dart';
-import 'package:stock_count/widgets/modern_enhanced_cards.dart';
+import 'package:stock_count/widgets/universal_scaffold.dart';
 import 'package:stock_count/screens/modern_profile_page.dart';
 import 'package:stock_count/screens/modern_leaves_page.dart';
 import 'package:stock_count/screens/modern_attendance_page.dart';
@@ -13,9 +13,11 @@ import 'package:stock_count/screens/modern_claims_page.dart';
 import 'package:stock_count/screens/modern_approvals_page.dart';
 import 'package:stock_count/utilis/outbox_queue.dart';
 import 'package:stock_count/screens/login.dart';
+import 'package:stock_count/widgets/modern_ui_components.dart';
 import 'package:hive/hive.dart';
 import 'dart:convert';
 import 'dart:async';
+import 'dart:ui';
 
 class ModernHRDashboard extends StatefulWidget {
   const ModernHRDashboard({super.key});
@@ -185,31 +187,40 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
+        backgroundColor: AppThemeUnified.glassDark,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
+          borderRadius: BorderRadius.circular(AppThemeUnified.radiusMD),
         ),
         title: Row(
           children: [
             Icon(
               Icons.logout,
-              color: ModernDesignSystem.error,
+              color: AppThemeUnified.error,
             ),
-            ModernDesignSystem.horizontalSpaceXS,
-            const Text('Sign Out'),
+            const SizedBox(width: AppThemeUnified.spaceXS),
+            Text(
+              'Sign Out',
+              style: AppThemeUnified.titleLarge,
+            ),
           ],
         ),
-        content: const Text('Are you sure you want to sign out?'),
+        content: Text(
+          'Are you sure you want to sign out?',
+          style: AppThemeUnified.bodyMedium,
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text(
+              'Cancel',
+              style: AppThemeUnified.labelLarge,
+            ),
           ),
-          ModernPrimaryButton(
-            text: 'Sign Out',
+          ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
-            padding: const EdgeInsets.symmetric(
-              horizontal: ModernDesignSystem.spaceMD,
-              vertical: ModernDesignSystem.spaceXS,
+            child: Text(
+              'Sign Out',
+              style: AppThemeUnified.labelLarge,
             ),
           ),
         ],
@@ -238,48 +249,35 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
     final brightness = Theme.of(context).brightness;
     
     if (_isLoading) {
-      return const Scaffold(
-        body: ModernLoadingIndicator(
+      return const UniversalScaffold(
+        body: UniversalLoading(
           message: 'Loading your dashboard...',
         ),
       );
     }
     
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              ModernDesignSystem.getSurfaceColor(brightness),
-              ModernDesignSystem.getSurfaceVariant(brightness),
-            ],
-          ),
-        ),
-        child: PageView(
-          controller: _pageController,
-          onPageChanged: (index) {
-            setState(() {
-              _selectedIndex = index;
-            });
-          },
-          children: [
-            _buildDashboardPage(),
-            const ModernLeavesPage(),
-            const ModernAttendancePage(),
-            const ModernClaimsPage(),
-            if (_canApprove) const ModernApprovalsPage(),
-            const ModernProfilePage(),
-          ],
-        ),
+    return UniversalScaffold(
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: (index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
+        children: [
+          _buildDashboardPage(),
+          const ModernLeavesPage(),
+          const ModernAttendancePage(),
+          const ModernClaimsPage(),
+          if (_canApprove) const ModernApprovalsPage(),
+          const ModernProfilePage(),
+        ],
       ),
       bottomNavigationBar: _buildBottomNavigation(),
     );
   }
   
   Widget _buildBottomNavigation() {
-    final theme = Theme.of(context);
     final navItems = [
       _NavItem(Icons.dashboard_rounded, Icons.dashboard_outlined, 'Dashboard'),
       _NavItem(Icons.event_note_rounded, Icons.event_note_outlined, 'Leaves'),
@@ -290,12 +288,12 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
     ];
     
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      margin: const EdgeInsets.fromLTRB(AppThemeUnified.spaceMD, 0, AppThemeUnified.spaceMD, AppThemeUnified.spaceMD),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(ModernDesignSystem.radiusLG),
+        color: AppThemeUnified.glassLight,
+        borderRadius: BorderRadius.circular(AppThemeUnified.radiusLG),
         border: Border.all(
-          color: ModernDesignSystem.getBorderColor(theme.brightness),
+          color: AppThemeUnified.glassBorder,
           width: 1,
         ),
         boxShadow: [
@@ -306,165 +304,170 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
           ),
         ],
       ),
-      child: Container(
-        height: 68,
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: navItems.asMap().entries.map((entry) {
-            final index = entry.key;
-            final item = entry.value;
-            final isSelected = _selectedIndex == index;
-            final showBadge = _canApprove && index == 4 && _pendingApprovalsCount > 0;
-            
-            return Expanded(
-              child: GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _selectedIndex = index;
-                  });
-                  _pageController.animateToPage(
-                    index,
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOut,
-                  );
-                },
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  margin: const EdgeInsets.symmetric(horizontal: 2),
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: isSelected ? ModernDesignSystem.primaryTeal.withOpacity(0.15) : null,
-                    borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
-                    border: isSelected
-                        ? Border.all(color: ModernDesignSystem.primaryTeal, width: 1.5)
-                        : null,
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Stack(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppThemeUnified.radiusLG),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+          child: Container(
+            height: 68,
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: navItems.asMap().entries.map((entry) {
+                final index = entry.key;
+                final item = entry.value;
+                final isSelected = _selectedIndex == index;
+                final showBadge = _canApprove && index == 4 && _pendingApprovalsCount > 0;
+                
+                return Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedIndex = index;
+                      });
+                      _pageController.animateToPage(
+                        index,
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                      );
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      margin: const EdgeInsets.symmetric(horizontal: 2),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: isSelected 
+                            ? AppThemeUnified.glassLight
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(AppThemeUnified.radiusMD),
+                        border: isSelected
+                            ? Border.all(
+                                color: AppThemeUnified.glassBorder, 
+                                width: 1
+                              )
+                            : null,
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(
-                            isSelected ? item.activeIcon : item.inactiveIcon,
-                            color: isSelected
-                                ? ModernDesignSystem.primaryTeal
-                                : theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
-                            size: isSelected ? 22 : 20,
-                          ),
-                          if (showBadge)
-                            Positioned(
-                              right: -2,
-                              top: -2,
-                              child: Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: BoxDecoration(
-                                  color: ModernDesignSystem.error,
-                                  shape: BoxShape.circle,
-                                ),
-                                constraints: const BoxConstraints(
-                                  minWidth: 16,
-                                  minHeight: 16,
-                                ),
-                                child: Text(
-                                  _pendingApprovalsCount > 99 ? '99+' : _pendingApprovalsCount.toString(),
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 8,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
+                          Stack(
+                            children: [
+                              Icon(
+                                isSelected ? item.activeIcon : item.inactiveIcon,
+                                color: isSelected
+                                    ? AppThemeUnified.textPrimary
+                                    : AppThemeUnified.textTertiary,
+                                size: isSelected ? 22 : 20,
                               ),
+                              if (showBadge)
+                                Positioned(
+                                  right: -2,
+                                  top: -2,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: BoxDecoration(
+                                      color: AppThemeUnified.error,
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: AppThemeUnified.error.withOpacity(0.3),
+                                          blurRadius: 4,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    constraints: const BoxConstraints(
+                                      minWidth: 16,
+                                      minHeight: 16,
+                                    ),
+                                    child: Text(
+                                      _pendingApprovalsCount > 99 ? '99+' : _pendingApprovalsCount.toString(),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 8,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            item.label,
+                            style: AppThemeUnified.labelSmall.copyWith(
+                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                              color: isSelected
+                                  ? AppThemeUnified.textPrimary
+                                  : AppThemeUnified.textTertiary,
                             ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ],
                       ),
-                      ModernDesignSystem.verticalSpaceMicro,
-                      Text(
-                        item.label,
-                        style: ModernDesignSystem.captionSmall.copyWith(
-                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                          color: isSelected
-                              ? ModernDesignSystem.primaryTeal
-                              : theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-      ),
-    );
-  }
-  
-  Widget _buildDashboardPage() {
-    final brightness = Theme.of(context).brightness;
-    
-    return SafeArea(
-      child: RefreshIndicator(
-        onRefresh: _loadDashboardData,
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(ModernDesignSystem.spaceMD),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header Section
-              _buildHeader(),
-              ModernDesignSystem.verticalSpaceLG,
-              
-              // Quick Stats
-              _buildQuickStats(),
-              ModernDesignSystem.verticalSpaceLG,
-              
-              // Quick Actions
-              _buildQuickActions(),
-              ModernDesignSystem.verticalSpaceLG,
-              
-              // Recent Activities
-              _buildRecentActivities(),
-              
-              // Bottom spacing for navigation
-              const SizedBox(height: 100),
-            ],
+                );
+              }).toList(),
+            ),
           ),
         ),
       ),
     );
   }
   
+  Widget _buildDashboardPage() {
+    return SafeArea(
+      child: RefreshIndicator(
+        onRefresh: _loadDashboardData,
+        child: UniversalPageContent(
+          children: [
+            // Header Section
+            _buildHeader(),
+            AppThemeUnified.sectionSpacing,
+            
+            // Quick Stats
+            _buildQuickStats(),
+            AppThemeUnified.sectionSpacing,
+            
+            // Quick Actions
+            _buildQuickActions(),
+            AppThemeUnified.sectionSpacing,
+            
+            // Recent Activities
+            _buildRecentActivities(),
+            
+            // Bottom spacing for navigation
+            const SizedBox(height: 100),
+          ],
+        ),
+      ),
+    );
+  }
+  
   Widget _buildHeader() {
-    final brightness = Theme.of(context).brightness;
     final userName = _userInfo?['full_name']?.toString() ?? 'User';
     final firstName = userName.split(' ').first;
     final designation = _userInfo?['designation']?.toString() ?? '';
     
-    return ModernHeroCard(
-      gradient: LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [
-          ModernDesignSystem.primaryNavy,
-          ModernDesignSystem.primaryTeal,
-        ],
-      ),
+    return UniversalCard(
       child: Row(
         children: [
           Container(
             width: 60,
             height: 60,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
-              border: Border.all(color: Colors.white.withOpacity(0.3), width: 2),
+              color: AppThemeUnified.glassLight,
+              borderRadius: BorderRadius.circular(AppThemeUnified.radiusMD),
+              border: Border.all(
+                color: AppThemeUnified.glassBorder,
+                width: 1,
+              ),
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD - 2),
+              borderRadius: BorderRadius.circular(AppThemeUnified.radiusMD - 2),
               child: _profileImageUrl != null
                   ? Image.network(
                       _profileImageUrl!,
@@ -475,7 +478,7 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
             ),
           ),
           
-          ModernDesignSystem.horizontalSpaceMD,
+          const SizedBox(width: AppThemeUnified.spaceMD),
           
           Expanded(
             child: Column(
@@ -483,25 +486,20 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
               children: [
                 Text(
                   'Welcome back,',
-                  style: ModernDesignSystem.bodySmall.copyWith(
-                    color: Colors.white.withOpacity(0.8),
-                  ),
+                  style: AppThemeUnified.bodySmall,
                 ),
-                ModernDesignSystem.verticalSpaceMicro,
+                const SizedBox(height: AppThemeUnified.spaceXS),
                 Text(
                   firstName,
-                  style: ModernDesignSystem.headlineMedium.copyWith(
-                    color: Colors.white,
+                  style: AppThemeUnified.headlineMedium.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 if (designation.isNotEmpty) ...[
-                  ModernDesignSystem.verticalSpaceMicro,
+                  const SizedBox(height: AppThemeUnified.spaceXS),
                   Text(
                     designation,
-                    style: ModernDesignSystem.bodySmall.copyWith(
-                      color: Colors.white.withOpacity(0.7),
-                    ),
+                    style: AppThemeUnified.bodyMedium,
                   ),
                 ],
               ],
@@ -512,13 +510,13 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
             onPressed: _handleLogout,
             icon: const Icon(
               Icons.logout,
-              color: Colors.white,
+              color: AppThemeUnified.textPrimary,
               size: 24,
             ),
             style: IconButton.styleFrom(
-              backgroundColor: Colors.white.withOpacity(0.1),
+              backgroundColor: AppThemeUnified.glassLight,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(ModernDesignSystem.radiusSM),
+                borderRadius: BorderRadius.circular(AppThemeUnified.radiusSM),
               ),
             ),
           ),
@@ -531,12 +529,11 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
     return Container(
       width: double.infinity,
       height: double.infinity,
-      color: Colors.white.withOpacity(0.2),
+      color: AppThemeUnified.glassMedium,
       child: Center(
         child: Text(
           firstName.isNotEmpty ? firstName[0].toUpperCase() : 'U',
-          style: ModernDesignSystem.headlineMedium.copyWith(
-            color: Colors.white,
+          style: AppThemeUnified.headlineMedium.copyWith(
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -688,9 +685,9 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
             subtitle: _getItemSubtitle(item),
             trailing: _getItemStatus(item),
             onTap: () => _handleItemTap(item),
-            margin: const EdgeInsets.only(bottom: ModernDesignSystem.spaceXS),
+            margin: EdgeInsets.only(bottom: ModernDesignSystem.spaceXS),
           );
-        }).toList(),
+        }).toList().cast<Widget>(),
       ),
     );
   }
@@ -834,126 +831,153 @@ class _ModernHRDashboardState extends State<ModernHRDashboard> with TickerProvid
     final currentColor = currentData['color'] as Color;
     final brightness = Theme.of(context).brightness;
     
-    return Container(
-      decoration: ModernDesignSystem.modernCardDecoration(brightness),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: _rotateLeaveBalanceManually,
-          borderRadius: BorderRadius.circular(ModernDesignSystem.radiusMD),
-          child: Padding(
-            padding: const EdgeInsets.all(ModernDesignSystem.spaceCompactMD),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+    return AppThemeUnified.glassContainer(
+      borderRadius: AppThemeUnified.radiusMD,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppThemeUnified.radiusMD),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppThemeUnified.glassLight,
+              borderRadius: BorderRadius.circular(AppThemeUnified.radiusMD),
+              border: Border.all(
+                color: AppThemeUnified.glassBorder,
+                width: 1,
+              ),
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: _rotateLeaveBalanceManually,
+                borderRadius: BorderRadius.circular(AppThemeUnified.radiusMD),
+                child: Padding(
+                  padding: const EdgeInsets.all(AppThemeUnified.spaceMD),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      padding: const EdgeInsets.all(ModernDesignSystem.spaceXS),
-                      decoration: BoxDecoration(
-                        color: currentColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(ModernDesignSystem.radiusXS),
-                      ),
-                      child: Stack(
-                        children: [
-                          AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 300),
-                            child: Icon(
-                              Icons.event_available,
-                              key: ValueKey(currentColor.value),
-                              color: currentColor,
-                              size: 16,
+                    Row(
+                      children: [
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          padding: const EdgeInsets.all(AppThemeUnified.spaceXS),
+                          decoration: BoxDecoration(
+                            color: AppThemeUnified.glassMedium,
+                            borderRadius: BorderRadius.circular(AppThemeUnified.radiusXS),
+                            border: Border.all(
+                              color: AppThemeUnified.glassBorder,
+                              width: 0.5,
                             ),
                           ),
-                          // Stack indicator with dynamic color
-                          if (_leaveBalance != null && _leaveBalance!.length > 1)
-                            Positioned(
-                              top: -4,
-                              right: -4,
-                              child: AnimatedContainer(
+                          child: Stack(
+                            children: [
+                              AnimatedSwitcher(
                                 duration: const Duration(milliseconds: 300),
-                                padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
-                                decoration: BoxDecoration(
+                                child: Icon(
+                                  Icons.event_available,
+                                  key: ValueKey(currentColor.value),
                                   color: currentColor,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  '${_currentLeaveTypeIndex + 1}/${_leaveBalance!.length}',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 7,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                                  size: 16,
                                 ),
                               ),
-                            ),
-                        ],
+                              // Stack indicator with dynamic color
+                              if (_leaveBalance != null && _leaveBalance!.length > 1)
+                                Positioned(
+                                  top: -4,
+                                  right: -4,
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 300),
+                                    padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                                    decoration: BoxDecoration(
+                                      color: currentColor,
+                                      borderRadius: BorderRadius.circular(4),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: currentColor.withOpacity(0.3),
+                                          blurRadius: 4,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Text(
+                                      '${_currentLeaveTypeIndex + 1}/${_leaveBalance!.length}',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 7,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                        const Spacer(),
+                      ],
+                    ),
+                    
+                    const SizedBox(height: AppThemeUnified.spaceMD),
+                    
+                    // Balance value with animation and dynamic color
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      transitionBuilder: (Widget child, Animation<double> animation) {
+                        return SlideTransition(
+                          position: Tween<Offset>(
+                            begin: const Offset(0.0, 0.3),
+                            end: Offset.zero,
+                          ).animate(animation),
+                          child: FadeTransition(
+                            opacity: animation,
+                            child: child,
+                          ),
+                        );
+                      },
+                      child: Text(
+                        currentData['balance']!,
+                        key: ValueKey('${currentData['balance']}-${currentColor.value}'),
+                        style: AppThemeUnified.headlineSmall.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: currentColor,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    const Spacer(),
+                    
+                    const SizedBox(height: AppThemeUnified.spaceXS),
+                    
+                    // Leave type label with animation
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      transitionBuilder: (Widget child, Animation<double> animation) {
+                        return SlideTransition(
+                          position: Tween<Offset>(
+                            begin: const Offset(0.0, -0.3),
+                            end: Offset.zero,
+                          ).animate(animation),
+                          child: FadeTransition(
+                            opacity: animation,
+                            child: child,
+                          ),
+                        );
+                      },
+                      child: Text(
+                        currentData['type']!,
+                        key: ValueKey(currentData['type']),
+                        style: AppThemeUnified.bodySmall.copyWith(
+                          color: AppThemeUnified.textSecondary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                   ],
-                ),
-                
-                ModernDesignSystem.verticalSpaceMD,
-                
-                // Balance value with animation and dynamic color
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  transitionBuilder: (Widget child, Animation<double> animation) {
-                    return SlideTransition(
-                      position: Tween<Offset>(
-                        begin: const Offset(0.0, 0.3),
-                        end: Offset.zero,
-                      ).animate(animation),
-                      child: FadeTransition(
-                        opacity: animation,
-                        child: child,
-                      ),
-                    );
-                  },
-                  child: Text(
-                    currentData['balance']!,
-                    key: ValueKey('${currentData['balance']}-${currentColor.value}'),
-                    style: ModernDesignSystem.headlineCompact.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: ModernDesignSystem.getTextPrimary(brightness),
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                
-                ModernDesignSystem.verticalSpaceXS,
-                
-                // Leave type label with animation
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  transitionBuilder: (Widget child, Animation<double> animation) {
-                    return SlideTransition(
-                      position: Tween<Offset>(
-                        begin: const Offset(0.0, -0.3),
-                        end: Offset.zero,
-                      ).animate(animation),
-                      child: FadeTransition(
-                        opacity: animation,
-                        child: child,
-                      ),
-                    );
-                  },
-                  child: Text(
-                    currentData['type']!,
-                    key: ValueKey(currentData['type']),
-                    style: ModernDesignSystem.captionCompact.copyWith(
-                      color: ModernDesignSystem.getTextSecondary(brightness),
-                      fontWeight: FontWeight.w500,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),
