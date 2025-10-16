@@ -1,4 +1,4 @@
-import 'package:stock_count/hr/services/hrms_api_client.dart';
+import 'package:cohenix_ess/hr/services/hrms_api_client.dart';
 
 class DoctypeService {
   static Future<List<dynamic>> getDoctypeFields(String doctype) async {

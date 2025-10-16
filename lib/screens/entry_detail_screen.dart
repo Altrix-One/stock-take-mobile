@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:stock_count/constants/theme.dart';
+import 'package:cohenix_ess/constants/theme.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:stock_count/utilis/outbox_queue.dart';
+import 'package:cohenix_ess/utilis/outbox_queue.dart';
 
 class EntryDetailsScreen extends StatefulWidget {
   final int entryId;

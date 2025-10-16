@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:stock_count/constants/theme.dart';
+import 'package:cohenix_ess/constants/theme.dart';
 
 void showErrorDialog(BuildContext context, String message) {
   showDialog(

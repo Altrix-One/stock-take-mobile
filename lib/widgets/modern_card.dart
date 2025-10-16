@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:stock_count/constants/modern_design_system.dart';
+import 'package:cohenix_ess/constants/modern_design_system.dart';
 
 class ModernCard extends StatelessWidget {
   final Widget child;

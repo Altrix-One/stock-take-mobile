@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:hive/hive.dart';
-import 'package:stock_count/config.dart';
+import 'package:cohenix_ess/config.dart';
 
 class ItemService {
   static Future<List<Map<String, dynamic>>> searchItems(String query,

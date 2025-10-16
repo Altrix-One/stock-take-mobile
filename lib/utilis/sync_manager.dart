@@ -1,11 +1,11 @@
-import 'package:stock_count/config.dart';
+import 'package:cohenix_ess/config.dart';
 import 'package:http/http.dart' as http;
 import 'package:hive/hive.dart'; // Hive for token management
 import 'package:sqflite/sqflite.dart';
 import 'dart:convert';
 import 'package:path/path.dart';
-import 'package:stock_count/utilis/db_schema.dart';
-import 'package:stock_count/utilis/auth_service.dart';
+import 'package:cohenix_ess/utilis/db_schema.dart';
+import 'package:cohenix_ess/utilis/auth_service.dart';
 
 class SyncManager {
   // Use a method to get the base URL asynchronously

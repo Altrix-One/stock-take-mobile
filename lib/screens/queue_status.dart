@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
-import 'package:stock_count/utilis/db_schema.dart';
-import 'package:stock_count/utilis/outbox_queue.dart';
-import 'package:stock_count/utils/error_message_parser.dart';
-import 'package:stock_count/widgets/professional_error_dialog.dart';
+import 'package:cohenix_ess/utilis/db_schema.dart';
+import 'package:cohenix_ess/utilis/outbox_queue.dart';
+import 'package:cohenix_ess/utils/error_message_parser.dart';
+import 'package:cohenix_ess/widgets/professional_error_dialog.dart';
 
 class QueueStatusScreen extends StatefulWidget {
   const QueueStatusScreen({super.key});

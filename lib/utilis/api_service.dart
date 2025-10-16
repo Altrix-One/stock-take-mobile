@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:stock_count/config.dart';
-import 'package:stock_count/screens/modern_hr_dashboard.dart';
-import 'package:stock_count/utilis/dialog_messages.dart';
+import 'package:cohenix_ess/config.dart';
+import 'package:cohenix_ess/screens/modern_hr_dashboard.dart';
+import 'package:cohenix_ess/utilis/dialog_messages.dart';
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:hive/hive.dart';
 
@@ -31,7 +31,7 @@ class ApiService {
 
       final result = await FlutterWebAuth2.authenticate(
         url: url.toString(),
-        callbackUrlScheme: 'stockcount',
+        callbackUrlScheme: 'cohenixess',
       );
 
       final code = Uri.parse(result).queryParameters['code'];

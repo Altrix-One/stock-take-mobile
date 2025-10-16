@@ -1,12 +1,12 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:stock_count/config.dart';
-import 'package:stock_count/constants/app_theme_unified.dart';
-import 'package:stock_count/widgets/universal_scaffold.dart';
-import 'package:stock_count/screens/setup_dialog.dart';
-import 'package:stock_count/utilis/api_service.dart';
-import 'package:stock_count/hr/widgets/leave_hero_animation.dart';
+import 'package:cohenix_ess/config.dart';
+import 'package:cohenix_ess/constants/app_theme_unified.dart';
+import 'package:cohenix_ess/widgets/universal_scaffold.dart';
+import 'package:cohenix_ess/screens/setup_dialog.dart';
+import 'package:cohenix_ess/utilis/api_service.dart';
+import 'package:cohenix_ess/hr/widgets/leave_hero_animation.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});

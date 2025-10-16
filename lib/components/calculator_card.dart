@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:stock_count/constants/theme.dart';
-import 'package:stock_count/utilis/change_notifier.dart';
+import 'package:cohenix_ess/constants/theme.dart';
+import 'package:cohenix_ess/utilis/change_notifier.dart';
 import 'package:sunmi_scanner/sunmi_scanner.dart';
 
 class CalculatorCard extends StatefulWidget {

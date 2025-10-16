@@ -4,7 +4,7 @@ class AppConfig {
   // Default values (used as fallback)
   static const String _defaultClientId = 'pijppl7q46';
   static const String _defaultBaseUrl = 'https://dev14-csf-tz.aakvaerp.com';
-  static const String redirectUri = 'stockcount://oauth2redirect';
+  static const String redirectUri = 'cohenixess://oauth2redirect';
   static const String tokenEndpoint =
       '/api/method/frappe.integrations.oauth2.get_token';
   static const String userInfoEndpoint =

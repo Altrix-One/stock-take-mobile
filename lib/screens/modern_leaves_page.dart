@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:stock_count/hr/services/leaves_service.dart';
-import 'package:stock_count/constants/app_theme_unified.dart';
-import 'package:stock_count/constants/modern_design_system.dart';
-import 'package:stock_count/widgets/modern_ui_components.dart';
-import 'package:stock_count/hr/widgets/leave_balance_card.dart';
-import 'package:stock_count/utilis/outbox_queue.dart';
-import 'package:stock_count/widgets/universal_scaffold.dart';
+import 'package:cohenix_ess/hr/services/leaves_service.dart';
+import 'package:cohenix_ess/constants/app_theme_unified.dart';
+import 'package:cohenix_ess/constants/modern_design_system.dart';
+import 'package:cohenix_ess/widgets/modern_ui_components.dart';
+import 'package:cohenix_ess/hr/widgets/leave_balance_card.dart';
+import 'package:cohenix_ess/utilis/outbox_queue.dart';
+import 'package:cohenix_ess/widgets/universal_scaffold.dart';
 import 'dart:async';
 
 class ModernLeavesPage extends StatefulWidget {

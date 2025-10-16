@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:stock_count/config.dart';
-import 'package:stock_count/constants/wallpaper_manager.dart';
+import 'package:cohenix_ess/config.dart';
+import 'package:cohenix_ess/constants/wallpaper_manager.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class SetupDialog extends StatefulWidget {

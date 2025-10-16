@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
-import 'package:stock_count/config.dart';
-import 'package:stock_count/constants/app_theme_unified.dart';
-import 'package:stock_count/widgets/universal_scaffold.dart';
-import 'package:stock_count/screens/login.dart';
-import 'package:stock_count/screens/setup_dialog.dart';
-import 'package:stock_count/utilis/outbox_queue.dart';
+import 'package:cohenix_ess/config.dart';
+import 'package:cohenix_ess/constants/app_theme_unified.dart';
+import 'package:cohenix_ess/widgets/universal_scaffold.dart';
+import 'package:cohenix_ess/screens/login.dart';
+import 'package:cohenix_ess/screens/setup_dialog.dart';
+import 'package:cohenix_ess/utilis/outbox_queue.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:async';
@@ -42,6 +43,15 @@ Future<void> initializeHiveForBackgroundTasks() async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Enable edge-to-edge mode for transparent system bars
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      systemNavigationBarColor: Colors.transparent,
+      statusBarColor: Colors.transparent,
+    ),
+  );
 
   await Hive.initFlutter();
   await Hive.openBox('authBox');

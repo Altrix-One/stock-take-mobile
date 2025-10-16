@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:stock_count/constants/modern_design_system.dart';
-import 'package:stock_count/constants/app_theme_unified.dart';
-import 'package:stock_count/constants/wallpaper_manager.dart';
-import 'package:stock_count/hr/services/profile_service.dart';
-import 'package:stock_count/utilis/outbox_queue.dart';
-import 'package:stock_count/screens/queue_status.dart';
-import 'package:stock_count/screens/login.dart';
-import 'package:stock_count/widgets/modern_ui_components.dart';
-import 'package:stock_count/widgets/universal_scaffold.dart';
+import 'package:cohenix_ess/constants/modern_design_system.dart';
+import 'package:cohenix_ess/constants/app_theme_unified.dart';
+import 'package:cohenix_ess/constants/wallpaper_manager.dart';
+import 'package:cohenix_ess/hr/services/profile_service.dart';
+import 'package:cohenix_ess/utilis/outbox_queue.dart';
+import 'package:cohenix_ess/screens/queue_status.dart';
+import 'package:cohenix_ess/screens/login.dart';
+import 'package:cohenix_ess/widgets/modern_ui_components.dart';
+import 'package:cohenix_ess/widgets/universal_scaffold.dart';
 import 'package:hive/hive.dart';
 import 'package:image_picker/image_picker.dart';
 

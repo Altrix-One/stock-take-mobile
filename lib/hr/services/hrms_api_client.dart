@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:hive/hive.dart';
 import 'package:http/http.dart' as http;
-import 'package:stock_count/config.dart';
-import 'package:stock_count/utilis/auth_service.dart';
+import 'package:cohenix_ess/config.dart';
+import 'package:cohenix_ess/utilis/auth_service.dart';
 
 class HrmsApiClient {
   static Future<String> _baseUrl() async => await AppConfig.baseUrl;

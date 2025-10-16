@@ -8,17 +8,17 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
 import 'package:hive/hive.dart'; // Hive for token management
 
-import 'package:stock_count/components/calculator_card.dart';
-import 'package:stock_count/components/center_box.dart';
-import 'package:stock_count/components/liquid_components.dart';
-import 'package:stock_count/screens/setup_dialog.dart';
-import 'package:stock_count/constants/theme.dart';
-import 'package:stock_count/constants/wallpaper_manager.dart';
-import 'package:stock_count/utilis/change_notifier.dart';
-import 'package:stock_count/utilis/db_schema.dart';
-import 'package:stock_count/utilis/dialog_messages.dart';
-import 'package:stock_count/screens/login.dart'; // Import login screen
-import 'package:stock_count/screens/move.dart';
+import 'package:cohenix_ess/components/calculator_card.dart';
+import 'package:cohenix_ess/components/center_box.dart';
+import 'package:cohenix_ess/components/liquid_components.dart';
+import 'package:cohenix_ess/screens/setup_dialog.dart';
+import 'package:cohenix_ess/constants/theme.dart';
+import 'package:cohenix_ess/constants/wallpaper_manager.dart';
+import 'package:cohenix_ess/utilis/change_notifier.dart';
+import 'package:cohenix_ess/utilis/db_schema.dart';
+import 'package:cohenix_ess/utilis/dialog_messages.dart';
+import 'package:cohenix_ess/screens/login.dart'; // Import login screen
+import 'package:cohenix_ess/screens/move.dart';
 
 class HomeScreen extends StatefulWidget {
   final int? recountEntryId;

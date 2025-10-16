@@ -1,6 +1,6 @@
-# Stock Take
+# Cohenix ESS
 
-**Stock Take** is a Flutter-based mobile application that streamlines and enhances the stock-taking process in warehouses. It integrates with Frappe/ERPNext for powerful data management and supports offline operation for environments with limited connectivity.
+**Cohenix ESS** (Employee Self-Service) is a Flutter-based mobile application for warehouse stock-taking and HR operations. It integrates with Frappe/ERPNext for powerful data management and supports offline operation for environments with limited connectivity.
 
 > **Note:** This app **requires** the [Nex Bridge](https://github.com/Aakvatech-Limited/nex_bridge) application for communication between Flutter and Frappe/ERPNext.
 
@@ -10,7 +10,7 @@
 
 You can download the latest APK directly from this repository:
 
-[**Download Stock Take APK**](https://github.com/Aakvatech-Limited/stock-take-mobile/raw/main/Stock%20Take.apk)
+[**Download Cohenix ESS APK**](https://github.com/Aakvatech-Limited/stock-take-mobile/raw/main/Cohenix%20ESS.apk)
 
 After installation, you'll need to configure the app to connect to your Frappe/ERPNext server.
 
@@ -23,10 +23,10 @@ After installation, you'll need to configure the app to connect to your Frappe/E
 2. To set up OAuth in Frappe:
    - Navigate to: Integrations > OAuth Client > New
    - Fill in the following details:
-     - App Name: Stock Taking App
+     - App Name: Cohenix ESS
      - Skip Authorization: Check this box
-     - Redirect URIs: stockcount://oauth2redirect
-     - Default Redirect URI: stockcount://oauth2redirect
+     - Redirect URIs: cohenixess://oauth2redirect
+     - Default Redirect URI: cohenixess://oauth2redirect
      - Grant Type: Authorization Code
      - Response Type: Code
    - Save the OAuth Client and copy the Client ID to use in the app
@@ -36,9 +36,11 @@ After installation, you'll need to configure the app to connect to your Frappe/E
 ## Features
 
 - **Real-Time Data Integration:** Seamlessly connects with Frappe/ERPNext.
-- **Offline Operation:** Continue stock-taking without an internet connection.
+- **Offline Operation:** Continue working without an internet connection.
 - **User-Friendly UI:** Built with Flutter for a modern, intuitive experience.
-- **Efficient Inventory Management:** Minimizes human errors and streamlines workflows.
+- **Stock-Taking:** Warehouse inventory counting with offline support.
+- **HR Operations:** Employee self-service functions (leaves, claims, attendance) with offline queue processing.
+- **Efficient Workflows:** Minimizes human errors and streamlines warehouse and HR operations.
 
 ---
 

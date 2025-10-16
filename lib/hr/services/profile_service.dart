@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:hive/hive.dart';
-import 'package:stock_count/hr/services/hrms_api_client.dart';
-import 'package:stock_count/config.dart';
+import 'package:cohenix_ess/hr/services/hrms_api_client.dart';
+import 'package:cohenix_ess/config.dart';
 import 'package:http/http.dart' as http;
 
 class ProfileService {

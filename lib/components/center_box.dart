@@ -4,12 +4,12 @@ import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/uil.dart';
 import 'package:hive/hive.dart'; // For Hive storage
 import 'package:sqflite/sqflite.dart';
-import 'package:stock_count/constants/theme.dart';
-import 'package:stock_count/screens/entry_detail_screen.dart';
-import 'package:stock_count/screens/home.dart';
-import 'package:stock_count/utilis/dialog_messages.dart';
+import 'package:cohenix_ess/constants/theme.dart';
+import 'package:cohenix_ess/screens/entry_detail_screen.dart';
+import 'package:cohenix_ess/screens/home.dart';
+import 'package:cohenix_ess/utilis/dialog_messages.dart';
 import 'package:provider/provider.dart';
-import 'package:stock_count/utilis/change_notifier.dart';
+import 'package:cohenix_ess/utilis/change_notifier.dart';
 
 class CenterBox extends StatefulWidget {
   final Database? database;

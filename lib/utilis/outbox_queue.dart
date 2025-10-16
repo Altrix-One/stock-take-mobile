@@ -3,11 +3,11 @@ import 'dart:async';
 import 'package:hive/hive.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
-import 'package:stock_count/utilis/db_schema.dart';
-import 'package:stock_count/services/stock_service.dart';
-import 'package:stock_count/hr/services/leaves_service.dart';
-import 'package:stock_count/hr/services/attendance_service.dart';
-import 'package:stock_count/hr/services/claims_service.dart';
+import 'package:cohenix_ess/utilis/db_schema.dart';
+import 'package:cohenix_ess/services/stock_service.dart';
+import 'package:cohenix_ess/hr/services/leaves_service.dart';
+import 'package:cohenix_ess/hr/services/attendance_service.dart';
+import 'package:cohenix_ess/hr/services/claims_service.dart';
 
 class OutboxQueue {
   static const _uuid = Uuid();

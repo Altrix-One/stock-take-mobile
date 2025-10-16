@@ -460,37 +460,38 @@ class LiquidBottomNavigationBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: margin,
-      decoration: LiquidTheme.glassDecoration(
-        color: backgroundColor ?? Theme.of(context).colorScheme.surface,
-        opacity: 0.85,
-        borderRadius: BorderRadius.circular(24),
-        blur: 20.0,
-        customShadows: [
-          BoxShadow(
-            color: Theme.of(context).colorScheme.shadow.withOpacity(0.1),
-            blurRadius: elevation * 2,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: List.generate(items.length, (index) {
-                return _LiquidBottomNavItem(
-                  item: items[index],
-                  isSelected: index == currentIndex,
-                  liquidPalette: liquidPalette,
-                  onTap: () => onTap?.call(index),
-                );
-              }),
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+    return Material(
+      type: MaterialType.transparency,
+      color: Colors.transparent,
+      child: Container(
+        margin: margin,
+        padding: EdgeInsets.only(bottom: bottomPadding + 12),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.03),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.2),
+                  width: 1.0,
+                ),
+              ),
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: List.generate(items.length, (index) {
+                  return _LiquidBottomNavItem(
+                    item: items[index],
+                    isSelected: index == currentIndex,
+                    liquidPalette: liquidPalette,
+                    onTap: () => onTap?.call(index),
+                  );
+                }),
+              ),
             ),
           ),
         ),
@@ -606,9 +607,17 @@ class _LiquidBottomNavItemState extends State<_LiquidBottomNavItem>
                 children: [
                   Opacity(
                     opacity: _opacityAnimation.value,
-                    child: widget.isSelected && widget.item.activeIcon != null
-                        ? widget.item.activeIcon!
-                        : widget.item.icon,
+                    child: IconTheme(
+                      data: IconThemeData(
+                        color: widget.isSelected
+                            ? Colors.white
+                            : Colors.white.withOpacity(0.7),
+                        size: 24,
+                      ),
+                      child: widget.isSelected && widget.item.activeIcon != null
+                          ? widget.item.activeIcon!
+                          : widget.item.icon,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -619,10 +628,7 @@ class _LiquidBottomNavItemState extends State<_LiquidBottomNavItem>
                           widget.isSelected ? FontWeight.w600 : FontWeight.w500,
                       color: widget.isSelected
                           ? Colors.white
-                          : Theme.of(context)
-                              .colorScheme
-                              .onSurfaceVariant
-                              .withOpacity(0.6),
+                          : Colors.white.withOpacity(0.7),
                     ),
                   ),
                 ],

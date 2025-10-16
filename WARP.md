@@ -4,7 +4,7 @@ This file provides guidance to WARP (warp.dev) when working with code in this re
 
 ## Overview
 
-Flutter mobile app for warehouse stock-taking and HR operations that integrates with Frappe/ERPNext via the Nex Bridge backend. The app supports offline-first workflows (local SQLite via sqflite) with periodic background sync and uses OAuth (authorization code flow) for authentication.
+Cohenix ESS (Employee Self-Service) is a Flutter mobile app for warehouse stock-taking and HR operations that integrates with Frappe/ERPNext via the Nex Bridge backend. The app supports offline-first workflows (local SQLite via sqflite) with periodic background sync and uses OAuth (authorization code flow) for authentication.
 
 Key functionality:
 - **Stock-taking operations**: Warehouse inventory counting with offline support
@@ -14,7 +14,7 @@ Key functionality:
 Key points from README:
 - Requires Nex Bridge on the Frappe/ERPNext server for API endpoints used by this app.
 - First-run configuration prompts for Base URL and Client ID; values are persisted and can be edited later.
-- OAuth redirect URI used by the app: stockcount://oauth2redirect
+- OAuth redirect URI used by the app: cohenixess://oauth2redirect
 
 ## Commands
 
@@ -64,7 +64,7 @@ Key points from README:
 - Configuration and persistence
   - AppConfig (lib/config.dart)
     - Persists Base URL and Client ID via SharedPreferences with cached getters/setters.
-    - Defines redirectUri (stockcount://oauth2redirect) and paths for token and userinfo endpoints.
+    - Defines redirectUri (cohenixess://oauth2redirect) and paths for token and userinfo endpoints.
   - Hive (box: authBox)
     - Stores accessToken, refreshToken, tokenExpiry, userId, userDetails and cached server data (warehouses_by_company, companies, assigned_items).
   - SQLite via sqflite with schema in lib/utilis/db_schema.dart
@@ -96,7 +96,7 @@ Key points from README:
   - Periodic scheduling: main.dart startPeriodicHRSync() sets a Timer.periodic for HR outbox queue processing every 15 minutes.
 
 - State management and UI
-  - State management: Provider (lib/utilis/change_notifier.dart) via StockTakeNotifier for lightweight app state (countType, scannedData).
+  - State management: Provider (lib/utilis/change_notifier.dart) for lightweight app state management.
   - Theming: Multiple theme systems including lib/constants/theme.dart, lib/constants/app_theme.dart, and lib/constants/modern_design_system.dart with Cohenix branding elements.
   - Screens:
     - LoginScreen (lib/screens/login.dart): Triggers OAuth login via ApiService, includes access to SetupDialog for editing config.
@@ -108,8 +108,9 @@ Key points from README:
 
 - Nex Bridge is required on the Frappe/ERPNext server for this app.
 - OAuth client in Frappe should be configured with:
-  - Redirect URIs: stockcount://oauth2redirect
-  - Default Redirect URI: stockcount://oauth2redirect
+  - App Name: Cohenix ESS
+  - Redirect URIs: cohenixess://oauth2redirect
+  - Default Redirect URI: cohenixess://oauth2redirect
   - Grant Type: Authorization Code
   - Response Type: Code
 - On first launch, the app requests:

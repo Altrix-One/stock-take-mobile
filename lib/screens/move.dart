@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
-import 'package:stock_count/utilis/db_schema.dart';
-import 'package:stock_count/utilis/outbox_queue.dart';
-import 'package:stock_count/utilis/sync_manager.dart';
-import 'package:stock_count/services/item_service.dart';
+import 'package:cohenix_ess/utilis/db_schema.dart';
+import 'package:cohenix_ess/utilis/outbox_queue.dart';
+import 'package:cohenix_ess/utilis/sync_manager.dart';
+import 'package:cohenix_ess/services/item_service.dart';
 
 class MoveScreen extends StatefulWidget {
   const MoveScreen({Key? key}) : super(key: key);

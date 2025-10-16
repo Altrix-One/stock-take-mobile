@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'dart:ui';
-import 'package:stock_count/constants/app_theme_unified.dart';
+import 'package:cohenix_ess/constants/app_theme_unified.dart';
 
 class ModernLeaveItem extends StatelessWidget {
   final Map<String, dynamic> leave;

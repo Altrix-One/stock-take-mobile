@@ -1,6 +1,6 @@
-import 'package:stock_count/hr/services/hrms_api_client.dart';
-import 'package:stock_count/hr/services/profile_service.dart';
-import 'package:stock_count/utilis/outbox_queue.dart';
+import 'package:cohenix_ess/hr/services/hrms_api_client.dart';
+import 'package:cohenix_ess/hr/services/profile_service.dart';
+import 'package:cohenix_ess/utilis/outbox_queue.dart';
 
 class LeavesService {
   static Future<List<dynamic>> myLeaves() async {

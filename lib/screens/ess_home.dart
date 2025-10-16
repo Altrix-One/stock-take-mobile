@@ -1,31 +1,32 @@
 import 'package:flutter/material.dart';
-import 'package:stock_count/hr/services/leaves_service.dart';
-import 'package:stock_count/hr/services/attendance_service.dart';
-import 'package:stock_count/hr/services/claims_service.dart';
-import 'package:stock_count/hr/services/profile_service.dart';
+import 'package:flutter/services.dart';
+import 'package:cohenix_ess/hr/services/leaves_service.dart';
+import 'package:cohenix_ess/hr/services/attendance_service.dart';
+import 'package:cohenix_ess/hr/services/claims_service.dart';
+import 'package:cohenix_ess/hr/services/profile_service.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:stock_count/hr/widgets/leave_balance_card.dart';
-import 'package:stock_count/utilis/outbox_queue.dart';
+import 'package:cohenix_ess/hr/widgets/leave_balance_card.dart';
+import 'package:cohenix_ess/utilis/outbox_queue.dart';
 import 'package:hive/hive.dart';
-import 'package:stock_count/screens/queue_status.dart';
-import 'package:stock_count/screens/login.dart';
-import 'package:stock_count/widgets/section_header.dart';
-import 'package:stock_count/widgets/professional_loading.dart';
-import 'package:stock_count/widgets/professional_error_dialog.dart';
-import 'package:stock_count/utils/error_message_parser.dart';
-import 'package:stock_count/widgets/modern_leave_item.dart';
-import 'package:stock_count/widgets/modern_attendance_item.dart';
-import 'package:stock_count/widgets/modern_shift_item.dart';
-import 'package:stock_count/widgets/modern_claim_item.dart';
-import 'package:stock_count/screens/modern_profile_page.dart';
-import 'package:stock_count/constants/modern_design_system.dart';
-import 'package:stock_count/constants/wallpaper_manager.dart';
-import 'package:stock_count/components/liquid_components.dart';
-import 'package:stock_count/widgets/clean_leave_balance_card.dart';
+import 'package:cohenix_ess/screens/queue_status.dart';
+import 'package:cohenix_ess/screens/login.dart';
+import 'package:cohenix_ess/widgets/section_header.dart';
+import 'package:cohenix_ess/widgets/professional_loading.dart';
+import 'package:cohenix_ess/widgets/professional_error_dialog.dart';
+import 'package:cohenix_ess/utils/error_message_parser.dart';
+import 'package:cohenix_ess/widgets/modern_leave_item.dart';
+import 'package:cohenix_ess/widgets/modern_attendance_item.dart';
+import 'package:cohenix_ess/widgets/modern_shift_item.dart';
+import 'package:cohenix_ess/widgets/modern_claim_item.dart';
+import 'package:cohenix_ess/screens/modern_profile_page.dart';
+import 'package:cohenix_ess/constants/modern_design_system.dart';
+import 'package:cohenix_ess/constants/wallpaper_manager.dart';
+import 'package:cohenix_ess/components/liquid_components.dart';
+import 'package:cohenix_ess/widgets/clean_leave_balance_card.dart';
 
 class ESSHomeScreen extends StatefulWidget {
   const ESSHomeScreen({super.key});
@@ -51,6 +52,14 @@ class _ESSHomeScreenState extends State<ESSHomeScreen>
     _pageController = PageController(initialPage: 0);
     _loadRoles();
     _loadWallpaper();
+    
+    // Set system navigation bar to transparent
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarIconBrightness: Brightness.light,
+      ),
+    );
   }
 
   @override
@@ -109,34 +118,43 @@ class _ESSHomeScreenState extends State<ESSHomeScreen>
     // Clamp index if approvals hidden
     if (!_canApprove && _index == 4) _index = 3;
 
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF1436AC), // Royal Blue
-            Color(0xFF1483EB), // Ocean Blue
-            Color(0xFF1436AC), // Royal Blue
-          ],
-        ),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
       ),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        extendBody: true,
-        body: PageView(
-          controller: _pageController,
-          onPageChanged: (index) {
-            setState(() {
-              _index = index;
-            });
-            _animationController.forward().then((_) {
-              _animationController.reset();
-            });
-          },
-          children: pages,
+      child: SizedBox.expand(
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFF1436AC), // Royal Blue
+                Color(0xFF1483EB), // Ocean Blue
+                Color(0xFF1436AC), // Royal Blue
+              ],
+            ),
+          ),
+          child: Scaffold(
+            backgroundColor: Colors.transparent,
+            extendBody: true,
+            body: PageView(
+              controller: _pageController,
+              onPageChanged: (index) {
+                setState(() {
+                  _index = index;
+                });
+                _animationController.forward().then((_) {
+                  _animationController.reset();
+                });
+              },
+              children: pages,
+            ),
+            bottomNavigationBar: _buildLiquidBottomNav(),
+          ),
         ),
-        bottomNavigationBar: _buildLiquidBottomNav(),
       ),
     );
   }
@@ -437,6 +455,7 @@ class _ESSHomeScreenState extends State<ESSHomeScreen>
     return LiquidBottomNavigationBar(
       liquidPalette: 'corporate',
       currentIndex: _index,
+      margin: const EdgeInsets.fromLTRB(12, 0, 12, 8),
       onTap: (index) {
         if (_index != index) {
           setState(() {
@@ -1029,6 +1048,7 @@ class _DashboardPageState extends State<_DashboardPage> {
             ),
           ),
           child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Container(
@@ -1044,24 +1064,16 @@ class _DashboardPageState extends State<_DashboardPage> {
                 ),
               ),
               const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  title,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                    fontSize: 12, // Slightly smaller for more compact look
-                    height: 1.2, // Better line height
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+              Text(
+                title,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                  fontSize: 12,
+                  height: 1.2,
                 ),
-              ),
-              const SizedBox(width: 6),
-              Icon(
-                Icons.arrow_forward_ios_rounded,
-                size: 12,
-                color: Colors.white.withOpacity(0.7),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
@@ -1825,18 +1837,35 @@ class _ApplyLeavePageState extends State<_ApplyLeavePage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Apply for Leave'),
-        elevation: 0,
-        backgroundColor: theme.colorScheme.surface,
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF1436AC), // Royal Blue
+            Color(0xFF1483EB), // Ocean Blue
+            Color(0xFF1436AC), // Royal Blue
+          ],
+        ),
       ),
-      body: _loadingMeta
-          ? const ProfessionalLoading(message: 'Loading leave types...')
-          : Form(
-              key: _formKey,
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        extendBodyBehindAppBar: true,
+        appBar: AppBar(
+          title: const Text('Apply for Leave', style: TextStyle(color: Colors.white)),
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          backgroundColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          iconTheme: const IconThemeData(color: Colors.white),
+        ),
+        body: _loadingMeta
+            ? const ProfessionalLoading(message: 'Loading leave types...')
+            : Form(
+                key: _formKey,
+                child: ListView(
+                  padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + kToolbarHeight + 16, 20, 32),
                 children: [
                   // Header Section
                   Container(
@@ -5467,16 +5496,33 @@ class _NewAttendanceRequestPageState extends State<_NewAttendanceRequestPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Attendance Request'),
-        elevation: 0,
-        backgroundColor: theme.colorScheme.surface,
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF1436AC),
+            Color(0xFF1483EB),
+            Color(0xFF1436AC),
+          ],
+        ),
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        extendBodyBehindAppBar: true,
+        appBar: AppBar(
+          title: const Text('Attendance Request', style: TextStyle(color: Colors.white)),
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          backgroundColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+          padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + kToolbarHeight + 16, 20, 32),
           children: [
             // Header Section
             Container(
@@ -5836,18 +5882,35 @@ class _NewShiftRequestPageState extends State<_NewShiftRequestPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Shift Request'),
-        elevation: 0,
-        backgroundColor: theme.colorScheme.surface,
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF1436AC),
+            Color(0xFF1483EB),
+            Color(0xFF1436AC),
+          ],
+        ),
       ),
-      body: _loadingMeta
-          ? const ProfessionalLoading(message: 'Loading shift types...')
-          : Form(
-              key: _formKey,
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        extendBodyBehindAppBar: true,
+        appBar: AppBar(
+          title: const Text('Shift Request', style: TextStyle(color: Colors.white)),
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          backgroundColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          iconTheme: const IconThemeData(color: Colors.white),
+        ),
+        body: _loadingMeta
+            ? const ProfessionalLoading(message: 'Loading shift types...')
+            : Form(
+                key: _formKey,
+                child: ListView(
+                  padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + kToolbarHeight + 16, 20, 32),
                 children: [
                   // Header Section
                   Container(
@@ -6382,18 +6445,35 @@ class _NewClaimPageState extends State<_NewClaimPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('New Expense Claim'),
-        elevation: 0,
-        backgroundColor: theme.colorScheme.surface,
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF1436AC),
+            Color(0xFF1483EB),
+            Color(0xFF1436AC),
+          ],
+        ),
       ),
-      body: _loadingMeta
-          ? const ProfessionalLoading(message: 'Loading expense claim form...')
-          : Form(
-              key: _formKey,
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        extendBodyBehindAppBar: true,
+        appBar: AppBar(
+          title: const Text('New Expense Claim', style: TextStyle(color: Colors.white)),
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          backgroundColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          iconTheme: const IconThemeData(color: Colors.white),
+        ),
+        body: _loadingMeta
+            ? const ProfessionalLoading(message: 'Loading expense claim form...')
+            : Form(
+                key: _formKey,
+                child: ListView(
+                  padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + kToolbarHeight + 16, 20, 32),
                 children: [
                   // Header Section
                   Container(
@@ -6767,6 +6847,8 @@ class _NewClaimPageState extends State<_NewClaimPage> {
                 ],
               ),
             ),
+          ),
+        ),
     );
   }
 }

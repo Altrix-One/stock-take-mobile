@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:stock_count/utils/error_message_parser.dart';
+import 'package:cohenix_ess/utils/error_message_parser.dart';
 
 class ProfessionalErrorDialog extends StatelessWidget {
   final String title;
